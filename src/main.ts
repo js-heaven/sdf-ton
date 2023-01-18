@@ -84,10 +84,11 @@ window.addEventListener('load', () => {
     vec3.set(camUp, 0, 1, 0)
 
     vec3.set(camPosition,
-      camR * Math.cos(time * 0.1), 
+      2 * camR * Math.cos(time * 0.2), 
       2.5,
-      camR * Math.sin(time * 0.1),
+      camR * Math.sin(time * 0.2),
     )
+    vec3.set(lookAt, 0, Math.sin(time * 0.9), 0)
     vec3.sub(camStraight, lookAt, camPosition)
     vec3.normalize(camStraight, camStraight)
     vec3.cross(camRight, camUp, camStraight)
