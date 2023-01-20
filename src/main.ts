@@ -1,6 +1,6 @@
 import './style.css'
 
-import { vec3, mat4 } from 'gl-matrix'
+import { vec3 } from 'gl-matrix'
 
 import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 
@@ -9,7 +9,9 @@ import renderFs from './shaders/render.fs'
 import sampleVs from './shaders/sample.vs'
 import sampleFs from './shaders/sample.fs'
 
+
 window.addEventListener('load', () => {
+  // Prepare WebGL stuff
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
   const gl = canvas.getContext("webgl2", {
     alpha: true,
@@ -22,6 +24,19 @@ window.addEventListener('load', () => {
     console.error(`WebGL2 is not supported`)
     return
   }
+
+  // Prepare Audio Webworker
+
+  document.getElementById('play').addEventListener('click', () => {
+    const audioContext = new AudioContext();
+    audioContext.audioWorklet.addModule("./worklet.js").then(() => {
+      const whiteNoiseNode = new AudioWorkletNode(
+        audioContext,
+        "white-noise-processor"
+      );
+      whiteNoiseNode.connect(audioContext.destination);
+    })
+  })
 
   const drawScreenQuad = makeDrawScreenQuad(gl)
 

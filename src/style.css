@@ -1,6 +1,8 @@
 body {
   background-color: #111;
   margin: 0;
+  font-family: sans-serif;
+  color: #fff; 
 }
 
 #canvas {
@@ -13,3 +15,23 @@ body {
   height: 100vh; 
 }
 
+#play {
+  cursor: pointer;
+  position: absolute;
+  bottom: 75%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  padding: 3rem; 
+  border-radius: 1rem;
+  background-color: #fff8;
+  border: 0.3rem solid #fffb;
+  box-shadow: 0 0 6rem #0007;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+#play:hover {
+  background-color: #fffb;
+  border: 0.3rem solid #fffc;
+  box-shadow: 0 0 1.5rem #0002;
+}

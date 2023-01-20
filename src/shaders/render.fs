@@ -34,7 +34,7 @@ float bumps(vec3 p, float scale) {
   return length(p) / scale; 
 }
 
-float sdf(vec3 p) { 
+float sdf(in vec3 p) { 
   return 
   min(
     length(p) - 1.0,
@@ -42,13 +42,13 @@ float sdf(vec3 p) {
   ) + bumps(p, 5.0) * 2.0;
 }
 
-vec3 getNormal(vec3 p) {
-	float h = 0.0001;
-
-	return normalize(vec3(
-		sdf(p + vec3(h, 0, 0)) - sdf(p - vec3(h, 0, 0)),
-		sdf(p + vec3(0, h, 0)) - sdf(p - vec3(0, h, 0)),
-		sdf(p + vec3(0, 0, h)) - sdf(p - vec3(0, 0, h))));
+vec3 getNormal( in vec3 p ) // for function f(p)
+{
+    const float eps = 0.0001; // or some other value
+    const vec2 h = vec2(eps,0);
+    return normalize( vec3(sdf(p+h.xyy) - sdf(p-h.xyy),
+                           sdf(p+h.yxy) - sdf(p-h.yxy),
+                           sdf(p+h.yyx) - sdf(p-h.yyx) ) );
 }
 
 vec3 sky(vec3 v) {
