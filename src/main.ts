@@ -27,14 +27,34 @@ window.addEventListener('load', () => {
 
   // Prepare Audio Webworker
 
-  document.getElementById('play').addEventListener('click', () => {
+  const playButton = document.getElementById('play')!
+  playButton.addEventListener('click', () => {
+    playButton.style.display = 'none'
+
     const audioContext = new AudioContext();
     audioContext.audioWorklet.addModule("./worklet.js").then(() => {
-      const whiteNoiseNode = new AudioWorkletNode(
+      const continousBufferNode = new AudioWorkletNode(
         audioContext,
-        "white-noise-processor"
+        "continous-buffer"
       );
-      whiteNoiseNode.connect(audioContext.destination);
+      continousBufferNode.connect(audioContext.destination);
+      let t = 0
+      continousBufferNode.port.onmessage = (event) => {
+        if(event.data.type == 'requestBuffer') {
+          const a = new Float32Array(4096)
+          for(let i = 0 ; i < 4096 ; i++) {
+            t++
+            a[i] = Math.sin(t / 20) * 0.5 + 0.5
+          }
+          continousBufferNode.port.postMessage({
+            type: 'buffer',
+            buffer: a.buffer
+          }, [a.buffer])
+        }
+      }
+      continousBufferNode.port.postMessage({
+        type: 'start'
+      })
     })
   })
 
