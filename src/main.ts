@@ -12,11 +12,11 @@ import sampleFs from './shaders/sample.fs'
 window.addEventListener('load', () => {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
   const gl = canvas.getContext("webgl2", {
-    // alpha: true,
+    alpha: true,
     // depth: true,
     // antialias: false,
-    // premultipliedAlpha: false,
-    // preserveDrawingBuffer: true
+    premultipliedAlpha: false,
+    preserveDrawingBuffer: true
   })
   if(!gl) {
     console.error(`WebGL2 is not supported`)
@@ -81,16 +81,17 @@ window.addEventListener('load', () => {
   let camR = 5
 
   const updateCamera = () => {
-    vec3.set(camUp, 0, 1, 0)
 
     vec3.set(camPosition,
-      2 * camR * Math.cos(time * 0.2), 
+      camR * Math.cos(time * 0.5),
       2.5,
-      camR * Math.sin(time * 0.2),
+      camR * Math.sin(time * 0.5),
     )
-    vec3.set(lookAt, 0, Math.sin(time * 0.9), 0)
+
     vec3.sub(camStraight, lookAt, camPosition)
     vec3.normalize(camStraight, camStraight)
+
+    vec3.set(camUp, 0, 1, 0) // has to be reset everytime because we scale it based on aspectRatio
     vec3.cross(camRight, camUp, camStraight)
 
     // I)  2*x * 2*y = 1

@@ -7,41 +7,59 @@ uniform float time;
 
 in vec3 ray; 
 
-out vec3 rgb; 
+out vec4 rgba; 
 
-#include 4d-noise.glsl
+// forward declarations for the imported noise function to get correct line numbers
+float snoise(vec4); 
 
 // function for rotating around y axis
-vec3 rotateY(vec3 v, float a) {
-    float s = sin(a);
-    float c = cos(a);
-    return vec3(
-        v.x * c + v.z * s,
-        v.y,
-        v.z * c - v.x * s
-    );
+vec3 rotateY(vec3 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    mat3 m = mat3(c, 0, -s, 0, 1, 0, s, 0, c);
+    return m * v;
+}
+
+float diamonds(vec3 p, float scale) {
+  p *= scale;
+  return (
+    abs(mod(p.x, 2.) - 1.) + 
+    abs(mod(p.y, 2.) - 1.) + 
+    abs(mod(p.z, 2.) - 1.)
+  ) / scale; 
+}
+
+float bumps(vec3 p, float scale) {
+  p = mod(scale * p, 2.) - 1.;
+  return length(p) / scale; 
 }
 
 float sdf(vec3 p) { 
-  // p.y = p.y * 0.5; 
-  // p = rotateY(p, p.y * 2.); 
+  return 
+  min(
+    length(p) - 1.0,
+    length(p + vec3(1.0,0.7,0.4)) - 0.8
+  ) + bumps(p, 5.0) * 2.0;
+}
 
-  p = mod(p + 2., 4.) - 2.; 
+vec3 getNormal(vec3 p) {
+	float h = 0.0001;
 
-  return length(p) - 1.0 
-    + 0.4 * snoise(vec4(p * 0.5, 0.1 * time))
-    + .2 * snoise(vec4(p * 1., 0.1 * time)); 
+	return normalize(vec3(
+		sdf(p + vec3(h, 0, 0)) - sdf(p - vec3(h, 0, 0)),
+		sdf(p + vec3(0, h, 0)) - sdf(p - vec3(0, h, 0)),
+		sdf(p + vec3(0, 0, h)) - sdf(p - vec3(0, 0, h))));
+}
 
-  // return min(
-  //   length(mod(p + 2., 4.) - 2.) - 1.0 + s, 
-  //   length(p + vec3(4,1,2)) - 3.0 + s
-  // ) - s; 
+vec3 sky(vec3 v) {
+  // shall be replaced with env map soon
+  return vec3(v * 0.5 + 0.5);
 }
 
 void main() {
   vec3 rayDir = normalize(ray);
 
-  rgb = vec3(rayDir * 0.5 + 0.5) * 0.4; 
+  vec3 rgb = sky(rayDir);
 
   // raymarch 
   float z = 0.; 
@@ -49,21 +67,37 @@ void main() {
   float d = 0.; 
   float a = 0.;
   float b = 0.; 
-  vec3 colorInside = vec3(0.2, 0.2, 0.6); 
-  vec3 colorOutside = vec3(1, 0.4, 0.3); 
+  vec3 colorInside = vec3(0.1, 0.1, 0.3); 
+  vec3 colorOutside = vec3(1, 0.7, 0.5); 
+
   vec3 color = vec3(1);
-  for (int s = 0; s < 20; s++) {
-    d = sdf(pos);
-    if(d < 0.001) {
-      a = min(1., 2.45 / z); 
-      b = length(mod(pos + 2., 4.) - 2.); 
-      color = mix(colorInside, colorOutside, b);
-      rgb = mix(rgb, color, a) * b;
+  vec3 normal; 
+  for (int s = 0; s < 50; s++) {
+    d = sdf(pos) * 0.35; // allow for some deformations
+    if(d < 0.01) {
+      a = 0.1 + pow(0.9, z); 
+      b = clamp(length(pos), 0., 1.); 
+
+      // vec3 stepVis = float(s) * vec3(0.05);
+      normal = getNormal(pos);
+      color = 0.5 * (
+        mix(colorInside, colorOutside, b) + 
+        clamp(pos * 0.5 + 0.5, 0., 1.)
+      ); 
+      color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
+      rgb = mix(rgb, color, a);
+      break;
+    } 
+    else if (d > 20.) {
+      // we are on our way into space
       break;
     }
-    d += 0.01; // get faster past surfaces (any way to respect slope?) linearly?
     pos += rayDir * d;
     z += d;
   }
+
+  rgba = vec4(rgb, 1.0);
 }
+
+#include 4d-noise.glsl
 
