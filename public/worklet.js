@@ -29,7 +29,7 @@ class ContinousBuffer extends AudioWorkletProcessor {
       } else if (this.currentBuffer == this.nextBuffer) {
         throw('too many buffers');
       } else {
-        this.buffers[this.nextBuffer] = event.data.buffer;
+        this.buffers[this.nextBuffer] = new Float32Array(event.data.buffer)
         console.log('writing to buffer', this.nextBuffer)
         this.nextBuffer = (this.nextBuffer + 1) % this.bufferCount;
       }
@@ -64,15 +64,13 @@ class ContinousBuffer extends AudioWorkletProcessor {
     while(!done) {
       // if no buffer is available, stop
       if(this.currentBuffer === undefined) {
-        console.log('missing buffer')
         done = true
         break
       } 
-      console.log('have buffer')
-      // expect to be able to fill the whole channel from the current buffer
       done = true
+      let buffer = this.buffers[this.currentBuffer]
       for (ci; ci < channel.length; ci++) {
-        v = this.buffers[this.currentBuffer][this.bufferPointer]
+        v = buffer[this.bufferPointer]
         this.bufferPointer += 1
         channel[ci] = v // - this.mid
         // mid = mid * (1 - avgFactor) + v * avgFactor

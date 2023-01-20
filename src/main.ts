@@ -46,6 +46,7 @@ window.addEventListener('load', () => {
             t++
             a[i] = Math.sin(t / 20) * 0.5 + 0.5
           }
+          console.log(a)
           continousBufferNode.port.postMessage({
             type: 'buffer',
             buffer: a.buffer
