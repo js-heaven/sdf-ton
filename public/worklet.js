@@ -1,6 +1,7 @@
 class ContinousBuffer extends AudioWorkletProcessor {
 
   mid = 0.5;
+  normalizeFactor = 1; 
 
   buffers = [];
   currentBuffer = undefined;
@@ -27,10 +28,9 @@ class ContinousBuffer extends AudioWorkletProcessor {
         this.bufferPointer = 0; 
         this.nextBuffer = 1; 
       } else if (this.currentBuffer == this.nextBuffer) {
-        throw('too many buffers');
+        console.warning('too many buffers, ignoring one.')
       } else {
         this.buffers[this.nextBuffer] = new Float32Array(event.data.buffer)
-        console.log('writing to buffer', this.nextBuffer)
         this.nextBuffer = (this.nextBuffer + 1) % this.bufferCount;
       }
     }
@@ -47,9 +47,9 @@ class ContinousBuffer extends AudioWorkletProcessor {
     this.currentBuffer += 1
     this.currentBuffer %= this.bufferCount
     this.bufferPointer = 0
-    console.log('nextBuffer', this.currentBuffer)
     if(this.currentBuffer === this.nextBuffer) {
       this.currentBuffer = undefined
+      console.warning('no buffer available')
     }
     this.port.postMessage({
       type: 'requestBuffer'
@@ -71,10 +71,16 @@ class ContinousBuffer extends AudioWorkletProcessor {
       let buffer = this.buffers[this.currentBuffer]
       for (ci; ci < channel.length; ci++) {
         v = buffer[this.bufferPointer]
-        this.bufferPointer += 1
-        channel[ci] = v // - this.mid
-        // mid = mid * (1 - avgFactor) + v * avgFactor
+        v = v * 2 - 1
+        if(Math.abs(v) * this.normalizeFactor > 1) {
+          console.log('had to correct normalize') 
+          this.normalizeFactor = 1 / Math.abs(v)
+        } 
+        v *= this.normalizeFactor 
+        channel[ci] = v - this.mid 
+        this.mid = this.mid * (1 - this.avgFactor) + v * this.avgFactor
 
+        this.bufferPointer += 1
         if(this.bufferPointer >= this.bufferSize) {
           // need to continue with next buffer
           done = false

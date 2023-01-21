@@ -6,8 +6,8 @@ import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 
 import renderVs from './shaders/render.vs'
 import renderFs from './shaders/render.fs'
-import sampleVs from './shaders/sample.vs'
-import sampleFs from './shaders/sample.fs'
+
+import startSampling from './sampling'
 
 
 window.addEventListener('load', () => {
@@ -24,40 +24,16 @@ window.addEventListener('load', () => {
     console.error(`WebGL2 is not supported`)
     return
   }
+  // require extensions
+  const ext = {
+    float: gl.getExtension('EXT_color_buffer_float'),
+  }
+  if(!ext.float) {
+    console.error(`EXT_color_buffer_float is not supported`)
+    return
+  }
 
   // Prepare Audio Webworker
-
-  const playButton = document.getElementById('play')!
-  playButton.addEventListener('click', () => {
-    playButton.style.display = 'none'
-
-    const audioContext = new AudioContext();
-    audioContext.audioWorklet.addModule("./worklet.js").then(() => {
-      const continousBufferNode = new AudioWorkletNode(
-        audioContext,
-        "continous-buffer"
-      );
-      continousBufferNode.connect(audioContext.destination);
-      let t = 0
-      continousBufferNode.port.onmessage = (event) => {
-        if(event.data.type == 'requestBuffer') {
-          const a = new Float32Array(4096)
-          for(let i = 0 ; i < 4096 ; i++) {
-            t++
-            a[i] = Math.sin(t / 20) * 0.5 + 0.5
-          }
-          console.log(a)
-          continousBufferNode.port.postMessage({
-            type: 'buffer',
-            buffer: a.buffer
-          }, [a.buffer])
-        }
-      }
-      continousBufferNode.port.postMessage({
-        type: 'start'
-      })
-    })
-  })
 
   const drawScreenQuad = makeDrawScreenQuad(gl)
 
@@ -108,6 +84,9 @@ window.addEventListener('load', () => {
   resize()
   window.addEventListener('resize', resize )
 
+  // start sampling
+  startSampling(gl, drawScreenQuad, 5)
+
   let lookAt = vec3.fromValues(0, 0, 0)
   let camPosition = vec3.create()
   let camStraight = vec3.create()
@@ -120,7 +99,7 @@ window.addEventListener('load', () => {
 
     vec3.set(camPosition,
       camR * Math.cos(time * 0.5),
-      2.5,
+      Math.sin(time * 0.33) * 2.5,
       camR * Math.sin(time * 0.5),
     )
 
@@ -189,3 +168,4 @@ function makeDrawScreenQuad(gl: WebGL2RenderingContext) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 }
+

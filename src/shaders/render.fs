@@ -9,38 +9,8 @@ in vec3 ray;
 
 out vec4 rgba; 
 
-// forward declarations for the imported noise function to get correct line numbers
-float snoise(vec4); 
-
 // function for rotating around y axis
-vec3 rotateY(vec3 v, float angle) {
-    float s = sin(angle);
-    float c = cos(angle);
-    mat3 m = mat3(c, 0, -s, 0, 1, 0, s, 0, c);
-    return m * v;
-}
-
-float diamonds(vec3 p, float scale) {
-  p *= scale;
-  return (
-    abs(mod(p.x, 2.) - 1.) + 
-    abs(mod(p.y, 2.) - 1.) + 
-    abs(mod(p.z, 2.) - 1.)
-  ) / scale; 
-}
-
-float bumps(vec3 p, float scale) {
-  p = mod(scale * p, 2.) - 1.;
-  return length(p) / scale; 
-}
-
-float sdf(in vec3 p) { 
-  return 
-  min(
-    length(p) - 1.0,
-    length(p + vec3(1.0,0.7,0.4)) - 0.8
-  ) + bumps(p, 5.0) * 2.0;
-}
+float sdf(vec3); 
 
 vec3 getNormal( in vec3 p ) // for function f(p)
 {
@@ -73,7 +43,7 @@ void main() {
   vec3 color = vec3(1);
   vec3 normal; 
   for (int s = 0; s < 50; s++) {
-    d = sdf(pos) * 0.35; // allow for some deformations
+    d = sdf(pos); 
     if(d < 0.01) {
       a = 0.1 + pow(0.9, z); 
       b = clamp(length(pos), 0., 1.); 
@@ -92,6 +62,7 @@ void main() {
       // we are on our way into space
       break;
     }
+    d += 0.002; 
     pos += rayDir * d;
     z += d;
   }
@@ -99,5 +70,5 @@ void main() {
   rgba = vec4(rgb, 1.0);
 }
 
-#include 4d-noise.glsl
+#include sdf.glsl
 
