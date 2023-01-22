@@ -43,7 +43,7 @@ void main() {
   vec3 color = vec3(1);
   vec3 normal; 
   for (int s = 0; s < 50; s++) {
-    d = sdf(pos); 
+    d = sdf(pos) * 0.5; 
     if(d < 0.01) {
       a = 0.1 + pow(0.9, z); 
       b = clamp(length(pos), 0., 1.); 
@@ -62,7 +62,7 @@ void main() {
       // we are on our way into space
       break;
     }
-    d += 0.002; 
+    d += 0.003; 
     pos += rayDir * d;
     z += d;
   }

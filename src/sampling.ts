@@ -35,7 +35,9 @@ export default function startSampling(
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
 
-  const frequency = 55
+  gl.clear(gl.COLOR_BUFFER_BIT)
+
+  const frequency = 440 * 0.5 ** 3
   const BPM = 90
   const planeFrequency = 1 / (4 / (BPM / 60))
   let sampleRate = 42000
@@ -43,6 +45,8 @@ export default function startSampling(
   const samplePass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo) 
     gl.viewport(0, 0, SQRT_BUFFER_SIZE / 4, SQRT_BUFFER_SIZE)
+
+    gl.disable(gl.BLEND)
 
     gl.useProgram(sampleProgram)
     gl.uniform1f(sampleUniLocs.time, time)
@@ -102,4 +106,6 @@ export default function startSampling(
       })
     })
   })
+
+  return tex
 }

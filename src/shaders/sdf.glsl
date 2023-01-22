@@ -41,17 +41,20 @@ float sdTriPrism( vec3 p, vec2 h )
 }
 
 float sdf(in vec3 p) { 
-  return sdBox(p, vec3(1.));
-//  return min(
-//    min(
-//      length(p + vec3(0.5,0,0)) - 0.5,
-//      length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5
-//    ),
-//    min(
-//      sdBox(p + vec3(0.3,0,0), vec3(0.5, 0., 1.2)) - 0.1, 
-//      sdTriPrism(p + vec3(0,0.65,0.8), vec2(0.4, 0.4)) - 0.1
-//    )
-//  );
+  //return sdTriPrism(p, vec2(1, 1)); 
+  //return length(p - vec3(0.5,0,0)) - 0.5; 
+  p = rotateY(p, p.y*1.);
+  return sdBox(p, vec3(0.75)) - 0.1; 
+  //return min(
+  //  min(
+  //    length(p + vec3(0.5,0,0)) - 0.5,
+  //    length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5
+  //  ),
+  //  min(
+  //    sdBox(p + vec3(0.3,0,0), vec3(0.5, 0., 1.2)) - 0.1, 
+  //    sdTriPrism(p + vec3(0,0.65,0.8), vec2(0.4, 0.4)) - 0.1
+  //  )
+  //);
 }
 
 #include 4d-noise.glsl

@@ -24,7 +24,6 @@ void main() {
   vec4 samples; 
   for(int s = 0; s < 4; s++) {
 
-
     float ix = (uv.x - 0.5) * 4. + float(s);
     float i = ix + (uv.y - 0.5) * sqrtBufferSize;
 
@@ -50,15 +49,15 @@ void main() {
     float d = 0.; 
 
     for (int m = 0; m < 50; m++) {
-      d = sdf(pos); 
+      d = sdf(pos) * 0.3; 
       pos += dir * d;
       z += d;
-      if(d < 0.01 || z >= radius) {
+      if(d < 0.001 || z >= radius) {
         break;
       } 
     }
 
-    samples[s] = radius - z; 
+    samples[s] = max(0., radius - z); 
   }
   rgba = samples; 
 }

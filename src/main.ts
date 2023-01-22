@@ -7,8 +7,10 @@ import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 import renderVs from './shaders/render.vs'
 import renderFs from './shaders/render.fs'
 
-import startSampling from './sampling'
+import visualizeVs from './shaders/visualize.vs'
+import visualizeFs from './shaders/visualize.fs'
 
+import startSampling from './sampling'
 
 window.addEventListener('load', () => {
   // Prepare WebGL stuff
@@ -64,6 +66,34 @@ window.addEventListener('load', () => {
     drawScreenQuad()
   }
 
+  const visualizeProgram = compileShaders(gl, visualizeVs, visualizeFs)
+  const visualizeUniLocs = makeUniformLocationAccessor(gl, visualizeProgram)
+
+  gl.useProgram(visualizeProgram)
+
+  gl.uniform1f(visualizeUniLocs.bufferSize, 64 ** 2) 
+  gl.uniform1f(visualizeUniLocs.sqrtBufferSize, 64) 
+  gl.uniform1i(visualizeUniLocs.samples, 0) 
+
+  const visualizePass = () => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.viewport(0, 0, canvas.width, canvas.height) 
+
+    // use texture
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, sampleTex)
+
+    gl.enable(gl.BLEND)
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    ) 
+
+    gl.useProgram(visualizeProgram)
+
+    drawScreenQuad()
+  }
+
   // resize
   let aspectRatio = 1
   let nearPlaneSize = 1
@@ -85,7 +115,7 @@ window.addEventListener('load', () => {
   window.addEventListener('resize', resize )
 
   // start sampling
-  startSampling(gl, drawScreenQuad, 5)
+  let sampleTex = startSampling(gl, drawScreenQuad, 5)
 
   let lookAt = vec3.fromValues(0, 0, 0)
   let camPosition = vec3.create()
@@ -135,6 +165,7 @@ window.addEventListener('load', () => {
     updateCamera()
 
     renderPass()
+    visualizePass()
 
     requestAnimationFrame(loop) 
   }
