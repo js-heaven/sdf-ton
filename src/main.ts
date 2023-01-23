@@ -42,6 +42,9 @@ window.addEventListener('load', () => {
   const renderProgram = compileShaders(gl, renderVs, renderFs)
   const renderUniLocs = makeUniformLocationAccessor(gl, renderProgram)
 
+  let swipeA = [1,0]
+  let swipeB = [1,0]
+
   const renderPass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height) 
@@ -62,6 +65,12 @@ window.addEventListener('load', () => {
     gl.uniform3fv(renderUniLocs.camStraight, camStraight)
     gl.uniform3fv(renderUniLocs.camRight, camRight)
     gl.uniform3fv(renderUniLocs.camUp, camUp)
+    if(sampleTex) {
+      [swipeA, swipeB] = getPlaneSegment()
+        .map(angle => [Math.cos(angle), Math.sin(angle)])
+    }
+    gl.uniform2fv(renderUniLocs.swipeA, swipeA)
+    gl.uniform2fv(renderUniLocs.swipeB, swipeB)
 
     drawScreenQuad()
   }
@@ -115,7 +124,7 @@ window.addEventListener('load', () => {
   window.addEventListener('resize', resize )
 
   // start sampling
-  let sampleTex = startSampling(gl, drawScreenQuad, 5)
+  let {sampleTex, getPlaneSegment} = startSampling(gl, drawScreenQuad, 5)
 
   let lookAt = vec3.fromValues(0, 0, 0)
   let camPosition = vec3.create()

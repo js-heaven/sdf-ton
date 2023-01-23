@@ -5,6 +5,9 @@ precision highp float;
 uniform vec3 camPosition;
 uniform float time;
 
+uniform vec2 swipeA; 
+uniform vec2 swipeB; 
+
 in vec3 ray; 
 
 out vec4 rgba; 
@@ -26,6 +29,10 @@ vec3 sky(vec3 v) {
   return vec3(v * 0.5 + 0.5);
 }
 
+const vec3 colorInside = vec3(0.1, 0.1, 0.3); 
+const vec3 colorOutside = vec3(1, 0.7, 0.5); 
+const vec3 scanColor = vec3(0.3,0.5,0.7); 
+
 void main() {
   vec3 rayDir = normalize(ray);
 
@@ -37,8 +44,7 @@ void main() {
   float d = 0.; 
   float a = 0.;
   float b = 0.; 
-  vec3 colorInside = vec3(0.1, 0.1, 0.3); 
-  vec3 colorOutside = vec3(1, 0.7, 0.5); 
+  float xyAngle; 
 
   vec3 color = vec3(1);
   vec3 normal; 
@@ -55,6 +61,12 @@ void main() {
         clamp(pos * 0.5 + 0.5, 0., 1.)
       ); 
       color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
+      // see xournalpp sketch
+      bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;
+      bool s2 = pos.x * swipeB.y <= swipeB.x * pos.y;
+      if(s1 && s2 || !s1 && !s2) {
+        color += scanColor; 
+      }
       rgb = mix(rgb, color, a);
       break;
     } 

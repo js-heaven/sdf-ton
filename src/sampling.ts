@@ -37,11 +37,15 @@ export default function startSampling(
 
   gl.clear(gl.COLOR_BUFFER_BIT)
 
-  const frequency = 440 * 0.5 ** 3
-  const BPM = 90
+  const frequency = 47 // 440 * 0.5 ** 4
+  const BPM = 60
   const planeFrequency = 1 / (4 / (BPM / 60))
   let sampleRate = 42000
   let time = 0
+  
+  let planeStartAngle = 0
+  let planeEndAngle = 0
+
   const samplePass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo) 
     gl.viewport(0, 0, SQRT_BUFFER_SIZE / 4, SQRT_BUFFER_SIZE)
@@ -54,8 +58,8 @@ export default function startSampling(
     // calc time stuff
     let bufferDuration = BUFFER_SIZE / sampleRate
 
-    let planeStartAngle = ((time * planeFrequency) % 1) * Math.PI * 2
-    let planeEndAngle = bufferDuration * planeFrequency * Math.PI * 2 + planeStartAngle
+    planeStartAngle = ((time * planeFrequency) % 1) * Math.PI * 2
+    planeEndAngle = bufferDuration * planeFrequency * Math.PI * 2 + planeStartAngle
     gl.uniform1f(sampleUniLocs.planeStartAngle, planeStartAngle)
     gl.uniform1f(sampleUniLocs.planeEndAngle, planeEndAngle)
 
@@ -107,5 +111,10 @@ export default function startSampling(
     })
   })
 
-  return tex
+  return {
+    sampleTex: tex, 
+    getPlaneSegment: () => {
+      return [planeStartAngle, planeEndAngle]
+    }
+  }
 }
