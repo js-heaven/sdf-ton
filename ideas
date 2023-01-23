@@ -1,0 +1,45 @@
+- Ziel: Leute kommen ein zweites mal in die Ausstellung, extra um nochmal mit unserem Projekt spielen zu können
+
+  - Interaction 
+    - Frequency einstellbar 
+    - Gesten
+    - Interface zu den Shadern
+    - Sync across multiple clients
+      - Websockets
+      - Server im Lokalen Netzwerk? 
+        - Öffentliches WLAN
+    - ca 0.25s delay wegen buffersize + count
+
+    - SDF
+      - noise textur (extrapoliert?)
+
+  - Rendering
+    - Graphics
+      - Reflections
+        - Raum als 6 sided cube map
+    - Audio 
+      - Synchronisiert: Voreingestellte bpm
+      - Verschiedene Vielfache (3, 4, 8, 5) 
+
+  - Sound zu Anlage 
+    - 1 Objekt pro Speaker
+    - 1 tab vs 7 browsertabs https://blabla/audio/object?1-7
+      - WebAudio kann auch mehrere Channels
+    - irgendjemand mit MAC oder Windows (wegen Dante) 
+    - Filter & Effekte
+      - Unterschiedlich je node
+      - z.B. Sägezahn LFO + FM für Percussionartiges
+      - Reverb für drei gleichartige, die einen Akkord ergeben
+
+  - QR-codes
+    - Auf Hölzernen Sockeln / Tische
+      - Marker für VR? 
+
+  - AR (low prio)
+    - Modellieren
+    - Kalibrieren
+    - Shader integrieren
+      - Kombination aus traditioneller Computergrafik und SDF Raymarching
+        - bounding box
+
+
