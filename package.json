@@ -1,19 +1,19 @@
 {
-  "name": "sdf-sound",
-  "private": true,
+  "name": "von-ton-zu-ton",
   "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
   "devDependencies": {
-    "typescript": "^4.9.3",
-    "vite": "^4.0.0",
-    "vite-plugin-glsl": "^1.1.0"
+    "nx": "15.6.0",
+    "prettier": "^2.6.2",
+    "typescript": "^4.9.4"
   },
+  "workspaces": [
+    "packages/*"
+  ],
+  "author": "DC autitory team",
   "dependencies": {
-    "gl-matrix": "^3.4.3"
+    "socket.io": "^4.5.4"
   }
 }
