@@ -13,7 +13,5 @@
     "packages/*"
   ],
   "author": "DC autitory team",
-  "dependencies": {
-    "socket.io": "^4.5.4"
-  }
+  "dependencies": {}
 }
