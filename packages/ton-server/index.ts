@@ -6,14 +6,13 @@ import { Server } from 'socket.io';
 dotenv.config();
 
 const app: Express = express();
-const host = process.env.VITE_HOST;
-const port = process.env.VITE_BACKEND_PORT;
-const frontendPort = process.env.FRONTEND_PORT;
+const frontendUrl = process.env.FRONTEND_URL;
+const port = process.env.BACKEND_PORT;
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: `http://${host}:${frontendPort}`,
+    origin: frontendUrl,
     methods: ['GET', 'POST']
   }
 });

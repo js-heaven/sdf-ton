@@ -13,6 +13,8 @@ import visualizeFs from './shaders/visualize.fs'
 
 import startSampling from './sampling'
 
+import GestureHandler, { GestureCallbackFn } from './utils/gestures'
+
 window.addEventListener('load', () => {
   // Prepare WebGL stuff
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
@@ -181,6 +183,14 @@ window.addEventListener('load', () => {
   }
 
   loop()
+
+
+  // TODO: rename callback fn
+  const doSomethingWithTheObject: GestureCallbackFn = (gestureType, args) => {
+    console.log('Gesture detected:', gestureType);
+  }
+
+  new GestureHandler(doSomethingWithTheObject);
 })
 
 function makeDrawScreenQuad(gl: WebGL2RenderingContext) {
