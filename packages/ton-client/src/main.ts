@@ -1,4 +1,5 @@
 import './style.css'
+import './utils/web-socket'
 
 import { vec3 } from 'gl-matrix'
 
@@ -47,7 +48,7 @@ window.addEventListener('load', () => {
 
   const renderPass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, canvas.width, canvas.height) 
+    gl.viewport(0, 0, canvas.width, canvas.height)
 
     gl.clearColor(0, 0, 0, 1)
     gl.clear(gl.COLOR_BUFFER_BIT)
@@ -80,13 +81,13 @@ window.addEventListener('load', () => {
 
   gl.useProgram(visualizeProgram)
 
-  gl.uniform1f(visualizeUniLocs.bufferSize, 64 ** 2) 
-  gl.uniform1f(visualizeUniLocs.sqrtBufferSize, 64) 
-  gl.uniform1i(visualizeUniLocs.samples, 0) 
+  gl.uniform1f(visualizeUniLocs.bufferSize, 64 ** 2)
+  gl.uniform1f(visualizeUniLocs.sqrtBufferSize, 64)
+  gl.uniform1i(visualizeUniLocs.samples, 0)
 
   const visualizePass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, canvas.width, canvas.height) 
+    gl.viewport(0, 0, canvas.width, canvas.height)
 
     // use texture
     gl.activeTexture(gl.TEXTURE0)
@@ -94,9 +95,9 @@ window.addEventListener('load', () => {
 
     gl.enable(gl.BLEND)
     gl.blendFuncSeparate(
-      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    ) 
+    )
 
     gl.useProgram(visualizeProgram)
 
@@ -176,7 +177,7 @@ window.addEventListener('load', () => {
     renderPass()
     visualizePass()
 
-    requestAnimationFrame(loop) 
+    requestAnimationFrame(loop)
   }
 
   loop()
