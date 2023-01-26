@@ -37,11 +37,13 @@ export default function startSampling(
 
   gl.clear(gl.COLOR_BUFFER_BIT)
 
-  const frequency = 47 // 440 * 0.5 ** 4
+  const frequency = 42 // 440 * 0.5 ** 4
   const BPM = 60
   const planeFrequency = 1 / (4 / (BPM / 60))
   let sampleRate = 42000
   let time = 0
+
+  const periodLength = sampleRate / frequency
   
   let planeStartAngle = 0
   let planeEndAngle = 0
@@ -84,6 +86,8 @@ export default function startSampling(
   }
 
   // sampling
+  let generatedBufferCounter = 0
+  let numberOfBuffers = 3
   const playButton = document.getElementById('play')!
   playButton.addEventListener('click', () => {
     playButton.style.display = 'none'
@@ -103,6 +107,8 @@ export default function startSampling(
             type: 'buffer',
             buffer: a.buffer
           }, [a.buffer])
+          console.log('new buffer generated') 
+          generatedBufferCounter += 1
         }
       }
       continousBufferNode.port.postMessage({
@@ -115,6 +121,13 @@ export default function startSampling(
     sampleTex: tex, 
     getPlaneSegment: () => {
       return [planeStartAngle, planeEndAngle]
+    }, 
+    getPeriodBeginAndLength: () => {
+      let currentBuffer = generatedBufferCounter - numberOfBuffers 
+      let bufferStartSample = currentBuffer * BUFFER_SIZE
+      let nextPeriodBegin = (Math.floor(bufferStartSample / periodLength) + 1) * periodLength
+      let periodBegin = nextPeriodBegin - bufferStartSample
+      return [periodBegin, periodLength]
     }
   }
 }

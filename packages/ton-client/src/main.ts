@@ -45,6 +45,7 @@ window.addEventListener('load', () => {
   const renderProgram = compileShaders(gl, renderVs, renderFs)
   const renderUniLocs = makeUniformLocationAccessor(gl, renderProgram)
 
+
   let swipeA = [1,0]
   let swipeB = [1,0]
 
@@ -87,6 +88,8 @@ window.addEventListener('load', () => {
   gl.uniform1f(visualizeUniLocs.sqrtBufferSize, 64)
   gl.uniform1i(visualizeUniLocs.samples, 0)
 
+  let periodBegin = 0
+  let periodLength = 0
   const visualizePass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -101,7 +104,15 @@ window.addEventListener('load', () => {
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA
     )
 
+    if(sampleTex) {
+      [periodBegin, periodLength] = getPeriodBeginAndLength();
+    }
+
+    console.log(periodBegin) 
+
     gl.useProgram(visualizeProgram)
+    gl.uniform1f(visualizeUniLocs.periodBegin, periodBegin)
+    gl.uniform1f(visualizeUniLocs.periodLength, periodLength)
 
     drawScreenQuad()
   }
@@ -127,7 +138,11 @@ window.addEventListener('load', () => {
   window.addEventListener('resize', resize )
 
   // start sampling
-  let {sampleTex, getPlaneSegment} = startSampling(gl, drawScreenQuad, 5)
+  let {
+    sampleTex, 
+    getPlaneSegment,
+    getPeriodBeginAndLength
+  } = startSampling(gl, drawScreenQuad, 5)
 
   let lookAt = vec3.fromValues(0, 0, 0)
   let camPosition = vec3.create()

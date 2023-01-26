@@ -15,6 +15,9 @@ uniform float radius;
 
 in vec2 uv; 
 
+// we would like to write only one float per fragment
+// but in WebGL 2.0 we can only read RGBAF32 floats from framebuffers
+// so we need to do 4 samples per fragment :) 
 out vec4 rgba; 
 
 // forward declaration for the imported sdf
