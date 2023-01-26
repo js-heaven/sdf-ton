@@ -13,7 +13,7 @@ import visualizeFs from './shaders/visualize.fs'
 
 import startSampling from './sampling'
 
-import GestureHandler, { GestureCallbackFn } from './utils/gestures';
+import GestureHandler, { GestureCallbackFn, GESTURE_TYPES } from './utils/gestures';
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
 const SQRT_BUFFER_SIZE = 64 
@@ -79,6 +79,8 @@ window.addEventListener('load', () => {
     }
     gl.uniform2fv(renderUniLocs.swipeA, swipeA)
     gl.uniform2fv(renderUniLocs.swipeB, swipeB)
+
+    gl.uniform3fv(renderUniLocs.touchManipulationState, touchManipulationState)
 
     drawScreenQuad()
   }
@@ -164,6 +166,7 @@ window.addEventListener('load', () => {
   let camStraight = vec3.create()
   let camRight = vec3.create()
   let camUp = vec3.create()
+  let touchManipulationState = vec3.fromValues(0, 0, 0) // (tapState, swipeState, pinchState)
 
   let camR = 5
 
@@ -218,9 +221,14 @@ window.addEventListener('load', () => {
 
   const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
     console.log('Gesture detected:', gestureType);
+
+    if (gestureType = GESTURE_TYPES.tap) {
+      const newTapState = touchManipulationState[0] ? 0 : 1;
+      vec3.set(touchManipulationState, newTapState, touchManipulationState[1], touchManipulationState[2]);
+    }
   }
 
-  new GestureHandler(gestureCallbackFn);
+  new GestureHandler(canvas, gestureCallbackFn);
 })
 
 function makeDrawScreenQuad(gl: WebGL2RenderingContext) {

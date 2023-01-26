@@ -1,26 +1,30 @@
 export type GestureCallbackFn = (gestureType: string, otherArgs?: any) => void;
 
+export const GESTURE_TYPES = { tap: 'tap', swipe: 'swipe', pinch: 'pinch' };
+
 class GestureHandler {
   TAP_THRESHOLD = 250; // milliseconds
   touchesLength = 0;
   touchesInAction: { [identifier: number]: Touch } = {};
   startTimeStamp!: number;
+  touchTarget: HTMLElement;
   callbackFn: GestureCallbackFn;
 
-  constructor(callbackFn: GestureCallbackFn) {
-    this.addEventListeners();
+  constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
     this.callbackFn = callbackFn;
+    this.touchTarget = touchTarget || document;
+    this.addEventListeners();
   }
 
   addEventListeners() {
-    document.addEventListener(
+    this.touchTarget.addEventListener(
       'touchstart',
       this.handleTouchStart.bind(this),
       false
     );
-    document.addEventListener('touchmove', this.handleTouches, false);
-    document.addEventListener('touchcancel', this.handleTouches, false);
-    document.addEventListener(
+    this.touchTarget.addEventListener('touchmove', this.handleTouches, false);
+    this.touchTarget.addEventListener('touchcancel', this.handleTouches, false);
+    this.touchTarget.addEventListener(
       'touchend',
       this.handleTouchEnd.bind(this),
       false
@@ -64,7 +68,7 @@ class GestureHandler {
     const deltaTime = timeStamp - this.startTimeStamp;
 
     if (deltaTime <= this.TAP_THRESHOLD) {
-      this.callbackFn('tap');
+      this.callbackFn(GESTURE_TYPES.tap);
     }
   }
 
