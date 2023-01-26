@@ -223,9 +223,9 @@ window.addEventListener('load', () => {
   loop()
 
   const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
-    console.log('Gesture detected:', gestureType);
+    console.log('Gesture detected:', gestureType, args);
 
-    if (gestureType = GESTURE_TYPES.tap) store.toggleTapState();
+    if (gestureType === GESTURE_TYPES.tap) store.toggleTapState();
   }
 
   new GestureHandler(canvas, gestureCallbackFn);

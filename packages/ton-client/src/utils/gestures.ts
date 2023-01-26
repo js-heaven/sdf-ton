@@ -1,14 +1,25 @@
-export type GestureCallbackFn = (gestureType: string, otherArgs?: any) => void;
+import SwipeDetector from './swipe';
+import TapDetector from './tap';
 
-export const GESTURE_TYPES = { tap: 'tap', swipe: 'swipe', pinch: 'pinch' };
+export const GESTURE_TYPES = {
+  tap: 'tap',
+  swipe: 'swipe',
+  pinch: 'pinch',
+  none: 'none',
+};
+
+export type GestureCallbackFn = (
+  gestureType: string,
+  otherArgs?: any
+) => void;
+
 
 class GestureHandler {
-  TAP_THRESHOLD = 250; // milliseconds
-  touchesLength = 0;
-  touchesInAction: { [identifier: number]: Touch } = {};
-  startTimeStamp!: number;
   touchTarget: HTMLElement;
   callbackFn: GestureCallbackFn;
+
+  tapDetector?: TapDetector;
+  swipeDetector?: SwipeDetector;
 
   constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
     this.callbackFn = callbackFn;
@@ -22,8 +33,8 @@ class GestureHandler {
       this.handleTouchStart.bind(this),
       false
     );
-    this.touchTarget.addEventListener('touchmove', this.handleTouches, false);
-    this.touchTarget.addEventListener('touchcancel', this.handleTouches, false);
+    this.touchTarget.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
+    this.touchTarget.addEventListener('touchcancel', this.handleTouches.bind(this), false);
     this.touchTarget.addEventListener(
       'touchend',
       this.handleTouchEnd.bind(this),
@@ -32,51 +43,26 @@ class GestureHandler {
   }
 
   handleTouchStart(ev: TouchEvent) {
-    // reset touchesInAction
-    this.touchesInAction = {};
-    this.touchesLength = ev.changedTouches.length;
-    this.startTimeStamp = ev.timeStamp;
+    this.tapDetector = new TapDetector(ev);
+    this.swipeDetector = new SwipeDetector(ev);
+  }
 
-    for (let i = 0; i < this.touchesLength; i++) {
-      const touch = ev.changedTouches[i];
-      this.touchesInAction[touch.identifier] = touch;
-    }
+  handleTouchMove(ev: TouchEvent) {
+    this.swipeDetector?.update(ev);
+    this.detectGesture();
   }
 
   handleTouchEnd(ev: TouchEvent) {
     ev.preventDefault();
 
-    switch (this.touchesLength) {
-      case 1:
-        this.handleOneTouch(ev);
-        break;
-      case 2:
-        this.handleTwoTouches(ev);
-        break;
-      case 3:
-        this.handleThreeTouches(ev);
-        break;
-      default:
-        this.handleGestureNotSupported(ev);
-        break;
-    }
+    this.tapDetector?.update(ev);
+    this.detectGesture();
   }
 
-  handleOneTouch(ev: TouchEvent) {
-    const { timeStamp } = ev;
-    // const { identifier } = ev.changedTouches[0];
-    const deltaTime = timeStamp - this.startTimeStamp;
-
-    if (deltaTime <= this.TAP_THRESHOLD) {
-      this.callbackFn(GESTURE_TYPES.tap);
-    }
+  detectGesture() {
+    if (this.tapDetector?.isTapEvent) return this.callbackFn(GESTURE_TYPES.tap);
+    if (this.swipeDetector?.isSwipeEvent) return this.callbackFn(GESTURE_TYPES.swipe, this.swipeDetector.distanceToStart);
   }
-
-  handleTwoTouches(ev: TouchEvent) {}
-
-  handleThreeTouches(ev: TouchEvent) {}
-
-  handleGestureNotSupported(ev: TouchEvent) {}
 
   handleTouches(ev: TouchEvent) {
     ev.preventDefault();
