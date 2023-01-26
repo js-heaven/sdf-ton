@@ -43,7 +43,7 @@ void main() {
     );
     vec3 planeZ = vec3(0, 0, 1);
 
-    vec3 scale = vec3(0.75 + 0.15 * touchManipulationState.x);
+    vec3 scale = vec3(touchManipulationState.x);
 
     // camera position on circle on plane
     float angle = mix(startAngle, endAngle, i * oneByBufferSize);

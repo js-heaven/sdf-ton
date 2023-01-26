@@ -19,7 +19,7 @@ float sdf(vec3, vec3);
 
 vec3 getNormal( in vec3 p ) // for function f(p)
 {
-    vec3 scale = vec3(0.75 + 0.15 * touchManipulationState.x);
+    vec3 scale = vec3(touchManipulationState.x);
     const float eps = 0.0001; // or some other value
     const vec2 h = vec2(eps,0);
     return normalize( vec3(sdf(p+h.xyy, scale) - sdf(p-h.xyy, scale),
@@ -48,7 +48,7 @@ void main() {
   float a = 0.;
   float b = 0.;
   float xyAngle;
-  vec3 scale = vec3(0.75 + 0.15 * touchManipulationState.x);
+  vec3 scale = vec3(touchManipulationState.x);
 
   vec3 color = vec3(1);
   vec3 normal;
