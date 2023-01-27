@@ -17,7 +17,7 @@ import GestureHandler, { GestureCallbackFn, GESTURE_TYPES } from './utils/gestur
 import Store from './store'
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
-const SQRT_BUFFER_SIZE = 64 
+const SQRT_BUFFER_SIZE = 64
 const BUFFER_SIZE = SQRT_BUFFER_SIZE ** 2
 const NUMBER_OF_BUFFERS = 3
 
@@ -101,7 +101,7 @@ window.addEventListener('load', () => {
   let periodBegin = 0
   let periodLength = 0
   let normalizeInfo = {
-    center: 1, 
+    center: 1,
     normalizeFactor: 1
   }
   const visualizePass = () => {
@@ -116,10 +116,10 @@ window.addEventListener('load', () => {
     gl.blendFuncSeparate(
       gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    ); 
+    );
 
     [periodBegin, periodLength] = getPeriodBeginAndLength();
-    
+
     normalizeInfo = getNormalizeInfo();
 
     gl.useProgram(visualizeProgram)
@@ -154,15 +154,16 @@ window.addEventListener('load', () => {
 
   // start sampling
   let {
-    sampleTex, 
-    isReady, 
+    sampleTex,
+    isReady,
     getPlaneSegment,
-    getPeriodBeginAndLength, 
-    getNormalizeInfo, 
+    getPeriodBeginAndLength,
+    getNormalizeInfo,
   } = startSampling(gl, drawScreenQuad, {
-    radius: 5, 
+    radius: 5,
     sqrtBufferSize: SQRT_BUFFER_SIZE,
-    numberOfBuffers: NUMBER_OF_BUFFERS
+    numberOfBuffers: NUMBER_OF_BUFFERS,
+    touchManipulationState: store.state
   })
 
   let lookAt = vec3.fromValues(0, 0, 0)
@@ -213,7 +214,7 @@ window.addEventListener('load', () => {
     updateCamera()
 
     renderPass()
-    if(isReady()) {
+    if (isReady()) {
       visualizePass()
     }
 

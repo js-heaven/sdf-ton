@@ -2,6 +2,7 @@ import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 
 import sampleFs from '../shaders/sample.fs'
 import sampleVs from '../shaders/sample.vs'
+import { vec3 } from 'gl-matrix'
 
 export default function startSampling(
   gl: WebGL2RenderingContext,
@@ -10,6 +11,7 @@ export default function startSampling(
     radius: number,
     sqrtBufferSize: number,
     numberOfBuffers: number,
+    touchManipulationState: vec3
   }
 ) {
   let bufferSize = options.sqrtBufferSize ** 2
@@ -68,6 +70,8 @@ export default function startSampling(
     let endAngle = bufferDuration * frequency * Math.PI * 2 + startAngle
     gl.uniform1f(sampleUniLocs.startAngle, startAngle)
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
+
+    gl.uniform3fv(sampleUniLocs.touchManipulationState, options.touchManipulationState)
 
     time += bufferDuration
 
