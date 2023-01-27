@@ -1,6 +1,8 @@
+let globalI = 0
+
 class ContinousBuffer extends AudioWorkletProcessor {
 
-  mid = 0.5;
+  center = 1;
   normalizeFactor = 1; 
 
   buffers = [];
@@ -8,11 +10,20 @@ class ContinousBuffer extends AudioWorkletProcessor {
   bufferPointer = 0; // next buffer pointer
   nextBuffer = 0; 
 
-  constructor() {
+  constructor(options) {
     super()
-    this.bufferSize = 4096; //bufferSize;
-    this.bufferCount = 3; 
-    this.avgFactor = 0.00001;
+
+    this.sqrtBufferSize = options.processorOptions.sqrtBufferSize
+    this.bufferSize = this.sqrtBufferSize * this.sqrtBufferSize
+    this.numberOfBuffers = options.processorOptions.numberOfBuffers
+    this.avgFactor = options.processorOptions.avgFactor
+    this.maxValue = options.processorOptions.maxValue
+
+    // initialize min to the max and vice versa
+    // such that the first read sample defines both
+    this.min = this.maxValue
+    this.max = 0
+
     this.port.onmessage = this.handleMessage.bind(this);
   }
 
@@ -28,14 +39,14 @@ class ContinousBuffer extends AudioWorkletProcessor {
         this.bufferPointer = 0; 
         this.nextBuffer = 1; 
       } else if (this.currentBuffer == this.nextBuffer) {
-        console.warning('too many buffers, ignoring one.')
+        console.error('too many buffers, ignoring one.')
       } else {
         this.buffers[this.nextBuffer] = new Float32Array(event.data.buffer)
-        this.nextBuffer = (this.nextBuffer + 1) % this.bufferCount;
+        this.nextBuffer = (this.nextBuffer + 1) % this.numberOfBuffers;
       }
     }
     if(event.data.type === 'start') {
-      for(let i = 0; i < this.bufferCount; i++) {
+      for(let i = 0; i < this.numberOfBuffers; i++) {
         this.port.postMessage({
           type: 'requestBuffer'
         })
@@ -45,11 +56,11 @@ class ContinousBuffer extends AudioWorkletProcessor {
 
   switchToNextBuffer() {
     this.currentBuffer += 1
-    this.currentBuffer %= this.bufferCount
+    this.currentBuffer %= this.numberOfBuffers
     this.bufferPointer = 0
     if(this.currentBuffer === this.nextBuffer) {
       this.currentBuffer = undefined
-      console.warning('no buffer available')
+      console.error('crackel: starving, no sample buffer available')
     }
     this.port.postMessage({
       type: 'requestBuffer'
@@ -58,41 +69,73 @@ class ContinousBuffer extends AudioWorkletProcessor {
 
   process(_inputs, outputs, _parameters) {
     const channel = outputs[0][0]
-    let v = 0
-    let ci = 0
-    let done = false 
-    while(!done) {
-      // if no buffer is available, stop
-      if(this.currentBuffer === undefined) {
-        done = true
-        break
-      } 
-      done = true
-      let buffer = this.buffers[this.currentBuffer]
-      for (ci; ci < channel.length; ci++) {
-        v = buffer[this.bufferPointer]
-        v = v * 2 - 1
-        if(Math.abs(v) * this.normalizeFactor > 1) {
-          console.log('had to correct normalize') 
-          this.normalizeFactor = 1 / Math.abs(v)
-        } 
-        v *= this.normalizeFactor 
-        channel[ci] = v - this.mid 
-        this.mid = this.mid * (1 - this.avgFactor) + v * this.avgFactor
 
-        this.bufferPointer += 1
-        if(this.bufferPointer >= this.bufferSize) {
-          // need to continue with next buffer
-          done = false
-          this.switchToNextBuffer()
-          break
-        }
+    // performance optimization: use plain variables
+    // will be copied back at the end
+    let min = this.min
+    let max = this.max
+    let normalizeFactor = this.normalizeFactor
+    let center = this.center
+
+    let midFactor = this.avgFactor
+    let prevMidFactor = 1 - midFactor
+
+    // helpers
+    let sample = 0
+    let channelIndex = 0
+
+    let done = false 
+    while(!done && this.currentBuffer !== undefined) {
+      let buffer = this.buffers[this.currentBuffer]
+      let bufferPointer = this.bufferPointer
+
+      // calculate how many samples we draw from the current buffer
+      let freeSpaceOnBuffer = this.bufferSize - bufferPointer 
+      let requiredSpaceForChannel = channel.length - channelIndex
+      let sampleCount = Math.min(freeSpaceOnBuffer, requiredSpaceForChannel)
+
+      let until = channelIndex + sampleCount
+      for (channelIndex; channelIndex < until; channelIndex++) {
+        sample = buffer[bufferPointer]
+        bufferPointer += 1
+        if(sample < min) min = sample
+        if(sample > max) max = sample
+        center = center * prevMidFactor + sample * midFactor
+        normalizeFactor = 0.95 / Math.max(
+          center - min, 
+          max - center
+        )
+        sample = (sample - center) * normalizeFactor
+        channel[channelIndex] = sample
+      }
+      
+      // are we done yet? 
+      if(requiredSpaceForChannel < freeSpaceOnBuffer) {
+        this.bufferPointer += requiredSpaceForChannel
+        done = true
+      } else {
+        // continue with next buffer
+        this.switchToNextBuffer()
+        done = false
       }
     }
-    // fill rest with silence
-    for (ci; ci < channel.length; ci++) {
-      channel[ci] = 0;
+
+    // pad rest with silence, if there wasn't enough data
+    for (channelIndex; channelIndex < channel.length; channelIndex++) {
+      channel[channelIndex] = 0;
     }
+
+    // copy back
+    this.min = min
+    this.max = max
+    this.normalizeFactor = normalizeFactor
+    this.center = center
+
+    this.port.postMessage({
+      type: 'normalizeInfo', 
+      center: this.center, 
+      normalizeFactor: this.normalizeFactor
+    }) 
     return true;
   }
 }

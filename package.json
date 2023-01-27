@@ -2,7 +2,9 @@
   "name": "von-ton-zu-ton",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev": "nx run-many --target=dev"
+  },
   "private": true,
   "devDependencies": {
     "nx": "15.6.0",
