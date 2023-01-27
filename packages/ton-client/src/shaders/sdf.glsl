@@ -40,9 +40,10 @@ float sdTriPrism( vec3 p, vec2 h )
   return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
 }
 
-float sdf(in vec3 p, in vec3 scale) {
+float sdf(in vec3 p) {
   //return sdTriPrism(p, vec2(1, 1));
   //return length(p - vec3(0.5,0,0)) - 0.5;
+  vec3 scale = vec3(touchManipulationState.x);
   p = rotateY(p, p.y*1.);
   return sdBox(p, scale) - 0.1;
   // return min(

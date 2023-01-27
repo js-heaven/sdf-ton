@@ -1,7 +1,7 @@
 import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 
-import sampleFs from './shaders/sample.fs'
-import sampleVs from './shaders/sample.vs'
+import sampleFs from '../shaders/sample.fs'
+import sampleVs from '../shaders/sample.vs'
 
 export default function startSampling(
   gl: WebGL2RenderingContext,

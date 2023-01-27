@@ -15,16 +15,15 @@ in vec3 ray;
 out vec4 rgba;
 
 // function for rotating around y axis
-float sdf(vec3, vec3);
+float sdf(vec3);
 
 vec3 getNormal( in vec3 p ) // for function f(p)
 {
-    vec3 scale = vec3(touchManipulationState.x);
     const float eps = 0.0001; // or some other value
     const vec2 h = vec2(eps,0);
-    return normalize( vec3(sdf(p+h.xyy, scale) - sdf(p-h.xyy, scale),
-                           sdf(p+h.yxy, scale) - sdf(p-h.yxy, scale),
-                           sdf(p+h.yyx, scale) - sdf(p-h.yyx, scale) ) );
+    return normalize( vec3(sdf(p+h.xyy) - sdf(p-h.xyy),
+                           sdf(p+h.yxy) - sdf(p-h.yxy),
+                           sdf(p+h.yyx) - sdf(p-h.yyx) ) );
 }
 
 vec3 sky(vec3 v) {
@@ -48,12 +47,11 @@ void main() {
   float a = 0.;
   float b = 0.;
   float xyAngle;
-  vec3 scale = vec3(touchManipulationState.x);
 
   vec3 color = vec3(1);
   vec3 normal;
   for (int s = 0; s < 50; s++) {
-    d = sdf(pos, scale) * 0.5;
+    d = sdf(pos) * 0.5;
     if(d < 0.01) {
       a = 0.1 + pow(0.9, z);
       b = clamp(length(pos), 0., 1.);

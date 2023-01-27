@@ -23,7 +23,7 @@ in vec2 uv;
 out vec4 rgba;
 
 // forward declaration for the imported sdf
-float sdf(vec3, vec3);
+float sdf(vec3);
 
 void main() {
   vec4 samples;
@@ -43,8 +43,6 @@ void main() {
     );
     vec3 planeZ = vec3(0, 0, 1);
 
-    vec3 scale = vec3(touchManipulationState.x);
-
     // camera position on circle on plane
     float angle = mix(startAngle, endAngle, i * oneByBufferSize);
 
@@ -57,7 +55,7 @@ void main() {
     float d = 0.;
 
     for (int m = 0; m < 50; m++) {
-      d = sdf(pos, scale) * 0.3;
+      d = sdf(pos) * 0.3;
       pos += dir * d;
       z += d;
       if(d < 0.001 || z >= radius) {
