@@ -110,13 +110,11 @@ window.addEventListener('load', () => {
     gl.blendFuncSeparate(
       gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    )
+    ); 
 
-    if(sampleTex) {
-      [periodBegin, periodLength] = getPeriodBeginAndLength();
-      
-      normalizeInfo = getNormalizeInfo();
-    }
+    [periodBegin, periodLength] = getPeriodBeginAndLength();
+    
+    normalizeInfo = getNormalizeInfo();
 
     gl.useProgram(visualizeProgram)
     gl.uniform1f(visualizeUniLocs.periodBegin, periodBegin)
@@ -151,9 +149,10 @@ window.addEventListener('load', () => {
   // start sampling
   let {
     sampleTex, 
+    isReady, 
     getPlaneSegment,
     getPeriodBeginAndLength, 
-    getNormalizeInfo
+    getNormalizeInfo, 
   } = startSampling(gl, drawScreenQuad, {
     radius: 5, 
     sqrtBufferSize: SQRT_BUFFER_SIZE,
@@ -208,7 +207,9 @@ window.addEventListener('load', () => {
     updateCamera()
 
     renderPass()
-    visualizePass()
+    if(isReady()) {
+      visualizePass()
+    }
 
     requestAnimationFrame(loop)
   }

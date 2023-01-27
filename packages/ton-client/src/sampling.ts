@@ -139,17 +139,9 @@ export default function startSampling(
 
   return {
     sampleTex: tex, 
-    getPlaneSegment: () => {
-      return [planeStartAngle, planeEndAngle]
-    }, 
-    getPeriodBeginAndLength: () => {
-      return [periodStartSample - bufferStartSample, periodLength]
-    }, 
-    getNormalizeInfo: () => {
-      return {
-        center,
-        normalizeFactor
-      }
-    }
+    isReady: () => generatedBufferCounter > 0, 
+    getPlaneSegment: () => [planeStartAngle, planeEndAngle], 
+    getPeriodBeginAndLength: () => [periodStartSample - bufferStartSample, periodLength],
+    getNormalizeInfo: () => ({center, normalizeFactor})
   }
 }
