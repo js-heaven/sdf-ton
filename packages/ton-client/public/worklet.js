@@ -1,3 +1,5 @@
+let globalI = 0
+
 class ContinousBuffer extends AudioWorkletProcessor {
 
   center = 1;
@@ -85,15 +87,17 @@ class ContinousBuffer extends AudioWorkletProcessor {
     let done = false 
     while(!done && this.currentBuffer !== undefined) {
       let buffer = this.buffers[this.currentBuffer]
+      let bufferPointer = this.bufferPointer
 
       // calculate how many samples we draw from the current buffer
-      let freeSpaceOnBuffer = this.bufferSize - this.bufferPointer
+      let freeSpaceOnBuffer = this.bufferSize - bufferPointer 
       let requiredSpaceForChannel = channel.length - channelIndex
       let sampleCount = Math.min(freeSpaceOnBuffer, requiredSpaceForChannel)
 
       let until = channelIndex + sampleCount
       for (channelIndex; channelIndex < until; channelIndex++) {
-        sample = buffer[this.bufferPointer]
+        sample = buffer[bufferPointer]
+        bufferPointer += 1
         if(sample < min) min = sample
         if(sample > max) max = sample
         center = center * prevMidFactor + sample * midFactor
@@ -111,7 +115,6 @@ class ContinousBuffer extends AudioWorkletProcessor {
         done = true
       } else {
         // continue with next buffer
-        this.bufferPointer += sampleCount
         this.switchToNextBuffer()
         done = false
       }

@@ -45,6 +45,7 @@ void main() {
     float angle = mix(startAngle, endAngle, i * oneByBufferSize);
 
     vec3 pos = planeX * cos(angle) + planeZ * sin(angle); 
+
     vec3 dir = -pos; 
     pos *= radius; 
 

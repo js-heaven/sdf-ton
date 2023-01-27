@@ -38,7 +38,7 @@ export default function startSampling(
 
   gl.clear(gl.COLOR_BUFFER_BIT)
 
-  const frequency = 42 // 440 * 0.5 ** 4
+  const frequency = 55
   const BPM = 60
   const planeFrequency = 1 / (4 / (BPM / 60))
   let sampleRate = 42000
@@ -76,10 +76,6 @@ export default function startSampling(
     // read from framebuffer into array
     let data = new Float32Array(bufferSize)
     gl.readPixels(0, 0, options.sqrtBufferSize / 4, options.sqrtBufferSize, gl.RGBA, gl.FLOAT, data)
-
-    // if(time > 2 && time < 3) {
-    //   console.log(data.join(', '))
-    // }
 
     return data
   }
@@ -122,7 +118,6 @@ export default function startSampling(
             type: 'buffer',
             buffer: a.buffer
           }, [a.buffer])
-          console.log('generated buffer') 
           generatedBufferCounter += 1
           let assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
           periodLength = sampleRate / frequency
