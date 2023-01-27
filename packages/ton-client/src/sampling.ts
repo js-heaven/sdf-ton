@@ -98,6 +98,10 @@ export default function startSampling(
     const audioContext = new AudioContext();
     sampleRate = audioContext.sampleRate 
     audioContext.audioWorklet.addModule("./worklet.js").then(() => {
+      const gainNode = new GainNode(audioContext, {gain: 0.0})
+      gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
+      gainNode.gain.linearRampToValueAtTime(1.0, audioContext.currentTime + 2)
+      gainNode.connect(audioContext.destination)
       const continousBufferNode = new AudioWorkletNode(
         audioContext,
         "continous-buffer",
@@ -110,7 +114,7 @@ export default function startSampling(
           }
         }
       );
-      continousBufferNode.connect(audioContext.destination);
+      continousBufferNode.connect(gainNode);
       continousBufferNode.port.onmessage = (event) => {
         if(event.data.type == 'requestBuffer') {
           const a = samplePass()
