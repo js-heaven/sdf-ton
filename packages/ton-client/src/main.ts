@@ -15,6 +15,11 @@ import startSampling from './sampling'
 
 import GestureHandler, { GestureCallbackFn } from './utils/gestures';
 
+// sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
+const SQRT_BUFFER_SIZE = 64 
+const BUFFER_SIZE = SQRT_BUFFER_SIZE ** 2
+const NUMBER_OF_BUFFERS = 3
+
 window.addEventListener('load', () => {
   // Prepare WebGL stuff
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
@@ -44,7 +49,6 @@ window.addEventListener('load', () => {
 
   const renderProgram = compileShaders(gl, renderVs, renderFs)
   const renderUniLocs = makeUniformLocationAccessor(gl, renderProgram)
-
 
   let swipeA = [1,0]
   let swipeB = [1,0]
@@ -84,12 +88,16 @@ window.addEventListener('load', () => {
 
   gl.useProgram(visualizeProgram)
 
-  gl.uniform1f(visualizeUniLocs.bufferSize, 64 ** 2)
-  gl.uniform1f(visualizeUniLocs.sqrtBufferSize, 64)
+  gl.uniform1f(visualizeUniLocs.bufferSize, BUFFER_SIZE)
+  gl.uniform1f(visualizeUniLocs.sqrtBufferSize, SQRT_BUFFER_SIZE)
   gl.uniform1i(visualizeUniLocs.samples, 0)
 
   let periodBegin = 0
   let periodLength = 0
+  let normalizeInfo = {
+    center: 1, 
+    normalizeFactor: 1
+  }
   const visualizePass = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -106,13 +114,16 @@ window.addEventListener('load', () => {
 
     if(sampleTex) {
       [periodBegin, periodLength] = getPeriodBeginAndLength();
+      
+      normalizeInfo = getNormalizeInfo();
     }
-
-    console.log(periodBegin) 
 
     gl.useProgram(visualizeProgram)
     gl.uniform1f(visualizeUniLocs.periodBegin, periodBegin)
     gl.uniform1f(visualizeUniLocs.periodLength, periodLength)
+
+    gl.uniform1f(visualizeUniLocs.center, normalizeInfo.center)
+    gl.uniform1f(visualizeUniLocs.normalizeFactor, normalizeInfo.normalizeFactor)
 
     drawScreenQuad()
   }
@@ -141,8 +152,13 @@ window.addEventListener('load', () => {
   let {
     sampleTex, 
     getPlaneSegment,
-    getPeriodBeginAndLength
-  } = startSampling(gl, drawScreenQuad, 5)
+    getPeriodBeginAndLength, 
+    getNormalizeInfo
+  } = startSampling(gl, drawScreenQuad, {
+    radius: 5, 
+    sqrtBufferSize: SQRT_BUFFER_SIZE,
+    numberOfBuffers: NUMBER_OF_BUFFERS
+  })
 
   let lookAt = vec3.fromValues(0, 0, 0)
   let camPosition = vec3.create()

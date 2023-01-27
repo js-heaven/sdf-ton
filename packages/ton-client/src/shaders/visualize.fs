@@ -9,6 +9,16 @@ uniform float sqrtBufferSize;
 uniform float periodBegin; // in samples
 uniform float periodLength; // in samples
 
+uniform float center;
+uniform float normalizeFactor; 
+
+const float lineWidth = 0.001; 
+const vec3 lineColor = vec3(0.1, 0.1, 0.1);
+
+const float waveHeight = 0.2;
+const float waveHeightHalf = waveHeight * 0.5;
+const float oneMinusWaveHeightHalf = 1.0 - waveHeightHalf;
+
 in vec2 uv;
 
 out vec4 rgba; 
@@ -22,7 +32,21 @@ float getSampleValue(float sampleIndex) {
 
   vec4 fourSamples = texture(samples, (vec2(ix * 4., iy) + vec2(0.5)) / sqrtBufferSize); 
 
-  return fourSamples[iRgba];
+  float s = fourSamples[iRgba];
+
+  // normalize to values from -1 to 1
+  s = (s - center) * normalizeFactor;
+
+  return (s);
+}
+
+bool isInside(float center, float y, float v) {
+  float relativeY = y - center;
+  float scaledV = v * waveHeightHalf;
+  return (
+    relativeY > scaledV && relativeY < 0. ||
+    relativeY < scaledV && relativeY > 0.
+  );
 }
 
 void main() {
@@ -36,22 +60,19 @@ void main() {
     periodBegin + periodLength * uv.x - 0.5
   );
 
-  bool disc = true; 
-  vec3 rgb = vec3(0.5); 
-  if(uv.y < bufferValue * 0.25) {
-    //rgb = mix(rgb, vec3(0.3,0,0.1), 0.5); 
-    //disc = false; 
-  } 
-  if(uv.y < periodValue * 0.25) {
-    rgb = mix(rgb, vec3(0.0,0.1,0.5), 0.9); 
-    disc = false; 
-  }
-
-  if(disc) {
-    discard; 
+  // periodValue = (periodBegin + periodLength * uv.x) / bufferSize;
+  if(
+    uv.y > oneMinusWaveHeightHalf - lineWidth && uv.y < oneMinusWaveHeightHalf + lineWidth || 
+    uv.y > waveHeightHalf - lineWidth && uv.y < waveHeightHalf + lineWidth
+  ) {
+    rgba = vec4(lineColor, 1.0); 
+  } else if(isInside(waveHeightHalf, uv.y, bufferValue)) {
+    rgba = vec4(0.3,0,0.1,0.5); 
+  } else if(isInside(oneMinusWaveHeightHalf, uv.y, periodValue)) {
+    rgba = vec4(0.0,0.1,0.5,0.5); 
   } else {
-    rgba = vec4(rgb, 0.5); 
-  }
+    discard; 
+  } 
 }
 
 
