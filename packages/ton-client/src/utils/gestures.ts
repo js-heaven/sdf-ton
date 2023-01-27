@@ -1,12 +1,6 @@
 import SwipeDetector from './swipe';
 import TapDetector from './tap';
-
-export const GESTURE_TYPES = {
-  tap: 'tap',
-  swipe: 'swipe',
-  pinch: 'pinch',
-  none: 'none',
-};
+import PinchDetector from './pinch';
 
 export type GestureCallbackFn = (gestureType: string, otherArgs?: any) => void;
 
@@ -16,6 +10,7 @@ class GestureHandler {
 
   tapDetector?: TapDetector;
   swipeDetector?: SwipeDetector;
+  pinchDetector?: PinchDetector;
 
   constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
     this.callbackFn = callbackFn;
@@ -49,26 +44,36 @@ class GestureHandler {
   handleTouchStart(ev: TouchEvent) {
     this.tapDetector = new TapDetector(ev);
     this.swipeDetector = new SwipeDetector(ev);
+    this.pinchDetector = new PinchDetector(ev);
   }
 
   handleTouchMove(ev: TouchEvent) {
+    ev.preventDefault();
+
     this.swipeDetector?.update(ev);
+    this.pinchDetector?.update(ev);
     this.detectGesture();
   }
 
   handleTouchEnd(ev: TouchEvent) {
     ev.preventDefault();
 
-    this.tapDetector?.update(ev);
+    this.tapDetector?.handleTouchEnd(ev);
+    this.swipeDetector?.handleTouchEnd(ev);
+    this.pinchDetector?.handleTouchEnd(ev);
     this.detectGesture();
   }
 
   detectGesture() {
-    if (this.tapDetector?.isTapEvent) return this.callbackFn(GESTURE_TYPES.tap);
+    if (this.tapDetector?.isTapEvent) this.callbackFn(this.tapDetector.type);
+
     if (this.swipeDetector?.isSwipeEvent)
-      return this.callbackFn(
-        GESTURE_TYPES.swipe,
-        this.swipeDetector.distanceToStart
+      this.callbackFn(this.swipeDetector.type, this.swipeDetector.distToStart);
+
+    if (this.pinchDetector?.isPinchEvent)
+      this.callbackFn(
+        this.pinchDetector.type,
+        this.pinchDetector.distRelativeToStart
       );
   }
 

@@ -1,19 +1,13 @@
-import { vec2 } from "gl-matrix";
+import GestureDetector, { GESTURE_TYPES } from './gesture';
 
 const MAX_DELAY_MS = 2000;
 const MAX_PX_MOVE_TOLERANCE = 10;
 const MAX_TOUCHES = 1;
 
-class TapDetector {
-  start: TouchEvent;
-  end?: TouchEvent;
-
+// A tap is recognized when the pointer is doing a small tap/click.
+class TapDetector extends GestureDetector {
   constructor(start: TouchEvent) {
-    this.start = start;
-  }
-
-  update(end: TouchEvent) {
-    this.end = end;
+    super(start, GESTURE_TYPES.tap);
   }
 
   get isTapEvent(): boolean {
@@ -22,7 +16,8 @@ class TapDetector {
     const startTouchesLength = this.start.changedTouches.length;
     const endTouchesLength = this.end.changedTouches.length;
 
-    if (startTouchesLength != MAX_TOUCHES || endTouchesLength != MAX_TOUCHES) return false;
+    if (startTouchesLength != MAX_TOUCHES || endTouchesLength != MAX_TOUCHES)
+      return false;
 
     const startTimeStamp = this.start.timeStamp;
     const endTimeStamp = this.end.timeStamp;
@@ -31,9 +26,7 @@ class TapDetector {
 
     const startTouch = this.start.changedTouches[0];
     const endTouch = this.end.changedTouches[0];
-    const startPosition = vec2.fromValues(startTouch.clientX, startTouch.clientY);
-    const endPosition = vec2.fromValues(endTouch.clientX, endTouch.clientY);
-    const pxMoved = vec2.distance(startPosition, endPosition);
+    const pxMoved = this._distBetween2Touches(startTouch, endTouch);
 
     return pxMoved <= MAX_PX_MOVE_TOLERANCE;
   }

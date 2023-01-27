@@ -13,8 +13,9 @@ import visualizeFs from './shaders/visualize.fs'
 
 import startSampling from './utils/sampling'
 
-import GestureHandler, { GestureCallbackFn, GESTURE_TYPES } from './utils/gestures';
+import GestureHandler, { GestureCallbackFn } from './utils/gestures';
 import Store from './store'
+import { GESTURE_TYPES } from './utils/gesture'
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
 const SQRT_BUFFER_SIZE = 64
