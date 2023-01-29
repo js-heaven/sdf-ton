@@ -1,15 +1,17 @@
 import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 
-import sampleFs from './shaders/sample.fs'
-import sampleVs from './shaders/sample.vs'
+import sampleFs from '../shaders/sample.fs'
+import sampleVs from '../shaders/sample.vs'
+import { vec3 } from 'gl-matrix'
 
 export default function startSampling(
-  gl: WebGL2RenderingContext, 
-  drawScreenQuad: () => void, 
+  gl: WebGL2RenderingContext,
+  drawScreenQuad: () => void,
   options: {
-    radius: number, 
+    radius: number,
     sqrtBufferSize: number,
     numberOfBuffers: number,
+    touchManipulationState: vec3
   }
 ) {
   let bufferSize = options.sqrtBufferSize ** 2
@@ -48,7 +50,7 @@ export default function startSampling(
   let planeEndAngle = 0
 
   const samplePass = () => {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo) 
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
     gl.viewport(0, 0, options.sqrtBufferSize / 4, options.sqrtBufferSize)
 
     gl.disable(gl.BLEND)
@@ -68,6 +70,8 @@ export default function startSampling(
     let endAngle = bufferDuration * frequency * Math.PI * 2 + startAngle
     gl.uniform1f(sampleUniLocs.startAngle, startAngle)
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
+
+    gl.uniform3fv(sampleUniLocs.touchManipulationState, options.touchManipulationState)
 
     time += bufferDuration
 
@@ -92,7 +96,7 @@ export default function startSampling(
     playButton.style.display = 'none'
 
     const audioContext = new AudioContext();
-    sampleRate = audioContext.sampleRate 
+    sampleRate = audioContext.sampleRate
     audioContext.audioWorklet.addModule("./worklet.js").then(() => {
       const gainNode = new GainNode(audioContext, {gain: 0.0})
       gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
@@ -105,7 +109,7 @@ export default function startSampling(
           processorOptions: {
             sqrtBufferSize: options.sqrtBufferSize,
             numberOfBuffers: options.numberOfBuffers,
-            avgFactor: 0.00001, 
+            avgFactor: 0.00001,
             maxValue: options.radius
           }
         }
@@ -138,9 +142,9 @@ export default function startSampling(
   })
 
   return {
-    sampleTex: tex, 
-    isReady: () => generatedBufferCounter > 0, 
-    getPlaneSegment: () => [planeStartAngle, planeEndAngle], 
+    sampleTex: tex,
+    isReady: () => generatedBufferCounter > 0,
+    getPlaneSegment: () => [planeStartAngle, planeEndAngle],
     getPeriodBeginAndLength: () => [periodStartSample - bufferStartSample, periodLength],
     getNormalizeInfo: () => ({center, normalizeFactor})
   }

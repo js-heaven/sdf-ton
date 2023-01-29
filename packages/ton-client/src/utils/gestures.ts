@@ -1,26 +1,40 @@
+import SwipeDetector from './swipe';
+import TapDetector from './tap';
+import PinchDetector from './pinch';
+
 export type GestureCallbackFn = (gestureType: string, otherArgs?: any) => void;
 
 class GestureHandler {
-  TAP_THRESHOLD = 250; // milliseconds
-  touchesLength = 0;
-  touchesInAction: { [identifier: number]: Touch } = {};
-  startTimeStamp!: number;
+  touchTarget: HTMLElement;
   callbackFn: GestureCallbackFn;
 
-  constructor(callbackFn: GestureCallbackFn) {
-    this.addEventListeners();
+  tapDetector?: TapDetector;
+  swipeDetector?: SwipeDetector;
+  pinchDetector?: PinchDetector;
+
+  constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
     this.callbackFn = callbackFn;
+    this.touchTarget = touchTarget || document;
+    this.addEventListeners();
   }
 
   addEventListeners() {
-    document.addEventListener(
+    this.touchTarget.addEventListener(
       'touchstart',
       this.handleTouchStart.bind(this),
       false
     );
-    document.addEventListener('touchmove', this.handleTouches, false);
-    document.addEventListener('touchcancel', this.handleTouches, false);
-    document.addEventListener(
+    this.touchTarget.addEventListener(
+      'touchmove',
+      this.handleTouchMove.bind(this),
+      false
+    );
+    this.touchTarget.addEventListener(
+      'touchcancel',
+      this.handleTouches.bind(this),
+      false
+    );
+    this.touchTarget.addEventListener(
       'touchend',
       this.handleTouchEnd.bind(this),
       false
@@ -28,51 +42,40 @@ class GestureHandler {
   }
 
   handleTouchStart(ev: TouchEvent) {
-    // reset touchesInAction
-    this.touchesInAction = {};
-    this.touchesLength = ev.changedTouches.length;
-    this.startTimeStamp = ev.timeStamp;
+    this.tapDetector = new TapDetector(ev);
+    this.swipeDetector = new SwipeDetector(ev);
+    this.pinchDetector = new PinchDetector(ev);
+  }
 
-    for (let i = 0; i < this.touchesLength; i++) {
-      const touch = ev.changedTouches[i];
-      this.touchesInAction[touch.identifier] = touch;
-    }
+  handleTouchMove(ev: TouchEvent) {
+    ev.preventDefault();
+
+    this.swipeDetector?.update(ev);
+    this.pinchDetector?.update(ev);
+    this.detectGesture();
   }
 
   handleTouchEnd(ev: TouchEvent) {
     ev.preventDefault();
 
-    switch (this.touchesLength) {
-      case 1:
-        this.handleOneTouch(ev);
-        break;
-      case 2:
-        this.handleTwoTouches(ev);
-        break;
-      case 3:
-        this.handleThreeTouches(ev);
-        break;
-      default:
-        this.handleGestureNotSupported(ev);
-        break;
-    }
+    this.tapDetector?.handleTouchEnd(ev);
+    this.swipeDetector?.handleTouchEnd(ev);
+    this.pinchDetector?.handleTouchEnd(ev);
+    this.detectGesture();
   }
 
-  handleOneTouch(ev: TouchEvent) {
-    const { timeStamp } = ev;
-    // const { identifier } = ev.changedTouches[0];
-    const deltaTime = timeStamp - this.startTimeStamp;
+  detectGesture() {
+    if (this.tapDetector?.isTapEvent) this.callbackFn(this.tapDetector.type);
 
-    if (deltaTime <= this.TAP_THRESHOLD) {
-      this.callbackFn('tap');
-    }
+    if (this.swipeDetector?.isSwipeEvent)
+      this.callbackFn(this.swipeDetector.type, this.swipeDetector.distToStart);
+
+    if (this.pinchDetector?.isPinchEvent)
+      this.callbackFn(
+        this.pinchDetector.type,
+        this.pinchDetector.distRelativeToStart
+      );
   }
-
-  handleTwoTouches(ev: TouchEvent) {}
-
-  handleThreeTouches(ev: TouchEvent) {}
-
-  handleGestureNotSupported(ev: TouchEvent) {}
 
   handleTouches(ev: TouchEvent) {
     ev.preventDefault();

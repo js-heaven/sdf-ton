@@ -3,7 +3,7 @@ import './utils/web-socket'
 
 import { vec3 } from 'gl-matrix'
 
-import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
+import { compileShaders, makeUniformLocationAccessor } from './utils/shader-tools'
 
 import renderVs from './shaders/render.vs'
 import renderFs from './shaders/render.fs'
@@ -11,12 +11,14 @@ import renderFs from './shaders/render.fs'
 import visualizeVs from './shaders/visualize.vs'
 import visualizeFs from './shaders/visualize.fs'
 
-import startSampling from './sampling'
+import startSampling from './utils/sampling'
 
 import GestureHandler, { GestureCallbackFn } from './utils/gestures';
+import Store from './store'
+import { GESTURE_TYPES } from './utils/gesture'
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
-const SQRT_BUFFER_SIZE = 64 
+const SQRT_BUFFER_SIZE = 64
 const BUFFER_SIZE = SQRT_BUFFER_SIZE ** 2
 const NUMBER_OF_BUFFERS = 3
 
@@ -42,6 +44,9 @@ window.addEventListener('load', () => {
     console.error(`EXT_color_buffer_float is not supported`)
     return
   }
+
+  // create State
+  const store = new Store();
 
   // Prepare Audio Webworker
 
@@ -80,6 +85,8 @@ window.addEventListener('load', () => {
     gl.uniform2fv(renderUniLocs.swipeA, swipeA)
     gl.uniform2fv(renderUniLocs.swipeB, swipeB)
 
+    gl.uniform3fv(renderUniLocs.touchManipulationState, store.state);
+
     drawScreenQuad()
   }
 
@@ -95,7 +102,7 @@ window.addEventListener('load', () => {
   let periodBegin = 0
   let periodLength = 0
   let normalizeInfo = {
-    center: 1, 
+    center: 1,
     normalizeFactor: 1
   }
   const visualizePass = () => {
@@ -110,10 +117,10 @@ window.addEventListener('load', () => {
     gl.blendFuncSeparate(
       gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    ); 
+    );
 
     [periodBegin, periodLength] = getPeriodBeginAndLength();
-    
+
     normalizeInfo = getNormalizeInfo();
 
     gl.useProgram(visualizeProgram)
@@ -148,15 +155,16 @@ window.addEventListener('load', () => {
 
   // start sampling
   let {
-    sampleTex, 
-    isReady, 
+    sampleTex,
+    isReady,
     getPlaneSegment,
-    getPeriodBeginAndLength, 
-    getNormalizeInfo, 
+    getPeriodBeginAndLength,
+    getNormalizeInfo,
   } = startSampling(gl, drawScreenQuad, {
-    radius: 5, 
+    radius: 5,
     sqrtBufferSize: SQRT_BUFFER_SIZE,
-    numberOfBuffers: NUMBER_OF_BUFFERS
+    numberOfBuffers: NUMBER_OF_BUFFERS,
+    touchManipulationState: store.state
   })
 
   let lookAt = vec3.fromValues(0, 0, 0)
@@ -207,7 +215,7 @@ window.addEventListener('load', () => {
     updateCamera()
 
     renderPass()
-    if(isReady()) {
+    if (isReady()) {
       visualizePass()
     }
 
@@ -217,10 +225,12 @@ window.addEventListener('load', () => {
   loop()
 
   const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
-    console.log('Gesture detected:', gestureType);
+    console.log('Gesture detected:', gestureType, args);
+
+    if (gestureType === GESTURE_TYPES.tap) store.toggleTapState();
   }
 
-  new GestureHandler(gestureCallbackFn);
+  new GestureHandler(canvas, gestureCallbackFn);
 })
 
 function makeDrawScreenQuad(gl: WebGL2RenderingContext) {
