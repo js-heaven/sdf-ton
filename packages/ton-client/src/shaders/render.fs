@@ -8,7 +8,7 @@ uniform float time;
 uniform vec2 swipeA;
 uniform vec2 swipeB;
 
-uniform vec3 touchManipulationState;
+uniform float tapState;
 
 in vec3 ray;
 

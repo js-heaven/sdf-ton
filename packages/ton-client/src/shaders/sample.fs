@@ -13,7 +13,7 @@ uniform float planeEndAngle;
 
 uniform float radius;
 
-uniform vec3 touchManipulationState;
+uniform float tapState;
 
 in vec2 uv;
 
