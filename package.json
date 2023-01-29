@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "nx run-many --target=dev",
-    "lint": "nx run-many --target=lint"
+    "lint": "nx run-many --target=lint",
+    "lint:fix": "nx run-many --target=lint -- --fix"
   },
   "private": true,
   "devDependencies": {
