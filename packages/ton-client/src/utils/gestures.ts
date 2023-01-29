@@ -1,4 +1,4 @@
-import SwipeDetector from './swipe';
+import PanDetector from './pan';
 import TapDetector from './tap';
 import PinchDetector from './pinch';
 
@@ -9,7 +9,7 @@ class GestureHandler {
   callbackFn: GestureCallbackFn;
 
   tapDetector?: TapDetector;
-  swipeDetector?: SwipeDetector;
+  panDetector?: PanDetector;
   pinchDetector?: PinchDetector;
 
   constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
@@ -43,14 +43,14 @@ class GestureHandler {
 
   handleTouchStart(ev: TouchEvent) {
     this.tapDetector = new TapDetector(ev);
-    this.swipeDetector = new SwipeDetector(ev);
+    this.panDetector = new PanDetector(ev);
     this.pinchDetector = new PinchDetector(ev);
   }
 
   handleTouchMove(ev: TouchEvent) {
     ev.preventDefault();
 
-    this.swipeDetector?.update(ev);
+    this.panDetector?.update(ev);
     this.pinchDetector?.update(ev);
     this.detectGesture();
   }
@@ -59,7 +59,7 @@ class GestureHandler {
     ev.preventDefault();
 
     this.tapDetector?.handleTouchEnd(ev);
-    this.swipeDetector?.handleTouchEnd(ev);
+    this.panDetector?.handleTouchEnd(ev);
     this.pinchDetector?.handleTouchEnd(ev);
     this.detectGesture();
   }
@@ -67,8 +67,8 @@ class GestureHandler {
   detectGesture() {
     if (this.tapDetector?.isTapEvent) this.callbackFn(this.tapDetector.type);
 
-    if (this.swipeDetector?.isSwipeEvent)
-      this.callbackFn(this.swipeDetector.type, this.swipeDetector.distToStart);
+    if (this.panDetector?.isPanEvent)
+      this.callbackFn(this.panDetector.type, this.panDetector.distToStart);
 
     if (this.pinchDetector?.isPinchEvent)
       this.callbackFn(
