@@ -26,7 +26,8 @@ class PinchDetector extends GestureDetector {
     )
       return false;
 
-    if (Math.abs(this.distRelativeToStart) < MIN_PX_MOVE_TOLERANCE) return false;
+    if (Math.abs(this.distRelativeToStart) < MIN_PX_MOVE_TOLERANCE)
+      return false;
 
     this._isPinchEvent = true;
 

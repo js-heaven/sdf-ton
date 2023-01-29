@@ -14,7 +14,7 @@ export default function startSampling(
     tapState: number
   }
 ) {
-  let bufferSize = options.sqrtBufferSize ** 2
+  const bufferSize = options.sqrtBufferSize ** 2
 
   const sampleProgram = compileShaders(gl, sampleVs, sampleFs)
   const sampleUniLocs = makeUniformLocationAccessor(gl, sampleProgram)
@@ -59,15 +59,15 @@ export default function startSampling(
     gl.uniform1f(sampleUniLocs.time, time)
 
     // calc time stuff
-    let bufferDuration = bufferSize / sampleRate
+    const bufferDuration = bufferSize / sampleRate
 
     planeStartAngle = ((time * planeFrequency) % 1) * Math.PI * 2
     planeEndAngle = bufferDuration * planeFrequency * Math.PI * 2 + planeStartAngle
     gl.uniform1f(sampleUniLocs.planeStartAngle, planeStartAngle)
     gl.uniform1f(sampleUniLocs.planeEndAngle, planeEndAngle)
 
-    let startAngle = ((time * frequency) % 1) * Math.PI * 2
-    let endAngle = bufferDuration * frequency * Math.PI * 2 + startAngle
+    const startAngle = ((time * frequency) % 1) * Math.PI * 2
+    const endAngle = bufferDuration * frequency * Math.PI * 2 + startAngle
     gl.uniform1f(sampleUniLocs.startAngle, startAngle)
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
 
@@ -78,7 +78,7 @@ export default function startSampling(
     drawScreenQuad()
 
     // read from framebuffer into array
-    let data = new Float32Array(bufferSize)
+    const data = new Float32Array(bufferSize)
     gl.readPixels(0, 0, options.sqrtBufferSize / 4, options.sqrtBufferSize, gl.RGBA, gl.FLOAT, data)
 
     return data
@@ -123,7 +123,7 @@ export default function startSampling(
             buffer: a.buffer
           }, [a.buffer])
           generatedBufferCounter += 1
-          let assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
+          const assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
           periodLength = sampleRate / frequency
           bufferStartSample = assumedCurrentBuffer * bufferSize
           while(periodStartSample < bufferStartSample) {

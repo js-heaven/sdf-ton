@@ -137,7 +137,7 @@ window.addEventListener('load', () => {
   let aspectRatio = 1
   let nearPlaneSize = 1
   const resize = () => {
-    let pixelRatio = window.devicePixelRatio || 1
+    const pixelRatio = window.devicePixelRatio || 1
     canvas.width = Math.round(canvas.clientWidth * pixelRatio)
     canvas.height = Math.round(canvas.clientHeight * pixelRatio)
     aspectRatio = canvas.width / canvas.height
@@ -154,7 +154,7 @@ window.addEventListener('load', () => {
   window.addEventListener('resize', resize )
 
   // start sampling
-  let {
+  const {
     sampleTex,
     isReady,
     getPlaneSegment,
@@ -167,13 +167,13 @@ window.addEventListener('load', () => {
     tapState: store.tapState
   })
 
-  let lookAt = vec3.fromValues(0, 0, 0)
-  let camPosition = vec3.create()
-  let camStraight = vec3.create()
-  let camRight = vec3.create()
-  let camUp = vec3.create()
+  const lookAt = vec3.fromValues(0, 0, 0)
+  const camPosition = vec3.create()
+  const camStraight = vec3.create()
+  const camRight = vec3.create()
+  const camUp = vec3.create()
 
-  let camR = 5
+  const camR = 5
 
   const updateCamera = () => {
 
@@ -195,8 +195,8 @@ window.addEventListener('load', () => {
     // II in I) y * y * aspectRatio = 1 / 4
     // y = sqrt(1 / 4 / aspectRatio)
 
-    let yScale = Math.sqrt(0.25 / aspectRatio)
-    let xScale = yScale * aspectRatio
+    const yScale = Math.sqrt(0.25 / aspectRatio)
+    const xScale = yScale * aspectRatio
 
     vec3.scale(camRight, camRight, xScale)
     vec3.scale(camUp, camUp, yScale)
@@ -207,7 +207,7 @@ window.addEventListener('load', () => {
   let lastDateNow = Date.now()
 
   const loop = () => {
-    let now = Date.now()
+    const now = Date.now()
     deltaTime = (now - lastDateNow) / 1000
     lastDateNow = now
     time += deltaTime
@@ -237,14 +237,14 @@ function makeDrawScreenQuad(gl: WebGL2RenderingContext) {
   /*
    * ScreenQuad render
    */
-  let quadVao = gl.createVertexArray()
+  const quadVao = gl.createVertexArray()
   gl.bindVertexArray(quadVao)
   gl.enableVertexAttribArray(0)
 
-  let quadBuffer = gl.createBuffer()
+  const quadBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
   {
-    let vertices = [
+    const vertices = [
       -1, -1,
        1, -1,
       -1,  1,
