@@ -5,6 +5,7 @@ import { vec2 } from 'gl-matrix';
 
 export const GESTURE_TYPES = {
   tap: 'tap',
+  pan: 'pan',
   swipe: 'swipe',
   pinch: 'pinch',
   none: 'none',

@@ -44,7 +44,7 @@ float sdf(in vec3 p) {
   //return sdTriPrism(p, vec2(1, 1));
   //return length(p - vec3(0.5,0,0)) - 0.5;
   p = rotateY(p, p.y*1.);
-  return sdBox(p, vec3(touchManipulationState.x)) - 0.1;
+  return sdBox(p, vec3(tapState)) - 0.1;
   // return min(
   //   min(
   //     length(p + vec3(0.5,0,0)) - 0.5,

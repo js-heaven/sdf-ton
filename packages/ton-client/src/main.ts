@@ -85,7 +85,7 @@ window.addEventListener('load', () => {
     gl.uniform2fv(renderUniLocs.swipeA, swipeA)
     gl.uniform2fv(renderUniLocs.swipeB, swipeB)
 
-    gl.uniform3fv(renderUniLocs.touchManipulationState, store.state);
+    gl.uniform1f(renderUniLocs.tapState, store.tapState);
 
     drawScreenQuad()
   }
@@ -164,7 +164,7 @@ window.addEventListener('load', () => {
     radius: 5,
     sqrtBufferSize: SQRT_BUFFER_SIZE,
     numberOfBuffers: NUMBER_OF_BUFFERS,
-    touchManipulationState: store.state
+    tapState: store.tapState
   })
 
   let lookAt = vec3.fromValues(0, 0, 0)

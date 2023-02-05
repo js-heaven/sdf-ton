@@ -11,7 +11,7 @@ export default function startSampling(
     radius: number,
     sqrtBufferSize: number,
     numberOfBuffers: number,
-    touchManipulationState: vec3
+    tapState: number
   }
 ) {
   let bufferSize = options.sqrtBufferSize ** 2
@@ -71,7 +71,7 @@ export default function startSampling(
     gl.uniform1f(sampleUniLocs.startAngle, startAngle)
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
 
-    gl.uniform3fv(sampleUniLocs.touchManipulationState, options.touchManipulationState)
+    gl.uniform1f(sampleUniLocs.tapState, options.tapState)
 
     time += bufferDuration
 

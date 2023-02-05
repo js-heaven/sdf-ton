@@ -3,17 +3,17 @@ import GestureDetector, { GESTURE_TYPES } from './gesture';
 const MIN_PX_MOVE_TOLERANCE = 10;
 const MAX_TOUCHES = 1;
 
-class SwipeDetector extends GestureDetector {
-  private _isSwipeEvent: boolean;
+class PanDetector extends GestureDetector {
+  private _isPanEvent: boolean;
 
   constructor(start: TouchEvent) {
-    super(start, GESTURE_TYPES.swipe);
-    this._isSwipeEvent = false;
+    super(start, GESTURE_TYPES.pan);
+    this._isPanEvent = false;
   }
 
-  get isSwipeEvent(): boolean {
+  get isPanEvent(): boolean {
     if (!this.current) return false;
-    if (this._isSwipeEvent) return true;
+    if (this._isPanEvent) return true;
 
     const startTouchesLength = this.start.changedTouches.length;
     const currentTouchesLength = this.current.changedTouches.length;
@@ -26,7 +26,7 @@ class SwipeDetector extends GestureDetector {
 
     if (this.distToStart < MIN_PX_MOVE_TOLERANCE) return false;
 
-    this._isSwipeEvent = true;
+    this._isPanEvent = true;
     return true;
   }
 
@@ -40,4 +40,4 @@ class SwipeDetector extends GestureDetector {
   }
 }
 
-export default SwipeDetector;
+export default PanDetector;
