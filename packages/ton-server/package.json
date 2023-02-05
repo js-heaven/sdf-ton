@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc index.ts --outDir dist",
     "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
+    "dev": "concurrently \"npx tsc --watch --preserveWatchOutput\" \"nodemon -q dist/index.js\""
   },
   "author": "DC autitory team",
   "dependencies": {

@@ -21,7 +21,8 @@ body {
   bottom: 75%;
   left: 50%;
   transform: translate(-50%, 0%);
-  padding: 3rem; 
+  padding: 1rem; 
+  text-align: center;
   border-radius: 1rem;
   background-color: #fff8;
   border: 0.3rem solid #fffb;
@@ -37,3 +38,4 @@ body {
   box-shadow: 0 0 1.5rem #0002;
   text-shadow: 0 0 0.5rem #0002;
 }
+

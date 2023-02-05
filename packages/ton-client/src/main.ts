@@ -5,6 +5,8 @@ import { vec3 } from 'gl-matrix'
 
 import { compileShaders, makeUniformLocationAccessor } from './utils/shader-tools'
 
+import { ARToolkit, ARController } from 'artoolkit5-js'
+
 import renderVs from './shaders/render.vs'
 import renderFs from './shaders/render.fs'
 
@@ -17,10 +19,38 @@ import GestureHandler, { GestureCallbackFn } from './utils/gestures';
 import Store from './store'
 import { GESTURE_TYPES } from './utils/gesture'
 
+
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
 const SQRT_BUFFER_SIZE = 64
 const BUFFER_SIZE = SQRT_BUFFER_SIZE ** 2
 const NUMBER_OF_BUFFERS = 3
+
+console.log(ARToolkit)
+
+ARController.initWithDimensions(640, 480, '/data/camera_para.dat').then((_controller : any) => { 
+//  let arInfoDiv = document.getElementById('ar-info')
+//  let numOfMarkersSpan = document.getElementById('num-of-markers') 
+//
+//  console.log('controller', controller);
+//  controller.setMatrixCodeType(ARToolkit.AR_MATRIX_CODE_3x3_HAMMING63);
+//  controller.setPatternDetectionMode(controller.artoolkit.AR_MATRIX_CODE_DETECTION);
+//
+//  const FPS = 60;
+//
+//  setInterval(() => {
+//
+//    const result = controller.detectMarker();
+//    if(result !== 0) {
+//      // ARToolkit returning a value !== 0 means an error occured
+//      console.log('Error detecting markers');
+//      return;
+//    }
+//
+//    // get the total number of detected markers in frame
+//    numOfMarkersSpan = controller.getMarkerNum();
+//
+//  }, 1000 / FPS)
+});
 
 window.addEventListener('load', () => {
   // Prepare WebGL stuff

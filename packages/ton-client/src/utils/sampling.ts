@@ -40,7 +40,13 @@ export default function startSampling(
 
   gl.clear(gl.COLOR_BUFFER_BIT)
 
-  const frequency = 55
+  const octave = 1
+  const tone = 3/2 // quinte; 5/4 = terz
+  const frequency = 
+    55 
+    * 2 ** octave
+    * tone
+
   const BPM = 60
   const planeFrequency = 1 / (4 / (BPM / 60))
   let sampleRate = 42000
@@ -92,52 +98,61 @@ export default function startSampling(
   let center = 1
   let normalizeFactor = 1
   const playButton = document.getElementById('play')!
-  playButton.addEventListener('click', () => {
+  playButton.addEventListener('click', async () => {
     playButton.style.display = 'none'
 
     const audioContext = new AudioContext();
     sampleRate = audioContext.sampleRate
-    audioContext.audioWorklet.addModule("./worklet.js").then(() => {
-      const gainNode = new GainNode(audioContext, {gain: 0.0})
-      gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
-      gainNode.gain.linearRampToValueAtTime(1.0, audioContext.currentTime + 2)
-      gainNode.connect(audioContext.destination)
-      const continousBufferNode = new AudioWorkletNode(
-        audioContext,
-        "continous-buffer",
-        {
-          processorOptions: {
-            sqrtBufferSize: options.sqrtBufferSize,
-            numberOfBuffers: options.numberOfBuffers,
-            avgFactor: 0.00001,
-            maxValue: options.radius
-          }
-        }
-      );
-      continousBufferNode.connect(gainNode);
-      continousBufferNode.port.onmessage = (event) => {
-        if(event.data.type == 'requestBuffer') {
-          const a = samplePass()
-          continousBufferNode.port.postMessage({
-            type: 'buffer',
-            buffer: a.buffer
-          }, [a.buffer])
-          generatedBufferCounter += 1
-          let assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
-          periodLength = sampleRate / frequency
-          bufferStartSample = assumedCurrentBuffer * bufferSize
-          while(periodStartSample < bufferStartSample) {
-            periodStartSample += periodLength
-          }
-        }
-        if(event.data.type == 'normalizeInfo') {
-          center = event.data.center
-          normalizeFactor = event.data.normalizeFactor
+    await audioContext.audioWorklet.addModule("./worklet.js")
+
+    const gainNode = new GainNode(audioContext, {gain: 0.0})
+    const filterNode = audioContext.createBiquadFilter();
+    filterNode.type = 'bandpass';
+    filterNode.frequency.value = frequency * 2;
+    filterNode.Q.value = 1.;
+    const reverbNode = await createReverbNode(audioContext)
+
+    gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
+    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 2)
+    gainNode.connect(reverbNode)
+    
+    filterNode.connect(reverbNode)
+    reverbNode.connect(audioContext.destination)
+    const continousBufferNode = new AudioWorkletNode(
+      audioContext,
+      "continous-buffer",
+      {
+        processorOptions: {
+          sqrtBufferSize: options.sqrtBufferSize,
+          numberOfBuffers: options.numberOfBuffers,
+          avgFactor: 0.00001,
+          maxValue: options.radius
         }
       }
-      continousBufferNode.port.postMessage({
-        type: 'start'
-      })
+    );
+    continousBufferNode.connect(gainNode);
+    continousBufferNode.port.onmessage = (event) => {
+      if(event.data.type == 'requestBuffer') {
+        const a = samplePass()
+        continousBufferNode.port.postMessage({
+          type: 'buffer',
+          buffer: a.buffer
+        }, [a.buffer])
+        generatedBufferCounter += 1
+        let assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
+        periodLength = sampleRate / frequency
+        bufferStartSample = assumedCurrentBuffer * bufferSize
+        while(periodStartSample < bufferStartSample) {
+          periodStartSample += periodLength
+        }
+      }
+      if(event.data.type == 'normalizeInfo') {
+        center = event.data.center
+        normalizeFactor = event.data.normalizeFactor
+      }
+    }
+    continousBufferNode.port.postMessage({
+      type: 'start'
     })
   })
 
@@ -148,4 +163,16 @@ export default function startSampling(
     getPeriodBeginAndLength: () => [periodStartSample - bufferStartSample, periodLength],
     getNormalizeInfo: () => ({center, normalizeFactor})
   }
+}
+
+async function loadImpulseBuffer(ac: AudioContext, url: string) {
+    return fetch(url)
+    .then(response => response.arrayBuffer())
+    .then(arrayBuffer => ac.decodeAudioData(arrayBuffer))
+}
+
+async function createReverbNode(ac: AudioContext) {
+  const convolver = ac.createConvolver()
+  convolver.buffer = await loadImpulseBuffer(ac, 'impulse.wav')
+  return convolver
 }

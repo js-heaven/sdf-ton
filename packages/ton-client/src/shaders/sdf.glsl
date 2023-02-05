@@ -40,11 +40,47 @@ float sdTriPrism( vec3 p, vec2 h )
   return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
 }
 
+float opSmoothUnion( float d1, float d2, float k )
+{
+    float h = max(k-abs(d1-d2),0.0);
+    return min(d1, d2) - h*h*0.25/k;
+}
+
+float sdCappedTorus(in vec3 p, in vec2 sc, in float ra, in float rb)
+{
+  p.x = abs(p.x);
+  float k = (sc.y*p.x>sc.x*p.y) ? dot(p.xy,sc) : length(p.xy);
+  return sqrt( dot(p,p) + ra*ra - 2.0*ra*k ) - rb;
+}
+
 float sdf(in vec3 p) {
   //return sdTriPrism(p, vec2(1, 1));
   //return length(p - vec3(0.5,0,0)) - 0.5;
-  p = rotateY(p, p.y*1.);
-  return sdBox(p, vec3(touchManipulationState.x)) - 0.1;
+
+//  // A
+//  p = rotateY(p, p.y*1.);
+//  return sdBox(p, vec3(touchManipulationState.x)) - 0.1;
+
+//  // B
+//  vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
+//
+//  vec3 pAlt = vec3(p.z, -p.y, -p.x); 
+//
+//  return min(
+//    min(
+//      sdCappedTorus(p, c, 1.8, 0.2) - 0.1, 
+//      sdCappedTorus(pAlt, c, 1.8, 0.2) - 0.1
+//    ), 
+//    opSmoothUnion(
+//      length(p - 0.4) - 0.7, 
+//      length(p + 0.4) - 0.7, 
+//      0.5
+//    )
+//  );
+
+  // C
+  return length(p + vec3(0.5, 0, 0)) - 1. + 0.3 * diamonds(p, 4.);
+
   // return min(
   //   min(
   //     length(p + vec3(0.5,0,0)) - 0.5,
