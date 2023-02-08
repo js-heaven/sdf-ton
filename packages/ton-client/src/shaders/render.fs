@@ -52,33 +52,31 @@ void main() {
   vec3 normal;
   for (int s = 0; s < 50; s++) {
     d = sdf(pos) * 0.5;
-    if(d < 0.01) {
-      a = 0.1 + pow(0.9, z);
-      b = clamp(length(pos), 0., 1.);
-
-      // vec3 stepVis = float(s) * vec3(0.05);
-      normal = getNormal(pos);
-      color = 0.5 * (
-        mix(colorInside, colorOutside, b) +
-        clamp(pos * 0.5 + 0.5, 0., 1.)
-      );
-      color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
-      // see xournalpp sketch
-      bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;
-      bool s2 = pos.x * swipeB.y <= swipeB.x * pos.y;
-      if(s1 && s2 || !s1 && !s2) {
-        color += scanColor;
-      }
-      rgb = mix(rgb, color, a);
+    if(d < 0. || d > 20.) {
       break;
-    }
-    else if (d > 20.) {
-      // we are on our way into space
-      break;
-    }
-    d += 0.003;
+    } 
     pos += rayDir * d;
     z += d;
+  }
+
+  if(d < 0.1) {
+    a = 0.1 + pow(0.9, z);
+    b = clamp(length(pos), 0., 1.);
+
+    // vec3 stepVis = float(s) * vec3(0.05);
+    normal = getNormal(pos);
+    color = 0.5 * (
+      mix(colorInside, colorOutside, b) +
+      clamp(pos * 0.5 + 0.5, 0., 1.)
+    );
+    color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
+    // see xournalpp sketch
+    bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;
+    bool s2 = pos.x * swipeB.y <= swipeB.x * pos.y;
+    if(s1 && s2 || !s1 && !s2) {
+      color += scanColor;
+    }
+    rgb = mix(rgb, color, a);
   }
 
   rgba = vec4(rgb, 1.0);
