@@ -100,7 +100,7 @@ export default function startSampling(
     audioContext.audioWorklet.addModule("./worklet.js").then(() => {
       const gainNode = new GainNode(audioContext, {gain: 0.0})
       gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
-      gainNode.gain.linearRampToValueAtTime(1.0, audioContext.currentTime + 2)
+      gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 2)
       gainNode.connect(audioContext.destination)
       const continousBufferNode = new AudioWorkletNode(
         audioContext,
@@ -114,7 +114,29 @@ export default function startSampling(
           }
         }
       );
-      continousBufferNode.connect(gainNode);
+      const filter = new BiquadFilterNode(audioContext, options);
+      filter.type = 'lowpass';
+      filter.connect(gainNode);
+
+      const distortion = new WaveShaperNode(audioContext);
+      function makeDistortionCurve(amount) {
+        const k = typeof amount === "number" ? amount : 50;
+        const n_samples = 44100;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+
+          for (let i = 0; i < n_samples; i++) {
+            const x = (i * 2) / n_samples - 1;
+            curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+          }
+      return curve;
+      }
+
+      distortion.curve = makeDistortionCurve(100);
+      distortion.oversample = "4x";
+      distortion.connect(filter);
+
+      continousBufferNode.connect(distortion);
       continousBufferNode.port.onmessage = (event) => {
         if(event.data.type == 'requestBuffer') {
           const a = samplePass()

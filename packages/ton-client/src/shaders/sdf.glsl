@@ -8,6 +8,15 @@ vec3 rotateY(vec3 v, float angle) {
     return m * v;
 }
 
+vec3 rotateX(vec3 point, float angle) {
+  mat4 rotationMatrix = mat4(1.0);
+  rotationMatrix[1][1] = cos(angle);
+  rotationMatrix[1][2] = -sin(angle);
+  rotationMatrix[2][1] = sin(angle);
+  rotationMatrix[2][2] = cos(angle);
+  return (rotationMatrix * vec4(point, 1.0)).xyz;
+}
+
 float diamonds(vec3 p, float scale) {
   p *= scale;
   return (
@@ -40,11 +49,26 @@ float sdTriPrism( vec3 p, vec2 h )
   return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
 }
 
+float sdCutHollowSphere( vec3 p, float r, float h, float t )
+{
+  // sampling independent computations (only depend on shape)
+  float w = sqrt(r*r-h*h);
+  
+  // sampling dependant computations
+  vec2 q = vec2( length(p.xz), p.y );
+  return ((h*q.x<w*q.y) ? length(q-vec2(w,h)) : 
+                          abs(length(q)-r) ) - t;
+}
+
 float sdf(in vec3 p) {
   //return sdTriPrism(p, vec2(1, 1));
   //return length(p - vec3(0.5,0,0)) - 0.5;
   p = rotateY(p, p.y*1.);
-  return sdBox(p, vec3(tapState)) - 0.1;
+  p = rotateY(p, p.y*1.);
+  p = rotateX(p, p.x*1.);
+  //return sdBox(p, vec3(tapState)) - 0.1;
+  return sdTorus(p, vec2(0.4, 0.1)) - 0.1;
+  //return sdCutHollowSphere(p, 0.8, 0.3, 0.4);
   // return min(
   //   min(
   //     length(p + vec3(0.5,0,0)) - 0.5,
