@@ -1,5 +1,5 @@
 import './style.css'
-import './utils/web-socket'
+// import './utils/web-socket'
 
 import { vec3 } from 'gl-matrix'
 
@@ -28,12 +28,29 @@ window.addEventListener('load', () => {
   // Prepare WebGL stuff
   const cam = document.getElementById('camera') as HTMLVideoElement
 
+  cam.addEventListener('play', () => {
+    ARToolkit.ARController.initWithImage(cam, '/camera_para.dat').then((controller: any) => { 
+      controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
+      controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
+
+      const FPS = 60;
+      setInterval(() => {
+        controller.detectMarker();
+        let num = controller.getMarkerNum()
+        let info 
+        for(let i = 0; i < num; i++) {
+          info = controller.getMarker(i)
+          if(info.idMatrix != -1) {
+            console.log('matrix marker found. Id =', info.idMatrix)
+          }
+        }
+      }, 1000 / FPS);
+    });
+  });
+
   navigator.mediaDevices.getUserMedia({video: { facingMode: "environment" }}) 
     .then(function(stream) {
       cam.srcObject = stream
-      ARToolkit.ARController.initWithImage(cam, '/camera_para.dat').then((controller: any) => { 
-        console.log('ARController initialized', controller)
-      });
     })
     .catch(function(err) {
       console.log("An error occurred! " + err);
