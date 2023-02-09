@@ -1,7 +1,7 @@
 import './style.css'
 // import './utils/web-socket'
 
-import { vec3 } from 'gl-matrix'
+import { vec3, mat4 } from 'gl-matrix'
 
 import { compileShaders, makeUniformLocationAccessor } from './utils/shader-tools'
 
@@ -9,6 +9,9 @@ import ARToolkit from 'artoolkit5-js'
 
 import renderVs from './shaders/render.vs'
 import renderFs from './shaders/render.fs'
+
+import cubeVs from './shaders/cube.vs'
+import cubeFs from './shaders/cube.fs'
 
 import visualizeVs from './shaders/visualize.vs'
 import visualizeFs from './shaders/visualize.fs'
@@ -27,24 +30,16 @@ const NUMBER_OF_BUFFERS = 3
 window.addEventListener('load', () => {
   // Prepare WebGL stuff
   const cam = document.getElementById('camera') as HTMLVideoElement
+  let arController: any = undefined
 
+  let cameraMatrix: mat4 | undefined 
   cam.addEventListener('play', () => {
     ARToolkit.ARController.initWithImage(cam, '/camera_para.dat').then((controller: any) => { 
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
-
-      const FPS = 60;
-      setInterval(() => {
-        controller.detectMarker();
-        let num = controller.getMarkerNum()
-        let info 
-        for(let i = 0; i < num; i++) {
-          info = controller.getMarker(i)
-          if(info.idMatrix != -1) {
-            console.log('matrix marker found. Id =', info.idMatrix)
-          }
-        }
-      }, 1000 / FPS);
+      arController = controller
+      let cameraMatrixF64 = arController.getCameraMatrix()
+      cameraMatrix = mat4.clone(cameraMatrixF64)
     });
   });
 
@@ -53,7 +48,7 @@ window.addEventListener('load', () => {
       cam.srcObject = stream
     })
     .catch(function(err) {
-      console.log("An error occurred! " + err);
+      console.log("Error when using camera: " + err);
     });
 
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
@@ -62,7 +57,7 @@ window.addEventListener('load', () => {
     // depth: true,
     // antialias: false,
     premultipliedAlpha: false,
-    preserveDrawingBuffer: true
+    // preserveDrawingBuffer: true
   })
   if(!gl) {
     console.error(`WebGL2 is not supported`)
@@ -83,6 +78,7 @@ window.addEventListener('load', () => {
   // Prepare Audio Webworker
 
   const drawScreenQuad = makeDrawScreenQuad(gl)
+  const drawCube = makeDrawCube(gl)
 
   const renderProgram = compileShaders(gl, renderVs, renderFs)
   const renderUniLocs = makeUniformLocationAccessor(gl, renderProgram)
@@ -90,12 +86,9 @@ window.addEventListener('load', () => {
   let swipeA = [1,0]
   let swipeB = [1,0]
 
-  const renderPass = () => {
+  const renderShape = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
-
-    gl.clearColor(0, 0, 0, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
 
     gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.BLEND)
@@ -165,6 +158,32 @@ window.addEventListener('load', () => {
     drawScreenQuad()
   }
 
+  const cubeProgram = compileShaders(gl, cubeVs, cubeFs)
+  const cubeUniLocs = makeUniformLocationAccessor(gl, cubeProgram)
+  const mvp = mat4.create()
+  const projection = mat4.create()
+  mat4.perspective(projection, Math.PI / 3, canvas.height / canvas.width, 0.1, 1000)
+  const renderCube = (modelView: mat4) => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.viewport(0, 0, canvas.width, canvas.height)
+
+    gl.enable(gl.BLEND)
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    );
+
+    gl.useProgram(cubeProgram)
+    gl.disable(gl.CULL_FACE)
+
+    mat4.mul(mvp, projection, modelView)
+
+    gl.uniformMatrix4fv(cubeUniLocs.mvp, false, mvp)
+
+    drawCube()
+  }
+
+
   // resize
   let aspectRatio = 1
   let nearPlaneSize = 1
@@ -226,7 +245,6 @@ window.addEventListener('load', () => {
     // II) x = y * aspectRatio
     // II in I) y * y * aspectRatio = 1 / 4
     // y = sqrt(1 / 4 / aspectRatio)
-
     let yScale = Math.sqrt(0.25 / aspectRatio)
     let xScale = yScale * aspectRatio
 
@@ -234,11 +252,62 @@ window.addEventListener('load', () => {
     vec3.scale(camUp, camUp, yScale)
   }
 
+  let identity = mat4.create()
+  mat4.identity(identity) 
+  class Shape {
+    visible: boolean
+    markerTransformMat: Float64Array
+    transformMat: mat4
+    glMatrix: mat4 
+    constructor() {
+      this.visible = false
+      this.markerTransformMat = new Float64Array(12) 
+      this.transformMat = mat4.create()
+      this.glMatrix = mat4.create()
+    }
+  }
+  let numberOfShapes = 8
+  let shapes: Shape[] = new Array(numberOfShapes).fill(0).map(() => new Shape())
+  const updateAR = () => {
+    arController.detectMarker();
+    let num = arController.getMarkerNum()
+    let info, id, shape, transformation
+    let visibleShapes = new Set()
+    for(let i = 0; i < num; i++) {
+      info = arController.getMarker(i)
+      id = info.idMatrix
+      if(id != -1) {
+        visibleShapes.add(id)
+        shape = shapes[id]
+        transformation = shape.markerTransformMat
+        const width = 1
+        if(shape.visible) { 
+          arController.getTransMatSquareCont(i, width, transformation, transformation)
+        } else {
+          arController.getTransMatSquare(i, width, transformation) 
+        }
+        arController.transMatToGLMat(transformation, shape.transformMat) 
+        arController.arglCameraViewRHf(shape.transformMat, shape.glMatrix) 
+      }     
+    }
+    for(let i = 0; i < numberOfShapes; i++) {
+      if(visibleShapes.has(i)) {
+        shapes[i].visible = true; 
+      } else {
+        shapes[i].visible = false
+      }
+    }
+  }
+
   let time = 0
   let deltaTime = 0
   let lastDateNow = Date.now()
 
   const loop = () => {
+    if (arController !== undefined) {
+      updateAR()
+    }
+
     let now = Date.now()
     deltaTime = (now - lastDateNow) / 1000
     lastDateNow = now
@@ -246,7 +315,24 @@ window.addEventListener('load', () => {
 
     updateCamera()
 
-    renderPass()
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    // renderShape()
+
+    // let modelView = mat4.create()
+    // mat4.lookAt(modelView, [0, 0, -40], [0, 0, 0], [0, 1, 0])
+    // let rotation = mat4.create()
+    // mat4.fromRotation(rotation, time, [0,1,0])
+    // mat4.mul(modelView, modelView, rotation)
+    // renderCube(modelView)
+
+    for(let i = 0; i < numberOfShapes; i++) {
+      if(shapes[i].visible) {
+        renderCube(shapes[i].glMatrix)
+      }
+    }
+
     if (isReady()) {
       visualizePass()
     }
@@ -289,6 +375,71 @@ function makeDrawScreenQuad(gl: WebGL2RenderingContext) {
   return () => {
     gl.bindVertexArray(quadVao)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+  }
+}
+
+function makeDrawCube(gl: WebGL2RenderingContext) {
+  /*
+   * ScreenQuad render
+   */
+  let cubeVao = gl.createVertexArray()
+  gl.bindVertexArray(cubeVao)
+  gl.enableVertexAttribArray(0)
+
+  let cubeBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer)
+  {
+    let vertices = [
+       +1,+1,+1, 
+       +1,+1,-1, 
+       +1,-1,+1, 
+       +1,-1,+1, 
+       +1,+1,-1, 
+       +1,-1,-1, 
+
+       +1,+1,+1, 
+       -1,+1,+1, 
+       +1,+1,-1, 
+       +1,+1,-1, 
+       -1,+1,+1, 
+       -1,+1,-1, 
+
+       +1,+1,+1, 
+       -1,+1,+1, 
+       +1,-1,+1, 
+       +1,-1,+1, 
+       -1,+1,+1, 
+       -1,-1,+1, 
+
+       +1,+1,+1, 
+       +1,+1,+1, 
+       +1,+1,+1, 
+       +1,+1,+1, 
+       +1,+1,+1, 
+       +1,+1,+1, 
+
+       -1,-1,-1, 
+       +1,-1,-1, 
+       -1,-1,+1, 
+       -1,-1,+1, 
+       +1,-1,-1, 
+       +1,-1,+1, 
+
+       -1,-1,-1, 
+       +1,-1,-1, 
+       -1,+1,-1, 
+       -1,+1,-1, 
+       +1,-1,-1, 
+       +1,+1,-1, 
+    ]
+      
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0)
+  }
+
+  return () => {
+    gl.bindVertexArray(cubeVao)
+    gl.drawArrays(gl.TRIANGLES, 0, 6 * 3 * 2) // 6 faces
   }
 }
 
