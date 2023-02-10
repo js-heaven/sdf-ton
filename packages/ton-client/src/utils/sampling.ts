@@ -115,6 +115,7 @@ export default function startSampling(
         }
       );
       const filter = new BiquadFilterNode(audioContext, options);
+      //filter.type = 'lowpass';
       filter.type = 'lowpass';
       filter.connect(gainNode);
 
@@ -132,7 +133,7 @@ export default function startSampling(
       return curve;
       }
 
-      distortion.curve = makeDistortionCurve(100);
+      distortion.curve = makeDistortionCurve(70);
       distortion.oversample = "4x";
       distortion.connect(filter);
 

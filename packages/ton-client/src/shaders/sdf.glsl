@@ -17,6 +17,44 @@ vec3 rotateX(vec3 point, float angle) {
   return (rotationMatrix * vec4(point, 1.0)).xyz;
 }
 
+vec3 opCheapBend(vec3 p , float k)
+{
+    float c = cos(k*p.x);
+    float s = sin(k*p.x);
+    mat2  m = mat2(c,-s,s,c);
+    return vec3(m*p.xy,p.z);
+}
+
+vec3 opTwist(vec3 p , float k)
+{
+    float c = cos(k*p.y);
+    float s = sin(k*p.y);
+    mat2  m = mat2(c,-s,s,c);
+    vec3 q = vec3(m*p.xz,p.y);
+    return vec3(q.xz, q.y);
+}
+
+
+float opDisplace(vec3 p, float h, float k)
+{
+  return h + sin(20.*p.x)*sin(20.*p.y)*sin(20.*p.z)/k;
+}
+
+float opSmoothUnion(float d1, float d2, float k) 
+{
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h); 
+}
+
+
+vec3 opElongate(vec3 p,  float k)
+{
+    vec3 h = vec3(0.1, 0.1, 0.1) * k;
+    vec3 q = p - clamp( p, -h, h );
+    return q;
+}
+
+
 float diamonds(vec3 p, float scale) {
   p *= scale;
   return (
@@ -60,15 +98,50 @@ float sdCutHollowSphere( vec3 p, float r, float h, float t )
                           abs(length(q)-r) ) - t;
 }
 
+float sdLink( vec3 p, float le, float r1, float r2 )
+{
+  vec3 q = vec3( p.x, max(abs(p.y)-le,0.0), p.z );
+  return length(vec2(length(q.xy)-r1,q.z)) - r2;
+}
+
+
 float sdf(in vec3 p) {
-  //return sdTriPrism(p, vec2(1, 1));
-  //return length(p - vec3(0.5,0,0)) - 0.5;
-  p = rotateY(p, p.y*1.);
-  p = rotateY(p, p.y*1.);
-  p = rotateX(p, p.x*1.);
-  //return sdBox(p, vec3(tapState)) - 0.1;
-  return sdTorus(p, vec2(0.4, 0.1)) - 0.1;
-  //return sdCutHollowSphere(p, 0.8, 0.3, 0.4);
+  const float bend = 0.9;
+  const float twist = 5.2;
+  const float displace = 15.;
+  const float elongate = 2.;
+
+  /*
+  // Vector Transformation
+  */
+
+  //p = rotateY(p, p.y*1.);
+  //p = rotateX(p, p.x*1.);
+  //p = opCheapBend(p, bend);
+  //p = opTwist(p, twist);
+  p = opElongate(p, elongate);
+
+
+  /*
+  // Define object
+  */
+
+  float res = sdLink(p, 0.6, 0.4, 0.2);
+  //float res = sdBox(p, vec3(tapState)) - 0.1;
+  //float res1 = sdTorus(p, vec2(tapState)) - 0.1;
+  //float res = sdCutHollowSphere(p, 0.8, 0.3, 0.4);
+  //float res = sdTriPrism(p, vec2(1, 1));
+  
+
+  /*
+  // Float transformation
+  */
+
+  res = opDisplace(p, res, displace);
+  //res = opSmoothUnion(res, res1, 0.02);
+
+  return res;
+
   // return min(
   //   min(
   //     length(p + vec3(0.5,0,0)) - 0.5,
