@@ -7,8 +7,11 @@ import { compileShaders, makeUniformLocationAccessor } from './utils/shader-tool
 
 import ARToolkit from 'artoolkit5-js'
 
-import renderVs from './shaders/render.vs'
-import renderFs from './shaders/render.fs'
+import shapeVs from './shaders/shape.vs'
+import shapeFs from './shaders/shape.fs'
+
+import cubedShapeVs from './shaders/cubedShape.vs'
+import cubedShapeFs from './shaders/cubedShape.fs'
 
 import cubeVs from './shaders/cube.vs'
 import cubeFs from './shaders/cube.fs'
@@ -85,7 +88,7 @@ window.addEventListener('load', () => {
   const drawScreenQuad = makeDrawScreenQuad(gl)
   const drawCube = makeDrawCube(gl)
 
-  const renderProgram = compileShaders(gl, renderVs, renderFs)
+  const renderProgram = compileShaders(gl, shapeVs, shapeFs)
   const renderUniLocs = makeUniformLocationAccessor(gl, renderProgram)
 
   let swipeA = [1,0]
@@ -95,7 +98,6 @@ window.addEventListener('load', () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
 
-    gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.BLEND)
 
     gl.useProgram(renderProgram)
@@ -167,8 +169,7 @@ window.addEventListener('load', () => {
   const cubeUniLocs = makeUniformLocationAccessor(gl, cubeProgram)
   const mvp = mat4.create()
   const modelMatrix = mat4.create()
-  mat4.fromTranslation(modelMatrix, [0., 0., 0.5])
-  mat4.scale(modelMatrix, modelMatrix, [0.5, 0.5, 0.5])
+  mat4.fromTranslation(modelMatrix, [0., 0., 1])
   const modelViewMatrix = mat4.create() 
   const renderCube = (viewMatrix: mat4, color: number[]) => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -188,6 +189,39 @@ window.addEventListener('load', () => {
 
     gl.uniformMatrix4fv(cubeUniLocs.mvp, false, mvp)
     gl.uniform3fv(cubeUniLocs.color, color)
+
+    drawCube()
+  }
+
+  const cubedShapeProgram = compileShaders(gl, cubedShapeVs, cubedShapeFs)
+  const cubedShapeUniLocs = makeUniformLocationAccessor(gl, cubedShapeProgram)
+  const inverseModelViewMatrix = mat4.create()
+  const renderCubedShape = (viewMatrix: mat4) => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.viewport(0, 0, canvas.width, canvas.height)
+
+    gl.enable(gl.DEPTH_TEST)
+    gl.enable(gl.CULL_FACE)
+
+    gl.enable(gl.BLEND)
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    );
+
+    gl.useProgram(cubedShapeProgram)
+
+    mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
+    mat4.invert(inverseModelViewMatrix, modelViewMatrix)
+
+    mat4.mul(mvp, cameraMatrix!, modelViewMatrix)
+
+    gl.uniformMatrix4fv(cubedShapeUniLocs.mvp, false, mvp)
+
+    let camPosition = vec3.create()
+    vec3.transformMat4(camPosition, camPosition, inverseModelViewMatrix)
+
+    gl.uniform3fv(cubedShapeUniLocs.camPosition, camPosition)
 
     drawCube()
   }
@@ -308,7 +342,7 @@ window.addEventListener('load', () => {
     markerTransformMat: Float64Array
     transformMat: mat4
     glMatrix: mat4 
-    color: [number, number, number]
+    color: number[]
     constructor() {
       this.visible = false
       this.markerTransformMat = new Float64Array(12) 
@@ -384,7 +418,8 @@ window.addEventListener('load', () => {
 
     for(let i = 0; i < numberOfShapes; i++) {
       if(shapes[i].visible) {
-        renderCube(shapes[i].glMatrix, shapes[i].color)
+        //renderCube(shapes[i].glMatrix, shapes[i].color)
+        renderCubedShape(shapes[i].glMatrix) 
       }
     }
 
@@ -445,47 +480,42 @@ function makeDrawCube(gl: WebGL2RenderingContext) {
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer)
   {
     let vertices = [
-       +1,+1,+1, 
-       +1,+1,-1, 
-       +1,-1,+1, 
-       +1,-1,+1, 
-       +1,+1,-1, 
-       +1,-1,-1, 
-
-       +1,+1,+1, 
-       -1,+1,+1, 
-       +1,+1,-1, 
-       +1,+1,-1, 
-       -1,+1,+1, 
-       -1,+1,-1, 
-
-       +1,+1,+1, 
-       -1,+1,+1, 
-       +1,-1,+1, 
-       +1,-1,+1, 
-       -1,+1,+1, 
-       -1,-1,+1, 
-
-       +1,+1,+1, 
-       +1,+1,+1, 
-       +1,+1,+1, 
-       +1,+1,+1, 
-       +1,+1,+1, 
-       +1,+1,+1, 
-
-       -1,-1,-1, 
-       +1,-1,-1, 
-       -1,-1,+1, 
-       -1,-1,+1, 
-       +1,-1,-1, 
-       +1,-1,+1, 
-
-       -1,-1,-1, 
-       +1,-1,-1, 
-       -1,+1,-1, 
-       -1,+1,-1, 
-       +1,-1,-1, 
-       +1,+1,-1, 
+      -1,-1,-1, // triangle 1 : begin
+      -1,-1, 1,
+      -1, 1, 1, // triangle 1 : end
+      1, 1,-1, // triangle 2 : begin
+      -1,-1,-1,
+      -1, 1,-1, // triangle 2 : end
+      1,-1, 1,
+      -1,-1,-1,
+      1,-1,-1,
+      1, 1,-1,
+      1,-1,-1,
+      -1,-1,-1,
+      -1,-1,-1,
+      -1, 1, 1,
+      -1, 1,-1,
+      1,-1, 1,
+      -1,-1, 1,
+      -1,-1,-1,
+      -1, 1, 1,
+      -1,-1, 1,
+      1,-1, 1,
+      1, 1, 1,
+      1,-1,-1,
+      1, 1,-1,
+      1,-1,-1,
+      1, 1, 1,
+      1,-1, 1,
+      1, 1, 1,
+      1, 1,-1,
+      -1, 1,-1,
+      1, 1, 1,
+      -1, 1,-1,
+      -1, 1, 1,
+      1, 1, 1,
+      -1, 1, 1,
+      1,-1, 1
     ]
       
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)

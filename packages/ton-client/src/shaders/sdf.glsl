@@ -61,25 +61,25 @@ float sdf(in vec3 p) {
 //  p = rotateY(p, p.y*1.);
 //  return sdBox(p, vec3(touchManipulationState.x)) - 0.1;
 
-//  // B
-//  vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
-//
-//  vec3 pAlt = vec3(p.z, -p.y, -p.x); 
-//
-//  return min(
-//    min(
-//      sdCappedTorus(p, c, 1.8, 0.2) - 0.1, 
-//      sdCappedTorus(pAlt, c, 1.8, 0.2) - 0.1
-//    ), 
-//    opSmoothUnion(
-//      length(p - 0.4) - 0.7, 
-//      length(p + 0.4) - 0.7, 
-//      0.5
-//    )
-//  );
+  // B
+  vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
+
+  vec3 pAlt = vec3(p.z, -p.y, -p.x); 
+
+  return min(
+    min(
+      sdCappedTorus(p, c, 0.85, 0.1) - 0.05, 
+      sdCappedTorus(pAlt, c, 0.85, 0.1) - 0.05
+    ), 
+    opSmoothUnion(
+      length(p - 0.2) - 0.35, 
+      length(p + 0.2) - 0.35, 
+      0.25
+    )
+  );
 
   // C
-  return length(p + vec3(0.5, 0, 0)) - 1. + 0.3 * diamonds(p, 4.);
+  // return length(p + vec3(0.3, 0, 0)) - 0.7 + 0.2 * diamonds(p, 7.);
 
   // return min(
   //   min(
