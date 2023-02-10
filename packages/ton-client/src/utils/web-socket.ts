@@ -1,8 +1,13 @@
 import { io } from 'socket.io-client';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
-const socket = io(backendUrl);
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-socket.on('connect', () => {
-  console.log(socket.id);
-});
+export default () => {
+  const socket = io(BACKEND_URL);
+
+  socket.on('connect', () => {
+    console.log(socket.id);
+  });
+
+  return socket;
+};

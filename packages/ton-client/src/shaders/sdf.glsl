@@ -1,3 +1,5 @@
+uniform float twist;
+
 // forward declarations for the imported noise function to get correct line numbers
 float snoise(vec4);
 
@@ -43,7 +45,7 @@ float sdTriPrism( vec3 p, vec2 h )
 float sdf(in vec3 p) {
   //return sdTriPrism(p, vec2(1, 1));
   //return length(p - vec3(0.5,0,0)) - 0.5;
-  p = rotateY(p, p.y*1.);
+  p = rotateY(p, p.y * 3. * twist);
   return sdBox(p, vec3(tapState)) - 0.1;
   // return min(
   //   min(
