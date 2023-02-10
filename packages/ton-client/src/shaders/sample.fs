@@ -22,8 +22,10 @@ in vec2 uv;
 // so we need to do 4 samples per fragment :)
 out vec4 rgba;
 
+
+#include sdf.glsl
 // forward declaration for the imported sdf
-float sdf(vec3);
+// float sdf(vec3);
 
 void main() {
   vec4 samples;
@@ -67,5 +69,3 @@ void main() {
   }
   rgba = samples;
 }
-
-#include sdf.glsl

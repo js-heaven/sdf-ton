@@ -1,5 +1,4 @@
 import './style.css'
-import './utils/web-socket'
 
 import { vec3 } from 'gl-matrix'
 
@@ -13,9 +12,12 @@ import visualizeFs from './shaders/visualize.fs'
 
 import startSampling from './utils/sampling'
 
-import GestureHandler, { GestureCallbackFn } from './utils/gestures';
-import Store from './store'
-import { GESTURE_TYPES } from './utils/gesture'
+import GestureHandler from './utils/gesture-detection';
+import Store from './store';
+import createSocket from './utils/web-socket';
+import { GestureCallbackFn } from './utils/gesture-detection/gesture-detector';
+import TapDetector from './utils/gesture-detection/tap';
+import PanDetector from './utils/gesture-detection/pan';
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
 const SQRT_BUFFER_SIZE = 64
@@ -46,7 +48,8 @@ window.addEventListener('load', () => {
   }
 
   // create State
-  const store = new Store();
+  const socket = createSocket();
+  const store = new Store(socket);
 
   // Prepare Audio Webworker
 
@@ -86,6 +89,7 @@ window.addEventListener('load', () => {
     gl.uniform2fv(renderUniLocs.swipeB, swipeB)
 
     gl.uniform1f(renderUniLocs.tapState, store.tapState);
+    gl.uniform1f(renderUniLocs.twist, store.twist);
 
     drawScreenQuad()
   }
@@ -137,12 +141,15 @@ window.addEventListener('load', () => {
   let aspectRatio = 1
   let nearPlaneSize = 1
   const resize = () => {
-    let pixelRatio = window.devicePixelRatio || 1
+    const pixelRatio = window.devicePixelRatio || 1
     canvas.width = Math.round(canvas.clientWidth * pixelRatio)
     canvas.height = Math.round(canvas.clientHeight * pixelRatio)
     aspectRatio = canvas.width / canvas.height
 
     nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
+
+    store.dimensions.height = canvas.clientHeight;
+    store.dimensions.width = canvas.clientWidth;
 
     gl.useProgram(renderProgram)
 
@@ -154,7 +161,7 @@ window.addEventListener('load', () => {
   window.addEventListener('resize', resize )
 
   // start sampling
-  let {
+  const {
     sampleTex,
     isReady,
     getPlaneSegment,
@@ -167,13 +174,13 @@ window.addEventListener('load', () => {
     tapState: store.tapState
   })
 
-  let lookAt = vec3.fromValues(0, 0, 0)
-  let camPosition = vec3.create()
-  let camStraight = vec3.create()
-  let camRight = vec3.create()
-  let camUp = vec3.create()
+  const lookAt = vec3.fromValues(0, 0, 0)
+  const camPosition = vec3.create()
+  const camStraight = vec3.create()
+  const camRight = vec3.create()
+  const camUp = vec3.create()
 
-  let camR = 5
+  const camR = 5
 
   const updateCamera = () => {
 
@@ -195,8 +202,8 @@ window.addEventListener('load', () => {
     // II in I) y * y * aspectRatio = 1 / 4
     // y = sqrt(1 / 4 / aspectRatio)
 
-    let yScale = Math.sqrt(0.25 / aspectRatio)
-    let xScale = yScale * aspectRatio
+    const yScale = Math.sqrt(0.25 / aspectRatio)
+    const xScale = yScale * aspectRatio
 
     vec3.scale(camRight, camRight, xScale)
     vec3.scale(camUp, camUp, yScale)
@@ -207,7 +214,7 @@ window.addEventListener('load', () => {
   let lastDateNow = Date.now()
 
   const loop = () => {
-    let now = Date.now()
+    const now = Date.now()
     deltaTime = (now - lastDateNow) / 1000
     lastDateNow = now
     time += deltaTime
@@ -227,7 +234,8 @@ window.addEventListener('load', () => {
   const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
     console.log('Gesture detected:', gestureType, args);
 
-    if (gestureType === GESTURE_TYPES.tap) store.toggleTapState();
+    if (gestureType === TapDetector.TYPE) store.toggleTapState();
+    if (gestureType === PanDetector.TYPE) store.updatePanState(args);
   }
 
   new GestureHandler(canvas, gestureCallbackFn);
@@ -237,14 +245,14 @@ function makeDrawScreenQuad(gl: WebGL2RenderingContext) {
   /*
    * ScreenQuad render
    */
-  let quadVao = gl.createVertexArray()
+  const quadVao = gl.createVertexArray()
   gl.bindVertexArray(quadVao)
   gl.enableVertexAttribArray(0)
 
-  let quadBuffer = gl.createBuffer()
+  const quadBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer)
   {
-    let vertices = [
+    const vertices = [
       -1, -1,
        1, -1,
       -1,  1,

@@ -11,7 +11,8 @@ export default function startSampling(
     radius: number,
     sqrtBufferSize: number,
     numberOfBuffers: number,
-    tapState: number
+    tapState: number,
+    twist: number
   }
 ) {
   let bufferSize = options.sqrtBufferSize ** 2
@@ -72,6 +73,7 @@ export default function startSampling(
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
 
     gl.uniform1f(sampleUniLocs.tapState, options.tapState)
+    gl.uniform1f(sampleUniLocs.twist, options.twist);
 
     time += bufferDuration
 
