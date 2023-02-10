@@ -38,10 +38,8 @@ window.addEventListener('load', () => {
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
       arController = controller
-      setTimeout(() => {
-        let cameraMatrixF64 = arController.getCameraMatrix()
-        cameraMatrix = mat4.clone(cameraMatrixF64)
-      }, 500)
+      let cameraMatrixF64 = arController.getCameraMatrix()
+      cameraMatrix = mat4.clone(cameraMatrixF64)
       resize()
     });
   });
@@ -49,12 +47,6 @@ window.addEventListener('load', () => {
   navigator.mediaDevices.getUserMedia({
     video: { 
       facingMode: "environment", 
-      width: {
-        ideal: 640,
-      },
-      height: {
-        ideal: 480,
-      },
     }
   }) 
     .then(function(stream) {
@@ -174,9 +166,11 @@ window.addEventListener('load', () => {
   const cubeProgram = compileShaders(gl, cubeVs, cubeFs)
   const cubeUniLocs = makeUniformLocationAccessor(gl, cubeProgram)
   const mvp = mat4.create()
-  const projection = mat4.create()
-  mat4.perspective(projection, Math.PI / 2, canvas.height / canvas.width, 0.1, 1000)
-  const renderCube = (modelView: mat4) => {
+  const modelMatrix = mat4.create()
+  mat4.fromTranslation(modelMatrix, [0., 0., 0.5])
+  mat4.scale(modelMatrix, modelMatrix, [0.5, 0.5, 0.5])
+  const modelViewMatrix = mat4.create() 
+  const renderCube = (viewMatrix: mat4, color: number[]) => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
 
@@ -189,9 +183,11 @@ window.addEventListener('load', () => {
     gl.useProgram(cubeProgram)
     gl.disable(gl.CULL_FACE)
 
-    mat4.mul(mvp, cameraMatrix!, modelView)
+    mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
+    mat4.mul(mvp, cameraMatrix!, modelViewMatrix)
 
     gl.uniformMatrix4fv(cubeUniLocs.mvp, false, mvp)
+    gl.uniform3fv(cubeUniLocs.color, color)
 
     drawCube()
   }
@@ -312,15 +308,21 @@ window.addEventListener('load', () => {
     markerTransformMat: Float64Array
     transformMat: mat4
     glMatrix: mat4 
+    color: [number, number, number]
     constructor() {
       this.visible = false
       this.markerTransformMat = new Float64Array(12) 
       this.transformMat = mat4.create()
       this.glMatrix = mat4.create()
+      this.color = [Math.random(), Math.random(), Math.random()].map(c => 0.5 * c)
     }
   }
   let numberOfShapes = 8
-  let shapes: Shape[] = new Array(numberOfShapes).fill(0).map(() => new Shape())
+  let shapes: Shape[] = []
+  // initialize shapes
+  for(let i = 0; i < numberOfShapes; i++) {
+    shapes.push(new Shape())
+  }
   const updateAR = () => {
     arController.detectMarker();
     let num = arController.getMarkerNum()
@@ -382,7 +384,7 @@ window.addEventListener('load', () => {
 
     for(let i = 0; i < numberOfShapes; i++) {
       if(shapes[i].visible) {
-        renderCube(shapes[i].glMatrix)
+        renderCube(shapes[i].glMatrix, shapes[i].color)
       }
     }
 
