@@ -38,12 +38,25 @@ window.addEventListener('load', () => {
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
       arController = controller
-      let cameraMatrixF64 = arController.getCameraMatrix()
-      cameraMatrix = mat4.clone(cameraMatrixF64)
+      setTimeout(() => {
+        let cameraMatrixF64 = arController.getCameraMatrix()
+        cameraMatrix = mat4.clone(cameraMatrixF64)
+      }, 500)
+      resize()
     });
   });
 
-  navigator.mediaDevices.getUserMedia({video: { facingMode: "environment" }}) 
+  navigator.mediaDevices.getUserMedia({
+    video: { 
+      facingMode: "environment", 
+      width: {
+        ideal: 640,
+      },
+      height: {
+        ideal: 480,
+      },
+    }
+  }) 
     .then(function(stream) {
       cam.srcObject = stream
     })
@@ -162,7 +175,7 @@ window.addEventListener('load', () => {
   const cubeUniLocs = makeUniformLocationAccessor(gl, cubeProgram)
   const mvp = mat4.create()
   const projection = mat4.create()
-  mat4.perspective(projection, Math.PI / 3, canvas.height / canvas.width, 0.1, 1000)
+  mat4.perspective(projection, Math.PI / 2, canvas.height / canvas.width, 0.1, 1000)
   const renderCube = (modelView: mat4) => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -176,7 +189,7 @@ window.addEventListener('load', () => {
     gl.useProgram(cubeProgram)
     gl.disable(gl.CULL_FACE)
 
-    mat4.mul(mvp, projection, modelView)
+    mat4.mul(mvp, cameraMatrix!, modelView)
 
     gl.uniformMatrix4fv(cubeUniLocs.mvp, false, mvp)
 
@@ -187,10 +200,49 @@ window.addEventListener('load', () => {
   // resize
   let aspectRatio = 1
   let nearPlaneSize = 1
+  let screenRatio = 1
+  let webcamRatio = 1
   const resize = () => {
     let pixelRatio = window.devicePixelRatio || 1
-    canvas.width = Math.round(canvas.clientWidth * pixelRatio)
-    canvas.height = Math.round(canvas.clientHeight * pixelRatio)
+    let screenWidth = window.innerWidth;
+    let screenHeight = window.innerHeight;
+    screenRatio = screenWidth / screenHeight
+
+    // resize cam video
+    let sourceWidth = cam.videoWidth;
+    let sourceHeight = cam.videoHeight;
+    webcamRatio = sourceWidth / sourceHeight
+
+    // scale to fill screen
+    const scaleScale = 1
+    let scale = 1
+    let left = 0
+    let top = 0
+    if(webcamRatio > screenRatio) {
+      scale = screenHeight / sourceHeight * scaleScale
+      left = (screenWidth - sourceWidth * scale) / 2
+      top = (screenHeight - sourceHeight * scale) / 2
+    } else {
+      scale = screenWidth / sourceWidth * scaleScale
+      top = (screenHeight - sourceHeight * scale) / 2
+      left = (screenWidth - sourceWidth * scale) / 2
+    }
+
+    let width = sourceWidth * scale
+    let height = sourceHeight * scale
+
+    cam.style.width = width + "px";
+    cam.style.height = height + "px";
+    cam.style.top = top + "px";
+    cam.style.left = left + "px";
+
+    // resize canvas
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    canvas.style.top = top + "px";
+    canvas.style.left = left + "px";
+    canvas.width = Math.round(width * pixelRatio)
+    canvas.height = Math.round(height * pixelRatio)
     aspectRatio = canvas.width / canvas.height
 
     nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
@@ -199,6 +251,7 @@ window.addEventListener('load', () => {
 
     gl.uniform1f(renderUniLocs.aspectRatio, aspectRatio)
     gl.uniform1f(renderUniLocs.nearPlaneSize, nearPlaneSize)
+
   }
 
   resize()
