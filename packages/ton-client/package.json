@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host --https",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts"
   },
   "devDependencies": {
     "vite": "^4.0.0",

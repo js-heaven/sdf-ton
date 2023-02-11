@@ -6,10 +6,25 @@ The most recent one is at the top.
 ## D&C Jahresausstellung
 - Rendering
   - Edge antialiasing by distance
+    - inner half of threshold: draw as is
+    - outer half of threshold: draw with smoothstep e.g.
+
 - AR
   - consider dynamic threshold
     - arController.setThresholdMode
     - AR_LABELING_THRESH_MODE_AUTO_OTSU
+
+- use store variables also in sampling 
+
+- visualize the scan area also in cubedShape
+
+- put the raymarch in a function and iclude from 
+  - shape and 
+  - cubedShape
+
+- performance fallback: 
+  - lower resolution, when framerate drops < 30fps
+  - increase resolution until optimum, when framerate > 50fps
 
 ## initial
 

@@ -1,4 +1,9 @@
+uniform float twist;
+
 #include 4d-noise.glsl
+
+
+/* SDF helper functions */
 
 vec3 rotateY(vec3 v, float angle) {
     float s = sin(angle);
@@ -20,6 +25,9 @@ float bumps(vec3 p, float scale) {
   p = mod(scale * p, 2.) - 1.;
   return length(p) / scale;
 }
+
+
+/* SDF primitives */
 
 float sdTorus( vec3 p, vec2 t )
 {
@@ -52,6 +60,12 @@ float sdCappedTorus(in vec3 p, in vec2 sc, in float ra, in float rb)
   return sqrt( dot(p,p) + ra*ra - 2.0*ra*k ) - rb;
 }
 
+
+/* SDF Zoo 
+   Let's keep some options for sdfs lingering around. 
+   At some point, we can combine them before compiling the program 
+   and have different "presets" that way */
+
 float sdf_multiplePrimitives(in vec3 p) {
   p += vec3(0, -1.2, 0); 
   float d = sdTorus(p, vec2(0.5, 0.2)); 
@@ -61,13 +75,11 @@ float sdf_multiplePrimitives(in vec3 p) {
   }
   d = min(d, sdBox(p + vec3(0,1,0), vec3(0.1, 2.3, 0.1)));
   d = min(d, sdTorus(p + vec3(0, 2., 0), vec2(0.5, 0.2))); 
-//  d = min(d, sdTriPrism(p, vec2(0.5, 0.5)));
-//  d = min(d, sdCappedTorus(p, vec2(0.5, 0.5), 0.5, 0.2));
   return d;
 }
 
-float sdf_A(in vec3 p) {
-  p = rotateY(p, p.y*2.);
+float sdf_twistedBox(in vec3 p) {
+  p = rotateY(p, p.y * 3. * twist);
   return sdBox(p, vec3(0.4)) - 0.1;
 }
 
@@ -106,7 +118,10 @@ float sdf_D(in vec3 p) {
   );
 }
 
+
+/* main sdf function */
+
 float sdf(in vec3 p) {
-  return sdf_A(p);
+  return sdf_twistedBox(p);
 }
 

@@ -9,7 +9,7 @@ in vec3 modelVertex;
 out vec4 rgba;
 
 // function for rotating around y axis
-float sdf(vec3);
+#include sdf.glsl
 
 vec3 getNormal( in vec3 p ) // for function f(p)
 {
@@ -78,6 +78,4 @@ void main() {
 
   rgba = vec4(rgb, 1.0);
 }
-
-#include sdf.glsl
 
