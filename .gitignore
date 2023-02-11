@@ -53,3 +53,5 @@ testem.log
 Thumbs.db
 
 .env
+
+packages/ton-server/ca.*
