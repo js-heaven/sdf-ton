@@ -1,5 +1,4 @@
-// forward declarations for the imported noise function to get correct line numbers
-float snoise(vec4);
+#include 4d-noise.glsl
 
 vec3 rotateY(vec3 v, float angle) {
     float s = sin(angle);
@@ -53,15 +52,26 @@ float sdCappedTorus(in vec3 p, in vec2 sc, in float ra, in float rb)
   return sqrt( dot(p,p) + ra*ra - 2.0*ra*k ) - rb;
 }
 
-float sdf(in vec3 p) {
-  //return sdTriPrism(p, vec2(1, 1));
-  //return length(p - vec3(0.5,0,0)) - 0.5;
+float sdf_multiplePrimitives(in vec3 p) {
+  p += vec3(0, -1.2, 0); 
+  float d = sdTorus(p, vec2(0.5, 0.2)); 
+  for(int i = 0; i < 10; i++) {
+    vec3 q = p + float(i) * vec3(0, 0.3, 0);
+    d = opSmoothUnion(d, sdTorus(q, vec2(0.5, 0.1)), 0.1);
+  }
+  d = min(d, sdBox(p + vec3(0,1,0), vec3(0.1, 2.3, 0.1)));
+  d = min(d, sdTorus(p + vec3(0, 2., 0), vec2(0.5, 0.2))); 
+//  d = min(d, sdTriPrism(p, vec2(0.5, 0.5)));
+//  d = min(d, sdCappedTorus(p, vec2(0.5, 0.5), 0.5, 0.2));
+  return d;
+}
 
-//  // A
-//  p = rotateY(p, p.y*1.);
-//  return sdBox(p, vec3(touchManipulationState.x)) - 0.1;
+float sdf_A(in vec3 p) {
+  p = rotateY(p, p.y*2.);
+  return sdBox(p, vec3(0.4)) - 0.1;
+}
 
-  // B
+float sdf_B(in vec3 p) {
   vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
 
   vec3 pAlt = vec3(p.z, -p.y, -p.x); 
@@ -77,20 +87,26 @@ float sdf(in vec3 p) {
       0.25
     )
   );
-
-  // C
-  // return length(p + vec3(0.3, 0, 0)) - 0.7 + 0.2 * diamonds(p, 7.);
-
-  // return min(
-  //   min(
-  //     length(p + vec3(0.5,0,0)) - 0.5,
-  //     length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5
-  //   ),
-  //   min(
-  //     sdBox(p + vec3(0.3,0,0), vec3(0.5, 0., 1.2)) - 0.1,
-  //     sdTriPrism(p + vec3(0,0.65,0.8), vec2(0.4, 0.4)) - 0.1
-  //   )
-  // );
 }
 
-#include 4d-noise.glsl
+float sdf_C(in vec3 p) {
+  return length(p + vec3(0.3, 0, 0)) - 0.7 + 0.2 * diamonds(p, 7.);
+}
+
+float sdf_D(in vec3 p) {
+  return min(
+    min(
+      length(p + vec3(0.5,0,0)) - 0.5,
+      length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5
+    ),
+    min(
+      sdBox(p + vec3(0.3,0,0), vec3(0.5, 0., 1.2)) - 0.1,
+      sdTriPrism(p + vec3(0,0.65,0.8), vec2(0.4, 0.4)) - 0.1
+    )
+  );
+}
+
+float sdf(in vec3 p) {
+  return sdf_A(p);
+}
+

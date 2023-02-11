@@ -1,3 +1,18 @@
+# ideas
+
+The following blocks of ideas are in reverse chronological order. 
+The most recent one is at the top. 
+
+## D&C Jahresausstellung
+- Rendering
+  - Edge antialiasing by distance
+- AR
+  - consider dynamic threshold
+    - arController.setThresholdMode
+    - AR_LABELING_THRESH_MODE_AUTO_OTSU
+
+## initial
+
 - Ziel: Leute kommen ein zweites mal in die Ausstellung, extra um nochmal mit unserem Projekt spielen zu können
 
   - Interaction 

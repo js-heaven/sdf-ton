@@ -35,14 +35,24 @@ window.addEventListener('load', () => {
   const cam = document.getElementById('camera') as HTMLVideoElement
   let arController: any = undefined
 
-  let cameraMatrix: mat4 | undefined 
+  let cameraMatrix = mat4.create()
+
   cam.addEventListener('play', () => {
-    ARToolkit.ARController.initWithImage(cam, '/camera_para.dat').then((controller: any) => { 
+    console.log(cam.videoWidth, cam.videoHeight)
+    ARToolkit.ARController.initWithImage(
+      cam, 
+      '/camera_para.dat', {
+        orientation: 'landscape',
+      }
+    ).then((controller: any) => { 
+    //ARToolkit.ARController.initWithDimensions(cam, '/camera_para.dat').then((controller: any) => { 
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
       arController = controller
       let cameraMatrixF64 = arController.getCameraMatrix()
+      arController.arglCameraViewRHf(cameraMatrixF64, cameraMatrix) 
       cameraMatrix = mat4.clone(cameraMatrixF64)
+      console.log(cameraMatrix)
       resize()
     });
   });
@@ -64,7 +74,7 @@ window.addEventListener('load', () => {
     alpha: true,
     // depth: true,
     // antialias: false,
-    premultipliedAlpha: false,
+    premultipliedAlpha: true,
     // preserveDrawingBuffer: true
   })
   if(!gl) {
@@ -88,8 +98,8 @@ window.addEventListener('load', () => {
   const drawScreenQuad = makeDrawScreenQuad(gl)
   const drawCube = makeDrawCube(gl)
 
-  const renderProgram = compileShaders(gl, shapeVs, shapeFs)
-  const renderUniLocs = makeUniformLocationAccessor(gl, renderProgram)
+  const shapeProgram = compileShaders(gl, shapeVs, shapeFs)
+  const shapeUniLocs = makeUniformLocationAccessor(gl, shapeProgram)
 
   let swipeA = [1,0]
   let swipeB = [1,0]
@@ -100,24 +110,24 @@ window.addEventListener('load', () => {
 
     gl.disable(gl.BLEND)
 
-    gl.useProgram(renderProgram)
+    gl.useProgram(shapeProgram)
 
     // time
-    gl.uniform1f(renderUniLocs.time, time)
+    gl.uniform1f(shapeUniLocs.time, time)
 
     // camera
-    gl.uniform3fv(renderUniLocs.camPosition, camPosition)
-    gl.uniform3fv(renderUniLocs.camStraight, camStraight)
-    gl.uniform3fv(renderUniLocs.camRight, camRight)
-    gl.uniform3fv(renderUniLocs.camUp, camUp)
+    gl.uniform3fv(shapeUniLocs.camPosition, camPosition)
+    gl.uniform3fv(shapeUniLocs.camStraight, camStraight)
+    gl.uniform3fv(shapeUniLocs.camRight, camRight)
+    gl.uniform3fv(shapeUniLocs.camUp, camUp)
     if(sampleTex) {
       [swipeA, swipeB] = getPlaneSegment()
         .map(angle => [Math.cos(angle), Math.sin(angle)])
     }
-    gl.uniform2fv(renderUniLocs.swipeA, swipeA)
-    gl.uniform2fv(renderUniLocs.swipeB, swipeB)
+    gl.uniform2fv(shapeUniLocs.swipeA, swipeA)
+    gl.uniform2fv(shapeUniLocs.swipeB, swipeB)
 
-    gl.uniform3fv(renderUniLocs.touchManipulationState, store.state);
+    gl.uniform3fv(shapeUniLocs.touchManipulationState, store.state);
 
     drawScreenQuad()
   }
@@ -185,7 +195,7 @@ window.addEventListener('load', () => {
     gl.disable(gl.CULL_FACE)
 
     mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
-    mat4.mul(mvp, cameraMatrix!, modelViewMatrix)
+    mat4.mul(mvp, projectionMatrix, modelViewMatrix)
 
     gl.uniformMatrix4fv(cubeUniLocs.mvp, false, mvp)
     gl.uniform3fv(cubeUniLocs.color, color)
@@ -214,7 +224,7 @@ window.addEventListener('load', () => {
     mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
     mat4.invert(inverseModelViewMatrix, modelViewMatrix)
 
-    mat4.mul(mvp, cameraMatrix!, modelViewMatrix)
+    mat4.mul(mvp, projectionMatrix, modelViewMatrix)
 
     gl.uniformMatrix4fv(cubedShapeUniLocs.mvp, false, mvp)
 
@@ -232,11 +242,24 @@ window.addEventListener('load', () => {
   let nearPlaneSize = 1
   let screenRatio = 1
   let webcamRatio = 1
+  let correction = mat4.create()
+  let projectionMatrix = mat4.create()
+  mat4.fromZRotation(correction, Math.PI / 2)
   const resize = () => {
     let pixelRatio = window.devicePixelRatio || 1
     let screenWidth = window.innerWidth;
     let screenHeight = window.innerHeight;
     screenRatio = screenWidth / screenHeight
+
+    if(arController !== undefined) {
+      if(screenRatio < 1) {
+        arController.orientation = 'portrait'
+        mat4.mul(projectionMatrix, correction, cameraMatrix)
+      } else {
+        arController.orientation = 'landscape'
+        mat4.copy(projectionMatrix, cameraMatrix)
+      }
+    }
 
     // resize cam video
     let sourceWidth = cam.videoWidth;
@@ -244,7 +267,7 @@ window.addEventListener('load', () => {
     webcamRatio = sourceWidth / sourceHeight
 
     // scale to fill screen
-    const scaleScale = 1
+    const scaleScale = 0.65
     let scale = 1
     let left = 0
     let top = 0
@@ -273,14 +296,14 @@ window.addEventListener('load', () => {
     canvas.style.left = left + "px";
     canvas.width = Math.round(width * pixelRatio)
     canvas.height = Math.round(height * pixelRatio)
-    aspectRatio = canvas.width / canvas.height
+    aspectRatio = width / height
 
     nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
 
-    gl.useProgram(renderProgram)
+    gl.useProgram(shapeProgram)
 
-    gl.uniform1f(renderUniLocs.aspectRatio, aspectRatio)
-    gl.uniform1f(renderUniLocs.nearPlaneSize, nearPlaneSize)
+    gl.uniform1f(shapeUniLocs.aspectRatio, aspectRatio)
+    gl.uniform1f(shapeUniLocs.nearPlaneSize, nearPlaneSize)
 
   }
 
