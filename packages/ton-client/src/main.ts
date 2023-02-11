@@ -50,7 +50,7 @@ window.addEventListener('load', () => {
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
       arController = controller
-      let cameraMatrixF64 = arController.getCameraMatrix()
+      const cameraMatrixF64 = arController.getCameraMatrix()
       arController.arglCameraViewRHf(cameraMatrixF64, cameraMatrix) 
       cameraMatrix = mat4.clone(cameraMatrixF64)
       console.log(cameraMatrix)
@@ -235,7 +235,7 @@ window.addEventListener('load', () => {
 
     gl.uniformMatrix4fv(cubedShapeUniLocs.mvp, false, mvp)
 
-    let camPosition = vec3.create()
+    const camPosition = vec3.create()
     vec3.transformMat4(camPosition, camPosition, inverseModelViewMatrix)
 
     gl.uniform3fv(cubedShapeUniLocs.camPosition, camPosition)
@@ -253,13 +253,13 @@ window.addEventListener('load', () => {
   let nearPlaneSize = 1
   let screenRatio = 1
   let webcamRatio = 1
-  let correction = mat4.create()
-  let projectionMatrix = mat4.create()
+  const correction = mat4.create()
+  const projectionMatrix = mat4.create()
   mat4.fromZRotation(correction, Math.PI / 2)
   const resize = () => {
-    let pixelRatio = window.devicePixelRatio || 1
-    let screenWidth = window.innerWidth;
-    let screenHeight = window.innerHeight;
+    const pixelRatio = window.devicePixelRatio || 1
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     screenRatio = screenWidth / screenHeight
 
     if(arController !== undefined) {
@@ -278,8 +278,8 @@ window.addEventListener('load', () => {
     }
 
     // resize cam video
-    let sourceWidth = cam.videoWidth;
-    let sourceHeight = cam.videoHeight;
+    const sourceWidth = cam.videoWidth;
+    const sourceHeight = cam.videoHeight;
     webcamRatio = sourceWidth / sourceHeight
 
     // scale to fill screen
@@ -297,8 +297,8 @@ window.addEventListener('load', () => {
       left = (screenWidth - sourceWidth * scale) / 2
     }
 
-    let width = sourceWidth * scale
-    let height = sourceHeight * scale
+    const width = sourceWidth * scale
+    const height = sourceHeight * scale
 
     cam.style.width = width + "px";
     cam.style.height = height + "px";
@@ -374,7 +374,7 @@ window.addEventListener('load', () => {
     vec3.scale(camUp, camUp, yScale)
   }
 
-  let identity = mat4.create()
+  const identity = mat4.create()
   mat4.identity(identity) 
   class Shape {
     visible: boolean
@@ -390,17 +390,17 @@ window.addEventListener('load', () => {
       this.color = [Math.random(), Math.random(), Math.random()].map(c => 0.5 * c)
     }
   }
-  let numberOfShapes = 8
-  let shapes: Shape[] = []
+  const numberOfShapes = 8
+  const shapes: Shape[] = []
   // initialize shapes
   for(let i = 0; i < numberOfShapes; i++) {
     shapes.push(new Shape())
   }
   const updateAR = () => {
     arController.detectMarker();
-    let num = arController.getMarkerNum()
+    const num = arController.getMarkerNum()
     let info, id, shape, transformation
-    let visibleShapes = new Set()
+    const visibleShapes = new Set()
     for(let i = 0; i < num; i++) {
       info = arController.getMarker(i)
       id = info.idMatrix
@@ -516,14 +516,14 @@ function makeDrawCube(gl: WebGL2RenderingContext) {
   /*
    * ScreenQuad render
    */
-  let cubeVao = gl.createVertexArray()
+  const cubeVao = gl.createVertexArray()
   gl.bindVertexArray(cubeVao)
   gl.enableVertexAttribArray(0)
 
-  let cubeBuffer = gl.createBuffer()
+  const cubeBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer)
   {
-    let vertices = [
+    const vertices = [
       -1,-1,-1, // triangle 1 : begin
       -1,-1, 1,
       -1, 1, 1, // triangle 1 : end

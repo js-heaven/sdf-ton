@@ -3,4 +3,4 @@ declare module '*.fs';
 
 declare module 'artoolkit5-js'; 
 
-declare var artoolkit: any;
+declare let artoolkit: any;

@@ -1,5 +1,5 @@
 export function compileShaders(gl: WebGL2RenderingContext, vertexShaderSource: string, fragmentShaderSource: string): WebGLProgram {
-  let shader = [
+  const shader = [
     loadShader(gl, vertexShaderSource, gl.VERTEX_SHADER), 
     loadShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER)
   ]
@@ -7,12 +7,12 @@ export function compileShaders(gl: WebGL2RenderingContext, vertexShaderSource: s
 }
 
 function loadShader(gl: WebGL2RenderingContext, shaderSource: string, shaderType: number) {
-  let shader = gl.createShader(shaderType); 
+  const shader = gl.createShader(shaderType); 
   if(shader) {
     gl.shaderSource(shader, shaderSource);
     gl.compileShader(shader);
     
-    let compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
+    const compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
     if(compiled) {
       return shader;
     } else {
@@ -26,7 +26,7 @@ function loadShader(gl: WebGL2RenderingContext, shaderSource: string, shaderType
 }
   
 function createProgram(gl: WebGL2RenderingContext, shaders: WebGLShader[]) {
-  let program = gl.createProgram()
+  const program = gl.createProgram()
   if(program !== null) {
     shaders.forEach(shader => {
       gl.attachShader(program!, shader);
