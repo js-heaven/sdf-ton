@@ -179,11 +179,15 @@ window.addEventListener('load', () => {
   const cubeUniLocs = makeUniformLocationAccessor(gl, cubeProgram)
   const mvp = mat4.create()
   const modelMatrix = mat4.create()
-  mat4.fromTranslation(modelMatrix, [0., 0., 1])
+  mat4.fromXRotation(modelMatrix, Math.PI / 2)
+  mat4.translate(modelMatrix, modelMatrix, [0., 1., 0])
   const modelViewMatrix = mat4.create() 
   const renderCube = (viewMatrix: mat4, color: number[]) => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
+
+    gl.enable(gl.DEPTH_TEST)
+    gl.enable(gl.CULL_FACE)
 
     gl.enable(gl.BLEND)
     gl.blendFuncSeparate(
@@ -192,7 +196,6 @@ window.addEventListener('load', () => {
     );
 
     gl.useProgram(cubeProgram)
-    gl.disable(gl.CULL_FACE)
 
     mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
     mat4.mul(mvp, projectionMatrix, modelViewMatrix)
