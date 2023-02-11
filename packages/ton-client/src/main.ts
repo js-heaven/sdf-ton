@@ -261,13 +261,18 @@ window.addEventListener('load', () => {
       }
     }
 
+    // reset shape visible
+    for(let i = 0; i < numberOfShapes; i++) {
+      shapes[i].visible = false
+    }
+
     // resize cam video
     let sourceWidth = cam.videoWidth;
     let sourceHeight = cam.videoHeight;
     webcamRatio = sourceWidth / sourceHeight
 
     // scale to fill screen
-    const scaleScale = 0.65
+    const scaleScale = 1 // rather for debugging 0.65
     let scale = 1
     let left = 0
     let top = 0
@@ -306,9 +311,6 @@ window.addEventListener('load', () => {
     gl.uniform1f(shapeUniLocs.nearPlaneSize, nearPlaneSize)
 
   }
-
-  resize()
-  window.addEventListener('resize', resize )
 
   // start sampling
   let {
@@ -410,6 +412,9 @@ window.addEventListener('load', () => {
       }
     }
   }
+
+  resize()
+  window.addEventListener('resize', resize )
 
   let time = 0
   let deltaTime = 0
