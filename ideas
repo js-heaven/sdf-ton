@@ -8,6 +8,7 @@ The most recent one is at the top.
   - Edge antialiasing by distance
     - inner half of threshold: draw as is
     - outer half of threshold: draw with smoothstep e.g.
+  - Stop raymarching when outside of cube
 
 - AR
   - consider dynamic threshold
@@ -25,6 +26,39 @@ The most recent one is at the top.
 - performance fallback: 
   - lower resolution, when framerate drops < 30fps
   - increase resolution until optimum, when framerate > 50fps
+
+- das nächste Object ist das gesture target
+  - Also einfach die length cameraposition vergleichen :) 
+
+- 2D signed distance textur als "mask"
+
+- field of repeating bubbles
+  - smooth blend mit großer sphere
+  - dann twist
+
+- modes
+  - AR has no audio. 
+  - singleShape
+    - no AR
+    - eine einzelne shape wird angezeigt mit audio
+    - audio
+
+- AR fade in and out
+  - wenn nicht mehr visible: 'fade out'
+  - matrix bleibt
+
+- Presentation 
+  - 3 Sockel
+  - Lautsprecher innen rein legen
+    - auf schaumstoff
+    - XLR-Kabel rauskommen lassen
+  - Audiointerfaces
+    - Focusrite + Behringer = 4 out kanäle
+    - Pipewire
+    - audio only - flag
+  - Mein Smartphone als Stativ
+    - leave this smartphone at its place
+    - use your own!: QR code
 
 ## initial
 
