@@ -50,10 +50,7 @@ window.addEventListener('load', () => {
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
       arController = controller
-      const cameraMatrixF64 = arController.getCameraMatrix()
-      arController.arglCameraViewRHf(cameraMatrixF64, cameraMatrix) 
-      cameraMatrix = mat4.clone(cameraMatrixF64)
-      console.log(cameraMatrix)
+      cameraMatrix = mat4.clone(arController.getCameraMatrix())
       resize()
     });
   });
