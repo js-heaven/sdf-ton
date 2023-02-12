@@ -3,22 +3,14 @@
 ## Configure env
 Copy `.env-example to .env`.
 
-## Start with npm or yarn
-### npm
+## Install dependencies
 ```sh
-# install dependencies
 npm install
-
-# run in dev mode
-npx nx run-many --target=dev
 ```
-### yarn
-```sh
-# install dependencies
-yarn
 
-# run in dev mode
-yarn dev
+## Run in dev mode
+```sh
+npm run dev
 ```
 
 ## try
