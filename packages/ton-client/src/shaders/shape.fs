@@ -76,7 +76,7 @@ void main() {
     }
     rgb = mix(rgb, color, a);
   } else {
-    discard;
+    rgb *= 0.6; 
   }
 
   rgba = vec4(rgb, 1.0);

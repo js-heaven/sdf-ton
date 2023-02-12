@@ -20,6 +20,8 @@ const float waveHeight = 0.2;
 const float waveHeightHalf = waveHeight * 0.5;
 const float oneMinusWaveHeightHalf = 1.0 - waveHeightHalf;
 
+const vec3 scanColor = vec3(0.9); 
+
 in vec2 uv;
 
 out vec4 rgba; 
@@ -62,15 +64,10 @@ void main() {
   );
 
   // periodValue = (periodBegin + periodLength * uv.x) / bufferSize;
-  if(
-    uv.y > oneMinusWaveHeightHalf - lineWidth && uv.y < oneMinusWaveHeightHalf + lineWidth || 
-    uv.y > waveHeightHalf - lineWidth && uv.y < waveHeightHalf + lineWidth
-  ) {
-    rgba = vec4(lineColor, 1.0); 
-  } else if(isInside(waveHeightHalf, uv.y, bufferValue)) {
-    rgba = vec4(0.9,0,0.3,0.5); 
+  if(isInside(waveHeightHalf, uv.y, bufferValue)) {
+    rgba = vec4(scanColor, 0.8); 
   } else if(isInside(oneMinusWaveHeightHalf, uv.y, periodValue)) {
-    rgba = vec4(0.0,0.4,1.,0.5); 
+    rgba = vec4(scanColor, 0.8); 
   } else {
     discard; 
   } 
