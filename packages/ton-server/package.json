@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc index.ts --outDir dist",
     "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
+    "dev": "concurrently \"npx tsc --watch --preserveWatchOutput\" \"nodemon -q dist/index.js\"", 
     "lint": "eslint . --ext .ts"
   },
   "author": "DC autitory team",
@@ -19,6 +19,7 @@
     "@types/express": "^4.17.16",
     "@types/node": "^18.11.18",
     "concurrently": "^7.6.0",
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "mkcert": "^1.5.1"
   }
 }

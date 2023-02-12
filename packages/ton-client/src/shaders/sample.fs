@@ -13,8 +13,6 @@ uniform float planeEndAngle;
 
 uniform float radius;
 
-uniform float tapState;
-
 in vec2 uv;
 
 // we would like to write only one float per fragment
@@ -22,10 +20,7 @@ in vec2 uv;
 // so we need to do 4 samples per fragment :)
 out vec4 rgba;
 
-
 #include sdf.glsl
-// forward declaration for the imported sdf
-// float sdf(vec3);
 
 void main() {
   vec4 samples;

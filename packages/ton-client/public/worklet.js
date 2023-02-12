@@ -2,7 +2,7 @@ let globalI = 0
 
 class ContinousBuffer extends AudioWorkletProcessor {
 
-  center = 1;
+  center = 0.5;
   normalizeFactor = 1; 
 
   buffers = [];
@@ -72,9 +72,9 @@ class ContinousBuffer extends AudioWorkletProcessor {
 
     // performance optimization: use plain variables
     // will be copied back at the end
-    let min = this.min
+    let min = this.min 
     let max = this.max
-    let normalizeFactor = this.normalizeFactor
+    let normalizeFactor = this.normalizeFactor 
     let center = this.center
 
     let midFactor = this.avgFactor
@@ -98,10 +98,12 @@ class ContinousBuffer extends AudioWorkletProcessor {
       for (channelIndex; channelIndex < until; channelIndex++) {
         sample = buffer[bufferPointer]
         bufferPointer += 1
+        min += 0.0000011
+        max -= 0.0000011
         if(sample < min) min = sample
         if(sample > max) max = sample
         center = center * prevMidFactor + sample * midFactor
-        normalizeFactor = 0.95 / Math.max(
+        normalizeFactor = 0.8 / Math.max(
           center - min, 
           max - center
         )

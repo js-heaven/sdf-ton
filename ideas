@@ -1,0 +1,146 @@
+# ideas
+
+A crude way of keeping track of ideas for this project. 
+
+## comments
+can be denoted at the beginning of an item
+Syntax: 
+```
+<Status>(<comment>): <item>
+```
+Status can be: 
+- D = done
+- V = discarded
+- R = deferred
+- F = failed
+
+## ideas 
+
+The following blocks of ideas are in reverse chronological order. 
+The most recent one is at the top. 
+
+### D&C Jahresausstellung
+- D: Rendering
+
+  - F(doesn't really work, maybe FXAA is better): 
+    Edge antialiasing by distance
+    - D: inner half of threshold: draw as is
+    - D: outer half of threshold: draw with smoothstep e.g.
+
+  - D: Stop raymarching when outside of cube
+
+- D: AR
+  - D(didn't help much): consider dynamic threshold
+    - arController.setThresholdMode
+    - AR_LABELING_THRESH_MODE_AUTO_OTSU
+
+- D: use store variables also in sampling 
+
+- visualize the scan area also in cubedShape
+
+- put the raymarch in a function and iclude from 
+  - shape and 
+  - cubedShape
+
+- performance fallback: 
+  - lower resolution, when framerate drops < 30fps
+  - increase resolution until optimum, when framerate > 50fps
+
+- das nächste Object ist das gesture target
+  - Also einfach die length cameraposition vergleichen :) 
+
+- 2D signed distance textur als "mask"
+
+- field of repeating bubbles
+  - smooth blend mit großer sphere
+  - dann twist
+
+- modes
+  - AR has no audio. 
+  - singleShape
+    - no AR
+    - eine einzelne shape wird angezeigt mit audio
+    - audio
+
+- AR fade in and out
+  - wenn nicht mehr visible: 'fade out'
+  - matrix bleibt
+  - use camera distance for z ordering: render far first
+
+- Gestures: 
+  - up-down pan => twist
+  - left-right pan => carousell between 4 base shapes
+    - each of us creates one
+    - linear interpolation between each 2 neighbors
+  - pinch => bumps
+    - interpolate with infinitely gridrepeated circles
+  - optional: 
+    - make thicker & thinner
+      - e.g. two finger pan
+
+- multisampling
+
+- Presentation 
+  - 3 Sockel aus Boxen
+  - Lautsprecher innen rein legen
+    - auf schaumstoff
+    - XLR-Kabel rauskommen lassen
+  - Audiointerfaces
+    - Focusrite + Behringer = 4 out kanäle
+    - Pipewire
+    - audio only - flag
+  - Mein Smartphone als Stativ
+    - leave this smartphone at its place
+    - use your own!: QR code
+  - Lighting 
+    - QR codes well visible
+    - One light between the three pedestals
+      - facing straight down
+    - Align real world lighting and digital lighting
+
+### initial
+
+- Ziel: Leute kommen ein zweites mal in die Ausstellung, extra um nochmal mit unserem Projekt spielen zu können
+
+  - Interaction 
+    - Frequency einstellbar 
+    - Gesten
+    - Interface zu den Shadern
+    - Sync across multiple clients
+      - Websockets
+      - Server im Lokalen Netzwerk? 
+        - Öffentliches WLAN
+    - ca 0.25s delay wegen buffersize + count
+
+    - SDF
+      - noise textur (extrapoliert?)
+
+  - Rendering
+    - Graphics
+      - Reflections
+        - Raum als 6 sided cube map
+    - Audio 
+      - Synchronisiert: Voreingestellte bpm
+      - Verschiedene Vielfache (3, 4, 8, 5) 
+
+  - Sound zu Anlage 
+    - 1 Objekt pro Speaker
+    - 1 tab vs 7 browsertabs https://blabla/audio/object?1-7
+      - WebAudio kann auch mehrere Channels
+    - irgendjemand mit MAC oder Windows (wegen Dante) 
+    - Filter & Effekte
+      - Unterschiedlich je node
+      - z.B. Sägezahn LFO + FM für Percussionartiges
+      - Reverb für drei gleichartige, die einen Akkord ergeben
+
+  - QR-codes
+    - Auf Hölzernen Sockeln / Tische
+      - Marker für VR? 
+
+  - AR (low prio)
+    - Modellieren
+    - Kalibrieren
+    - Shader integrieren
+      - Kombination aus traditioneller Computergrafik und SDF Raymarching
+        - bounding box
+

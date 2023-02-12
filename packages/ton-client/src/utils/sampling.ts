@@ -2,20 +2,18 @@ import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
 
 import sampleFs from '../shaders/sample.fs'
 import sampleVs from '../shaders/sample.vs'
-import { vec3 } from 'gl-matrix'
 
 export default function startSampling(
   gl: WebGL2RenderingContext,
   drawScreenQuad: () => void,
+  setSdfUniforms: (uniLocs: any) => void,
   options: {
     radius: number,
     sqrtBufferSize: number,
     numberOfBuffers: number,
-    tapState: number,
-    twist: number
   }
 ) {
-  let bufferSize = options.sqrtBufferSize ** 2
+  const bufferSize = options.sqrtBufferSize ** 2
 
   const sampleProgram = compileShaders(gl, sampleVs, sampleFs)
   const sampleUniLocs = makeUniformLocationAccessor(gl, sampleProgram)
@@ -39,9 +37,16 @@ export default function startSampling(
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
 
+  gl.clearColor(0,0,0,0)
   gl.clear(gl.COLOR_BUFFER_BIT)
 
-  const frequency = 55
+  const octave = 1
+  const tone = 3/2 // quinte; 5/4 = terz
+  const frequency = 
+    55 
+    * 2 ** octave
+    * tone
+
   const BPM = 60
   const planeFrequency = 1 / (4 / (BPM / 60))
   let sampleRate = 42000
@@ -56,31 +61,33 @@ export default function startSampling(
 
     gl.disable(gl.BLEND)
 
+    gl.disable(gl.DEPTH_TEST)
+    gl.disable(gl.CULL_FACE)
+
     gl.useProgram(sampleProgram)
     gl.uniform1f(sampleUniLocs.time, time)
 
     // calc time stuff
-    let bufferDuration = bufferSize / sampleRate
+    const bufferDuration = bufferSize / sampleRate
 
     planeStartAngle = ((time * planeFrequency) % 1) * Math.PI * 2
     planeEndAngle = bufferDuration * planeFrequency * Math.PI * 2 + planeStartAngle
     gl.uniform1f(sampleUniLocs.planeStartAngle, planeStartAngle)
     gl.uniform1f(sampleUniLocs.planeEndAngle, planeEndAngle)
 
-    let startAngle = ((time * frequency) % 1) * Math.PI * 2
-    let endAngle = bufferDuration * frequency * Math.PI * 2 + startAngle
+    const startAngle = ((time * frequency) % 1) * Math.PI * 2
+    const endAngle = bufferDuration * frequency * Math.PI * 2 + startAngle
     gl.uniform1f(sampleUniLocs.startAngle, startAngle)
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
 
-    gl.uniform1f(sampleUniLocs.tapState, options.tapState)
-    gl.uniform1f(sampleUniLocs.twist, options.twist);
-
     time += bufferDuration
+
+    setSdfUniforms(sampleUniLocs)
 
     drawScreenQuad()
 
     // read from framebuffer into array
-    let data = new Float32Array(bufferSize)
+    const data = new Float32Array(bufferSize)
     gl.readPixels(0, 0, options.sqrtBufferSize / 4, options.sqrtBufferSize, gl.RGBA, gl.FLOAT, data)
 
     return data
@@ -94,52 +101,64 @@ export default function startSampling(
   let center = 1
   let normalizeFactor = 1
   const playButton = document.getElementById('play')!
-  playButton.addEventListener('click', () => {
+
+  playButton.addEventListener('click', async () => {
     playButton.style.display = 'none'
 
     const audioContext = new AudioContext();
     sampleRate = audioContext.sampleRate
-    audioContext.audioWorklet.addModule("./worklet.js").then(() => {
-      const gainNode = new GainNode(audioContext, {gain: 0.0})
-      gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
-      gainNode.gain.linearRampToValueAtTime(1.0, audioContext.currentTime + 2)
-      gainNode.connect(audioContext.destination)
-      const continousBufferNode = new AudioWorkletNode(
-        audioContext,
-        "continous-buffer",
-        {
-          processorOptions: {
-            sqrtBufferSize: options.sqrtBufferSize,
-            numberOfBuffers: options.numberOfBuffers,
-            avgFactor: 0.00001,
-            maxValue: options.radius
-          }
-        }
-      );
-      continousBufferNode.connect(gainNode);
-      continousBufferNode.port.onmessage = (event) => {
-        if(event.data.type == 'requestBuffer') {
-          const a = samplePass()
-          continousBufferNode.port.postMessage({
-            type: 'buffer',
-            buffer: a.buffer
-          }, [a.buffer])
-          generatedBufferCounter += 1
-          let assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
-          periodLength = sampleRate / frequency
-          bufferStartSample = assumedCurrentBuffer * bufferSize
-          while(periodStartSample < bufferStartSample) {
-            periodStartSample += periodLength
-          }
-        }
-        if(event.data.type == 'normalizeInfo') {
-          center = event.data.center
-          normalizeFactor = event.data.normalizeFactor
+    await audioContext.audioWorklet.addModule("./worklet.js")
+
+    const gainNode = new GainNode(audioContext, {gain: 0.0})
+    const filterNode = audioContext.createBiquadFilter();
+    filterNode.type = 'bandpass';
+    filterNode.frequency.value = frequency * 2;
+    filterNode.Q.value = 1.;
+    const reverbNode = await createReverbNode(audioContext)
+
+    gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
+    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 2)
+    gainNode.connect(reverbNode)
+    
+    filterNode.connect(reverbNode)
+    reverbNode.connect(audioContext.destination)
+    const continousBufferNode = new AudioWorkletNode(
+      audioContext,
+      "continous-buffer",
+      {
+        // the following options get copied into another js execution context
+        // any communication has to be done via messages
+        processorOptions: {
+          sqrtBufferSize: options.sqrtBufferSize,
+          numberOfBuffers: options.numberOfBuffers,
+          avgFactor: 0.00002,
+          maxValue: options.radius
         }
       }
-      continousBufferNode.port.postMessage({
-        type: 'start'
-      })
+    );
+    continousBufferNode.connect(gainNode);
+    continousBufferNode.port.onmessage = (event) => {
+      if(event.data.type == 'requestBuffer') {
+        const a = samplePass()
+        continousBufferNode.port.postMessage({
+          type: 'buffer',
+          buffer: a.buffer
+        }, [a.buffer])
+        generatedBufferCounter += 1
+        const assumedCurrentBuffer = generatedBufferCounter - options.numberOfBuffers
+        periodLength = sampleRate / frequency
+        bufferStartSample = assumedCurrentBuffer * bufferSize
+        while(periodStartSample < bufferStartSample) {
+          periodStartSample += periodLength
+        }
+      }
+      if(event.data.type == 'normalizeInfo') {
+        center = event.data.center
+        normalizeFactor = event.data.normalizeFactor
+      }
+    }
+    continousBufferNode.port.postMessage({
+      type: 'start'
     })
   })
 
@@ -150,4 +169,16 @@ export default function startSampling(
     getPeriodBeginAndLength: () => [periodStartSample - bufferStartSample, periodLength],
     getNormalizeInfo: () => ({center, normalizeFactor})
   }
+}
+
+async function loadImpulseBuffer(ac: AudioContext, url: string) {
+    return fetch(url)
+    .then(response => response.arrayBuffer())
+    .then(arrayBuffer => ac.decodeAudioData(arrayBuffer))
+}
+
+async function createReverbNode(ac: AudioContext) {
+  const convolver = ac.createConvolver()
+  convolver.buffer = await loadImpulseBuffer(ac, 'impulse.wav')
+  return convolver
 }

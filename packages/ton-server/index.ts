@@ -1,15 +1,21 @@
-import express, { Express, Request, Response } from 'express';
-import http from 'http';
 import dotenv from 'dotenv';
+dotenv.config();
+
+import express, { Express, Request, Response } from 'express';
+import https from 'https';
+import fs from "fs";
+
 import { Server } from 'socket.io';
 
-dotenv.config();
+const key = fs.readFileSync("ca.key", "utf-8");
+const cert = fs.readFileSync("ca.crt", "utf-8");
+
 
 const app: Express = express();
 const frontendUrl = process.env.FRONTEND_URL;
 const port = process.env.BACKEND_PORT;
 
-const server = http.createServer(app);
+const server = https.createServer({ key, cert }, app);
 const io = new Server(server, {
   cors: {
     origin: frontendUrl,
@@ -25,7 +31,7 @@ const store = {
   twistState: 0,
 }
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.send('Hello 👋');
 });
 
@@ -43,5 +49,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+  console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
 });

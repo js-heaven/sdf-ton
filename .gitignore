@@ -51,3 +51,7 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+.env
+
+packages/ton-server/ca.*
