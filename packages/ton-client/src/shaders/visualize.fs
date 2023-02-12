@@ -14,7 +14,7 @@ uniform float center;
 uniform float normalizeFactor; 
 
 const float lineWidth = 0.001; 
-const vec3 lineColor = vec3(0.1, 0.1, 0.1);
+const vec3 lineColor = vec3(0.5, 0.5, 0.5);
 
 const float waveHeight = 0.2;
 const float waveHeightHalf = waveHeight * 0.5;
@@ -68,9 +68,9 @@ void main() {
   ) {
     rgba = vec4(lineColor, 1.0); 
   } else if(isInside(waveHeightHalf, uv.y, bufferValue)) {
-    rgba = vec4(0.3,0,0.1,0.5); 
+    rgba = vec4(0.9,0,0.3,0.5); 
   } else if(isInside(oneMinusWaveHeightHalf, uv.y, periodValue)) {
-    rgba = vec4(0.0,0.1,0.5,0.5); 
+    rgba = vec4(0.0,0.4,1.,0.5); 
   } else {
     discard; 
   } 

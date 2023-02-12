@@ -59,6 +59,8 @@ export default function startSampling(
     gl.viewport(0, 0, options.sqrtBufferSize / 4, options.sqrtBufferSize)
 
     gl.disable(gl.BLEND)
+    gl.disable(gl.DEPTH_TEST)
+    gl.disable(gl.CULL_FACE)
 
     gl.useProgram(sampleProgram)
     gl.uniform1f(sampleUniLocs.time, time)
