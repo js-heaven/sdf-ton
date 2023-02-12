@@ -29,8 +29,10 @@ const vec3 colorInside = vec3(0.1, 0.1, 0.3);
 const vec3 colorOutside = vec3(1, 0.7, 0.5);
 const vec3 scanColor = vec3(0.3,0.5,0.7);
 
+const float carefulness = 0.5; 
+
 const float threshold = 0.1; 
-const float gone = 1. + threshold * 2.; // how far to go before we stop
+const float gone = 1. + threshold / carefulness.; // how far to go before we stop
 const float negativeGone = -gone;
 
 void main() {
@@ -50,7 +52,7 @@ void main() {
   vec3 color = vec3(1);
   vec3 normal;
   for (int s = 0; s < 50; s++) {
-    d = sdf(pos) * 0.5;
+    d = sdf(pos) * carefulness;
     if(
       d < 0. || 
       // or if we're outside of the cube
