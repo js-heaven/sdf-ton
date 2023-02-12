@@ -1,9 +1,25 @@
 # ideas
 
+A crude way of keeping track of ideas for this project. 
+
+## comments
+can be denoted at the beginning of an item
+Syntax: 
+```
+<Status>(<comment>): <item>
+```
+Status can be: 
+- D = done
+- V = discarded
+- R = deferred
+- F = failed
+
+## ideas 
+
 The following blocks of ideas are in reverse chronological order. 
 The most recent one is at the top. 
 
-## D&C Jahresausstellung
+### D&C Jahresausstellung
 - Rendering
   - Edge antialiasing by distance
     - inner half of threshold: draw as is
@@ -11,7 +27,7 @@ The most recent one is at the top.
   - Stop raymarching when outside of cube
 
 - AR
-  - consider dynamic threshold
+  - D(didn't help much): consider dynamic threshold
     - arController.setThresholdMode
     - AR_LABELING_THRESH_MODE_AUTO_OTSU
 
@@ -47,8 +63,19 @@ The most recent one is at the top.
   - wenn nicht mehr visible: 'fade out'
   - matrix bleibt
 
+- Gestures: 
+  - up-down pan => twist
+  - left-right pan => carousell between 4 base shapes
+    - each of us creates one
+    - linear interpolation between each 2 neighbors
+  - pinch => bumps
+    - interpolate with infinitely gridrepeated circles
+  - optional: 
+    - make thicker & thinner
+      - e.g. two finger pan
+
 - Presentation 
-  - 3 Sockel
+  - 3 Sockel aus Boxen
   - Lautsprecher innen rein legen
     - auf schaumstoff
     - XLR-Kabel rauskommen lassen
@@ -59,8 +86,13 @@ The most recent one is at the top.
   - Mein Smartphone als Stativ
     - leave this smartphone at its place
     - use your own!: QR code
+  - Lighting 
+    - QR codes well visible
+    - One light between the three pedestals
+      - facing straight down
+    - Align real world lighting and digital lighting
 
-## initial
+### initial
 
 - Ziel: Leute kommen ein zweites mal in die Ausstellung, extra um nochmal mit unserem Projekt spielen zu können
 

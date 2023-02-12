@@ -118,10 +118,17 @@ float sdf_D(in vec3 p) {
   );
 }
 
+float sdf_lerp(in vec3 p) {
+  float d1 = sdf_B(p);
+  //float d2 = sdf_C(p);
+  float d3 = sdf_twistedBox(p);
+  return mix(d1, d3, twist * 0.5 + 0.5);
+}
+
 
 /* main sdf function */
 
 float sdf(in vec3 p) {
-  return sdf_twistedBox(p);
+  return sdf_lerp(p);
 }
 

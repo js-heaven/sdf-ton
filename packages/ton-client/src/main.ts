@@ -49,6 +49,7 @@ window.addEventListener('load', () => {
     ).then((controller: any) => { 
       controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
       controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
+      // controller.setThresholdMode(artoolkit.AR_LABELING_THRESH_MODE_AUTO_OTSU); // doesn't help much
       arController = controller
       cameraMatrix = mat4.clone(arController.getCameraMatrix())
       resize()
