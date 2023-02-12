@@ -2,7 +2,7 @@ let globalI = 0
 
 class ContinousBuffer extends AudioWorkletProcessor {
 
-  center = 1;
+  center = 0.5;
   normalizeFactor = 1; 
 
   buffers = [];
