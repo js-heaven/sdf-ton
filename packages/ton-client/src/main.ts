@@ -85,8 +85,9 @@ window.addEventListener('load', () => {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
   const gl = canvas.getContext("webgl2", {
     alpha: true,
-    antialias: false,
-    premultipliedAlpha: true,
+   // antialias: false,
+    premultipliedAlpha: false,
+    preserveDrawingBuffer: true,
   })
   if(!gl) {
     console.error(`WebGL2 is not supported`)
@@ -123,9 +124,6 @@ window.addEventListener('load', () => {
   }
 
   const renderShape = () => {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, canvas.width, canvas.height)
-
     gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.CULL_FACE)
     gl.disable(gl.BLEND)
@@ -168,9 +166,6 @@ window.addEventListener('load', () => {
     normalizeFactor: 1
   }
   const visualizePass = () => {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, canvas.width, canvas.height)
-
     // use texture
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, sampleTex)
@@ -186,6 +181,7 @@ window.addEventListener('load', () => {
     [periodBegin, periodLength] = getPeriodBeginAndLength()
 
     normalizeInfo = getNormalizeInfo();
+    console.log(normalizeInfo); 
 
     gl.useProgram(visualizeProgram)
     gl.uniform1f(visualizeUniLocs.periodBegin, periodBegin)
@@ -209,9 +205,6 @@ window.addEventListener('load', () => {
   }
   const modelViewMatrix = mat4.create() 
   const renderCube = (viewMatrix: mat4, color: number[]) => {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, canvas.width, canvas.height)
-
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
     gl.cullFace(gl.FRONT)
@@ -232,9 +225,6 @@ window.addEventListener('load', () => {
   const cubedShapeUniLocs = makeUniformLocationAccessor(gl, cubedShapeProgram)
   const inverseModelViewMatrix = mat4.create()
   const renderCubedShape = (viewMatrix: mat4) => {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, canvas.width, canvas.height)
-
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
     gl.cullFace(gl.BACK)
@@ -465,7 +455,9 @@ window.addEventListener('load', () => {
     lastDateNow = now
     time += deltaTime
 
-    gl.clearColor(0, 0, 0, 0)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    gl.clearColor(0, 0, 0, 1)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     if(noAr) {

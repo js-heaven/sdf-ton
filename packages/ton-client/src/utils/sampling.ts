@@ -37,6 +37,7 @@ export default function startSampling(
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
 
+  gl.clearColor(0,0,0,0)
   gl.clear(gl.COLOR_BUFFER_BIT)
 
   const octave = 1
@@ -59,6 +60,7 @@ export default function startSampling(
     gl.viewport(0, 0, options.sqrtBufferSize / 4, options.sqrtBufferSize)
 
     gl.disable(gl.BLEND)
+
     gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.CULL_FACE)
 
@@ -129,7 +131,7 @@ export default function startSampling(
         processorOptions: {
           sqrtBufferSize: options.sqrtBufferSize,
           numberOfBuffers: options.numberOfBuffers,
-          avgFactor: 0.00001,
+          avgFactor: 0.00002,
           maxValue: options.radius
         }
       }
