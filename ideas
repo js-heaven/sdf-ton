@@ -20,21 +20,21 @@ The following blocks of ideas are in reverse chronological order.
 The most recent one is at the top. 
 
 ### D&C Jahresausstellung
-- Rendering
+- D: Rendering
 
   - F(doesn't really work, maybe FXAA is better): 
     Edge antialiasing by distance
     - D: inner half of threshold: draw as is
     - D: outer half of threshold: draw with smoothstep e.g.
 
-  - Stop raymarching when outside of cube
+  - D: Stop raymarching when outside of cube
 
-- AR
+- D: AR
   - D(didn't help much): consider dynamic threshold
     - arController.setThresholdMode
     - AR_LABELING_THRESH_MODE_AUTO_OTSU
 
-- use store variables also in sampling 
+- D: use store variables also in sampling 
 
 - visualize the scan area also in cubedShape
 

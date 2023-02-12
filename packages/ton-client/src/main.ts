@@ -181,7 +181,6 @@ window.addEventListener('load', () => {
     [periodBegin, periodLength] = getPeriodBeginAndLength()
 
     normalizeInfo = getNormalizeInfo();
-    console.log(normalizeInfo); 
 
     gl.useProgram(visualizeProgram)
     gl.uniform1f(visualizeUniLocs.periodBegin, periodBegin)

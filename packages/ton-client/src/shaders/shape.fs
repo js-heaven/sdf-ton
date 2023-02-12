@@ -75,9 +75,7 @@ void main() {
       color += scanColor;
     }
     rgb = mix(rgb, color, a);
-  } else {
-    rgb *= 0.6; 
-  }
+  } 
 
   rgba = vec4(rgb, 1.0);
 }

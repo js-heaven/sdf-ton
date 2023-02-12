@@ -30,6 +30,8 @@ const vec3 colorOutside = vec3(1, 0.7, 0.5);
 const vec3 scanColor = vec3(0.3,0.5,0.7);
 
 const float threshold = 0.1; 
+const float gone = 1. + threshold * 2.; // how far to go before we stop
+const float negativeGone = -gone;
 
 void main() {
   vec3 ray = modelVertex - camPosition;
@@ -49,7 +51,13 @@ void main() {
   vec3 normal;
   for (int s = 0; s < 50; s++) {
     d = sdf(pos) * 0.5;
-    if(d < 0. || d > 20.) {
+    if(
+      d < 0. || 
+      // or if we're outside of the cube
+      pos.x > gone || pos.x < negativeGone ||
+      pos.y > gone || pos.y < negativeGone ||
+      pos.z > gone || pos.z < negativeGone) 
+    {
       break;
     } 
     pos += rayDir * d;
