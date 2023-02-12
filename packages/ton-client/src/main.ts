@@ -33,54 +33,66 @@ const BUFFER_SIZE = SQRT_BUFFER_SIZE ** 2
 const NUMBER_OF_BUFFERS = 3
 
 window.addEventListener('load', () => {
-  // Prepare WebGL stuff
+
+  // parse search params
+
+  const appParams = new URLSearchParams(location.search) 
+  const noAr = !appParams.has('ar')
+  const renderBoxes = appParams.has('render-boxes')
+  const visualize = appParams.has('visualize')
+
+
+  // Prepare AR stuff
+
   const cam = document.getElementById('camera') as HTMLVideoElement
   let arController: any = undefined
-
   let cameraMatrix = mat4.create()
+  if(noAr) {
+    cam.parentNode?.removeChild(cam) 
+  } else {
+    cam.addEventListener('play', () => {
+      console.log(cam.videoWidth, cam.videoHeight)
+      ARToolkit.ARController.initWithImage(
+        cam, 
+        '/camera_para.dat', {
+          orientation: 'landscape',
+        }
+      ).then((controller: any) => { 
+        controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
+        controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
+        // controller.setThresholdMode(artoolkit.AR_LABELING_THRESH_MODE_AUTO_OTSU); 
+        arController = controller
+        cameraMatrix = mat4.clone(arController.getCameraMatrix())
+        resize()
+      });
+    });
 
-  cam.addEventListener('play', () => {
-    console.log(cam.videoWidth, cam.videoHeight)
-    ARToolkit.ARController.initWithImage(
-      cam, 
-      '/camera_para.dat', {
-        orientation: 'landscape',
+    navigator.mediaDevices.getUserMedia({
+      video: { 
+        facingMode: "environment", 
       }
-    ).then((controller: any) => { 
-      controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
-      controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
-      // controller.setThresholdMode(artoolkit.AR_LABELING_THRESH_MODE_AUTO_OTSU); // doesn't help much
-      arController = controller
-      cameraMatrix = mat4.clone(arController.getCameraMatrix())
-      resize()
-    });
-  });
+    }) 
+      .then(function(stream) {
+        cam.srcObject = stream
+      })
+      .catch(function(err) {
+        console.log("Error when using camera: " + err);
+      });
+  }
 
-  navigator.mediaDevices.getUserMedia({
-    video: { 
-      facingMode: "environment", 
-    }
-  }) 
-    .then(function(stream) {
-      cam.srcObject = stream
-    })
-    .catch(function(err) {
-      console.log("Error when using camera: " + err);
-    });
+  // Prepare WebGL stuff
 
   const canvas = document.getElementById("canvas") as HTMLCanvasElement
   const gl = canvas.getContext("webgl2", {
     alpha: true,
-    // depth: true,
     antialias: false,
     premultipliedAlpha: true,
-    // preserveDrawingBuffer: true
   })
   if(!gl) {
     console.error(`WebGL2 is not supported`)
     return
   }
-  // require extensions
+
   const ext = {
     float: gl.getExtension('EXT_color_buffer_float'),
   }
@@ -89,11 +101,12 @@ window.addEventListener('load', () => {
     return
   }
 
+
   // create State
+
   const socket = createSocket();
   const store = new Store(socket);
 
-  // Prepare Audio Webworker
 
   const drawScreenQuad = makeDrawScreenQuad(gl)
   const drawCube = makeDrawCube(gl)
@@ -104,10 +117,17 @@ window.addEventListener('load', () => {
   let swipeA = [1,0]
   let swipeB = [1,0]
 
+  const setSdfUniforms = (uniLocs: any) => {
+    gl.uniform1f(uniLocs.tapState, store.tapState);
+    gl.uniform1f(uniLocs.twist, store.twist);
+  }
+
   const renderShape = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
 
+    gl.disable(gl.DEPTH_TEST)
+    gl.disable(gl.CULL_FACE)
     gl.disable(gl.BLEND)
 
     gl.useProgram(shapeProgram)
@@ -127,9 +147,7 @@ window.addEventListener('load', () => {
     gl.uniform2fv(shapeUniLocs.swipeA, swipeA)
     gl.uniform2fv(shapeUniLocs.swipeB, swipeB)
 
-    // shape modifiers
-    gl.uniform1f(shapeUniLocs.tapState, store.tapState);
-    gl.uniform1f(shapeUniLocs.twist, store.twist);
+    setSdfUniforms(shapeUniLocs)
 
     drawScreenQuad()
   }
@@ -157,10 +175,15 @@ window.addEventListener('load', () => {
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, sampleTex)
 
+    gl.disable(gl.CULL_FACE)
+    gl.disable(gl.DEPTH_TEST)
     gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    );
 
-    [periodBegin, periodLength] = getPeriodBeginAndLength();
+    [periodBegin, periodLength] = getPeriodBeginAndLength()
 
     normalizeInfo = getNormalizeInfo();
 
@@ -191,9 +214,8 @@ window.addEventListener('load', () => {
 
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
-
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.cullFace(gl.FRONT)
+    gl.disable(gl.BLEND)
 
     gl.useProgram(cubeProgram)
 
@@ -215,27 +237,21 @@ window.addEventListener('load', () => {
 
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
-
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.cullFace(gl.BACK)
+    gl.disable(gl.BLEND)
 
     gl.useProgram(cubedShapeProgram)
 
     mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
-    mat4.invert(inverseModelViewMatrix, modelViewMatrix)
-
     mat4.mul(mvp, projectionMatrix, modelViewMatrix)
-
     gl.uniformMatrix4fv(cubedShapeUniLocs.mvp, false, mvp)
 
     const camPosition = vec3.create()
+    mat4.invert(inverseModelViewMatrix, modelViewMatrix)
     vec3.transformMat4(camPosition, camPosition, inverseModelViewMatrix)
-
     gl.uniform3fv(cubedShapeUniLocs.camPosition, camPosition)
 
-    // shape modifiers
-    gl.uniform1f(cubedShapeUniLocs.tapState, store.tapState);
-    gl.uniform1f(cubedShapeUniLocs.twist, store.twist);
+    setSdfUniforms(cubedShapeUniLocs)
 
     drawCube()
   }
@@ -249,55 +265,63 @@ window.addEventListener('load', () => {
   const correction = mat4.create()
   const projectionMatrix = mat4.create()
   mat4.fromZRotation(correction, Math.PI / 2)
-  let resolutionFactor = 1
+  const resolutionFactor = 1 // will be used later < 1 for slow devices
   const resize = () => {
     const pixelRatio = window.devicePixelRatio || 1
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     screenRatio = screenWidth / screenHeight
 
-    if(arController !== undefined) {
-      if(screenRatio < 1) {
-        arController.orientation = 'portrait'
-        mat4.mul(projectionMatrix, correction, cameraMatrix)
-      } else {
-        arController.orientation = 'landscape'
-        mat4.copy(projectionMatrix, cameraMatrix)
-      }
-    }
+    let width, height
+    let top, left
 
-    // reset shape visible
-    for(let i = 0; i < numberOfShapes; i++) {
-      shapes[i].visible = false
-    }
-
-    // resize cam video
-    const sourceWidth = cam.videoWidth;
-    const sourceHeight = cam.videoHeight;
-    webcamRatio = sourceWidth / sourceHeight
-
-    // scale to fill screen
-    const scaleScale = 1 // rather for debugging 0.65
-    let scale = 1
-    let left = 0
-    let top = 0
-    if(webcamRatio > screenRatio) {
-      scale = screenHeight / sourceHeight * scaleScale
-      left = (screenWidth - sourceWidth * scale) / 2
-      top = (screenHeight - sourceHeight * scale) / 2
+    if(noAr) {
+      width = screenWidth 
+      height = screenHeight
+      top = 0 
+      left = 0
     } else {
-      scale = screenWidth / sourceWidth * scaleScale
-      top = (screenHeight - sourceHeight * scale) / 2
-      left = (screenWidth - sourceWidth * scale) / 2
+      if(arController !== undefined) {
+        if(screenRatio < 1) {
+          arController.orientation = 'portrait'
+          mat4.mul(projectionMatrix, correction, cameraMatrix)
+        } else {
+          arController.orientation = 'landscape'
+          mat4.copy(projectionMatrix, cameraMatrix)
+        }
+      }
+
+      // reset shape visible
+      for(let i = 0; i < numberOfShapes; i++) {
+        shapes[i].visible = false
+      }
+
+      // resize cam video
+      const sourceWidth = cam.videoWidth;
+      const sourceHeight = cam.videoHeight;
+      webcamRatio = sourceWidth / sourceHeight
+
+      // scale to fill screen
+      const scaleScale = 1 // rather for debugging 0.65
+      let scale = 1
+      if(webcamRatio > screenRatio) {
+        scale = screenHeight / sourceHeight * scaleScale
+        left = (screenWidth - sourceWidth * scale) / 2
+        top = (screenHeight - sourceHeight * scale) / 2
+      } else {
+        scale = screenWidth / sourceWidth * scaleScale
+        top = (screenHeight - sourceHeight * scale) / 2
+        left = (screenWidth - sourceWidth * scale) / 2
+      }
+
+      width = sourceWidth * scale
+      height = sourceHeight * scale
+
+      cam.style.width = width + "px";
+      cam.style.height = height + "px";
+      cam.style.top = top + "px";
+      cam.style.left = left + "px";
     }
-
-    const width = sourceWidth * scale
-    const height = sourceHeight * scale
-
-    cam.style.width = width + "px";
-    cam.style.height = height + "px";
-    cam.style.top = top + "px";
-    cam.style.left = left + "px";
 
     // resize canvas
     canvas.style.width = width + "px";
@@ -319,18 +343,23 @@ window.addEventListener('load', () => {
     store.dimensions.height = screenHeight;
   }
 
-  // start sampling
+
+  // Prepare Audio Webworker for audio sampling
+
   const {
     sampleTex,
     isReady,
     getPlaneSegment,
     getPeriodBeginAndLength,
     getNormalizeInfo,
-  } = startSampling(gl, drawScreenQuad, {
+  } = startSampling(gl, drawScreenQuad, setSdfUniforms, {
     radius: 5,
     sqrtBufferSize: SQRT_BUFFER_SIZE,
     numberOfBuffers: NUMBER_OF_BUFFERS,
   }) 
+
+
+  // Camera 
 
   const lookAt = vec3.fromValues(0, 0, 0)
   const camPosition = vec3.create()
@@ -366,25 +395,27 @@ window.addEventListener('load', () => {
     vec3.scale(camUp, camUp, yScale)
   }
 
-  const identity = mat4.create()
-  mat4.identity(identity) 
+  
+  // AR marker detection 
+
   class Shape {
-    visible: boolean
-    markerTransformMat: Float64Array
-    transformMat: mat4
-    glMatrix: mat4 
+    visible = false
+    markerTransformMat = new Float64Array(12)
+    transformMat = mat4.create()
+    glMatrix = mat4.create()
     color: number[]
+    fadeOut = 0
+
     constructor() {
       this.visible = false
       this.markerTransformMat = new Float64Array(12) 
       this.transformMat = mat4.create()
       this.glMatrix = mat4.create()
-      this.color = [Math.random(), Math.random(), Math.random()].map(c => 0.5 * c)
+      this.color = [Math.random(), Math.random(), Math.random()]
     }
   }
   const numberOfShapes = 8
   const shapes: Shape[] = []
-  // initialize shapes
   for(let i = 0; i < numberOfShapes; i++) {
     shapes.push(new Shape())
   }
@@ -428,38 +459,40 @@ window.addEventListener('load', () => {
   let now = 0 
 
   const loop = () => {
-    if (arController !== undefined) {
-      updateAR()
-    }
 
     now = Date.now()
     deltaTime = (now - lastDateNow) / 1000
     lastDateNow = now
     time += deltaTime
 
-    updateCamera()
-    updateModelMatrix()
-
     gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    // renderShape()
+    if(noAr) {
+      updateCamera()
+      renderShape()
+    } else {
+      if (arController !== undefined) {
+        updateAR()
+      } 
+      updateModelMatrix()
 
-    // let modelView = mat4.create()
-    // mat4.lookAt(modelView, [0, 0, -40], [0, 0, 0], [0, 1, 0])
-    // let rotation = mat4.create()
-    // mat4.fromRotation(rotation, time, [0,1,0])
-    // mat4.mul(modelView, modelView, rotation)
-    // renderCube(modelView)
+      if(renderBoxes) {
+        for(let i = 0; i < numberOfShapes; i++) {
+          if(shapes[i].visible) {
+            renderCube(shapes[i].glMatrix, shapes[i].color)
+          }
+        }
+      }
 
-    for(let i = 0; i < numberOfShapes; i++) {
-      if(shapes[i].visible) {
-        //renderCube(shapes[i].glMatrix, shapes[i].color)
-        renderCubedShape(shapes[i].glMatrix) 
+      for(let i = 0; i < numberOfShapes; i++) {
+        if(shapes[i].visible) {
+          renderCubedShape(shapes[i].glMatrix) 
+        }
       }
     }
 
-    if (isReady()) {
+    if (visualize && isReady()) {
       visualizePass()
     }
 

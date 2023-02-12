@@ -6,6 +6,7 @@ import sampleVs from '../shaders/sample.vs'
 export default function startSampling(
   gl: WebGL2RenderingContext,
   drawScreenQuad: () => void,
+  setSdfUniforms: (uniLocs: any) => void,
   options: {
     radius: number,
     sqrtBufferSize: number,
@@ -76,6 +77,8 @@ export default function startSampling(
     gl.uniform1f(sampleUniLocs.endAngle, endAngle)
 
     time += bufferDuration
+
+    setSdfUniforms(sampleUniLocs)
 
     drawScreenQuad()
 

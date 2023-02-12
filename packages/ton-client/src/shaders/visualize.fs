@@ -3,6 +3,7 @@
 precision highp float; 
 
 uniform sampler2D samples;
+
 uniform float bufferSize;
 uniform float sqrtBufferSize;
 

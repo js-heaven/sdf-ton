@@ -65,6 +65,7 @@ The most recent one is at the top.
 - AR fade in and out
   - wenn nicht mehr visible: 'fade out'
   - matrix bleibt
+  - use camera distance for z ordering: render far first
 
 - Gestures: 
   - up-down pan => twist
