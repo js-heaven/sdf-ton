@@ -29,6 +29,9 @@ const vec3 colorInside = vec3(0.1, 0.1, 0.3);
 const vec3 colorOutside = vec3(1, 0.7, 0.5);
 const vec3 scanColor = vec3(0.3,0.5,0.7);
 
+const float threshold = 0.1; 
+const float oneByThreshold = 1. / threshold; 
+
 void main() {
   vec3 ray = modelVertex - camPosition;
   vec3 rayDir = normalize(ray);
@@ -54,7 +57,7 @@ void main() {
     z += d;
   }
 
-  if(d < 0.1) {
+  if(d < threshold) {
     a = 0.1 + pow(0.9, z);
     b = clamp(length(pos), 0., 1.);
 
@@ -76,6 +79,7 @@ void main() {
     discard;
   }
 
-  rgba = vec4(rgb, 1.0);
+  // gradient to transparency at the edge
+  rgba = vec4(rgb, 1);
 }
 

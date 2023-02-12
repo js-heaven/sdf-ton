@@ -21,9 +21,12 @@ The most recent one is at the top.
 
 ### D&C Jahresausstellung
 - Rendering
-  - Edge antialiasing by distance
-    - inner half of threshold: draw as is
-    - outer half of threshold: draw with smoothstep e.g.
+
+  - F(doesn't really work, maybe FXAA is better): 
+    Edge antialiasing by distance
+    - D: inner half of threshold: draw as is
+    - D: outer half of threshold: draw with smoothstep e.g.
+
   - Stop raymarching when outside of cube
 
 - AR

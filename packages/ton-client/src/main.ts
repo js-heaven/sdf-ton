@@ -72,7 +72,7 @@ window.addEventListener('load', () => {
   const gl = canvas.getContext("webgl2", {
     alpha: true,
     // depth: true,
-    // antialias: false,
+    antialias: false,
     premultipliedAlpha: true,
     // preserveDrawingBuffer: true
   })
@@ -158,10 +158,7 @@ window.addEventListener('load', () => {
     gl.bindTexture(gl.TEXTURE_2D, sampleTex)
 
     gl.enable(gl.BLEND)
-    gl.blendFuncSeparate(
-      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
-      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    );
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     [periodBegin, periodLength] = getPeriodBeginAndLength();
 
@@ -180,9 +177,13 @@ window.addEventListener('load', () => {
   const cubeProgram = compileShaders(gl, cubeVs, cubeFs)
   const cubeUniLocs = makeUniformLocationAccessor(gl, cubeProgram)
   const mvp = mat4.create()
+  const fixedModelMatrix = mat4.create()
+  mat4.fromXRotation(fixedModelMatrix, Math.PI / 2)
+  mat4.translate(fixedModelMatrix, fixedModelMatrix, [0., 1., 0])
   const modelMatrix = mat4.create()
-  mat4.fromXRotation(modelMatrix, Math.PI / 2)
-  mat4.translate(modelMatrix, modelMatrix, [0., 1., 0])
+  const updateModelMatrix = () => {
+    mat4.rotateY(modelMatrix, fixedModelMatrix, time * 0.1)
+  }
   const modelViewMatrix = mat4.create() 
   const renderCube = (viewMatrix: mat4, color: number[]) => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -192,10 +193,7 @@ window.addEventListener('load', () => {
     gl.enable(gl.CULL_FACE)
 
     gl.enable(gl.BLEND)
-    gl.blendFuncSeparate(
-      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
-      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    );
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.useProgram(cubeProgram)
 
@@ -219,10 +217,7 @@ window.addEventListener('load', () => {
     gl.enable(gl.CULL_FACE)
 
     gl.enable(gl.BLEND)
-    gl.blendFuncSeparate(
-      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
-      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    );
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.useProgram(cubedShapeProgram)
 
@@ -254,6 +249,7 @@ window.addEventListener('load', () => {
   const correction = mat4.create()
   const projectionMatrix = mat4.create()
   mat4.fromZRotation(correction, Math.PI / 2)
+  let resolutionFactor = 1
   const resize = () => {
     const pixelRatio = window.devicePixelRatio || 1
     const screenWidth = window.innerWidth;
@@ -308,8 +304,8 @@ window.addEventListener('load', () => {
     canvas.style.height = height + "px";
     canvas.style.top = top + "px";
     canvas.style.left = left + "px";
-    canvas.width = Math.round(width * pixelRatio)
-    canvas.height = Math.round(height * pixelRatio)
+    canvas.width = Math.round(width * pixelRatio * resolutionFactor) 
+    canvas.height = Math.round(height * pixelRatio * resolutionFactor)
     aspectRatio = width / height
 
     nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
@@ -331,8 +327,6 @@ window.addEventListener('load', () => {
     getPeriodBeginAndLength,
     getNormalizeInfo,
   } = startSampling(gl, drawScreenQuad, {
-    // these values get copied into another js execution context
-    // any communications has to be done via messages
     radius: 5,
     sqrtBufferSize: SQRT_BUFFER_SIZE,
     numberOfBuffers: NUMBER_OF_BUFFERS,
@@ -444,6 +438,7 @@ window.addEventListener('load', () => {
     time += deltaTime
 
     updateCamera()
+    updateModelMatrix()
 
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)

@@ -94,6 +94,7 @@ export default function startSampling(
   let center = 1
   let normalizeFactor = 1
   const playButton = document.getElementById('play')!
+
   playButton.addEventListener('click', async () => {
     playButton.style.display = 'none'
 
@@ -118,6 +119,8 @@ export default function startSampling(
       audioContext,
       "continous-buffer",
       {
+        // the following options get copied into another js execution context
+        // any communication has to be done via messages
         processorOptions: {
           sqrtBufferSize: options.sqrtBufferSize,
           numberOfBuffers: options.numberOfBuffers,
