@@ -69,8 +69,6 @@ The most recent one is at the top.
   - dann twist
 
 - Gestures
-
-- Gestures: 
   - up-down pan => twist
   - left-right pan => carousell between 4 base shapes
     - each of us creates one
@@ -83,7 +81,7 @@ The most recent one is at the top.
     - or custom base sdf manipulation
 
 - modes
-  - audio
+  - audio only
     - no audio when AR 
   - D: ar
   - L: box
@@ -91,10 +89,10 @@ The most recent one is at the top.
     - D: no AR
     - D: eine einzelne shape wird angezeigt mit audio
 
-- AR fade in and out
-  - wenn nicht mehr visible: 'fade out'
-  - matrix bleibt
-  - use camera distance for z ordering: render far first
+- D: AR fade in and out
+  - D: wenn nicht mehr visible: 'fade out'
+  - D: matrix bleibt
+  - D: use camera distance for z ordering: render far first
 
 - R: 2D signed distance textur als "mask"
 

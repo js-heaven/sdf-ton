@@ -1,7 +1,6 @@
 uniform float twist;
 
-#include 4d-noise.glsl
-
+#include noise.glsl
 
 /* SDF helper functions */
 
@@ -118,9 +117,20 @@ float sdf_D(in vec3 p) {
   );
 }
 
+float sdf_heavy_calculations(in vec3 p) {
+  float v = 0.; 
+  float f = 0.3; 
+  for(int i = 0; i < 4; i++) {
+    f *= 2.;
+    v += snoise3d(p * f) / f;
+  }
+  return v; 
+}
+
 float sdf_lerp(in vec3 p) {
-  float d1 = sdf_B(p);
-  //float d2 = sdf_C(p);
+  //float d1 = sdf_B(p);
+  //float d1 = sdf_C(p);
+  float d1 = sdf_heavy_calculations(p);
   float d3 = sdf_twistedBox(p);
   return mix(d1, d3, twist * 0.5 + 0.5);
 }

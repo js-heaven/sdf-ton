@@ -32,7 +32,7 @@ const SQRT_BUFFER_SIZE = 64
 const BUFFER_SIZE = SQRT_BUFFER_SIZE ** 2
 const NUMBER_OF_BUFFERS = 3
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
 
   // parse search params
 
@@ -263,7 +263,7 @@ window.addEventListener('load', () => {
   const correction = mat4.create()
   const projectionMatrix = mat4.create()
   mat4.fromZRotation(correction, Math.PI / 2)
-  const resolutionFactor = 1 // will be used later < 1 for slow devices
+  let resolutionDivisor = 1 // will be used later < 1 for slow devices
   const resize = () => {
     const pixelRatio = window.devicePixelRatio || 1
     const screenWidth = window.innerWidth;
@@ -326,8 +326,8 @@ window.addEventListener('load', () => {
     canvas.style.height = height + "px";
     canvas.style.top = top + "px";
     canvas.style.left = left + "px";
-    canvas.width = Math.round(width * pixelRatio * resolutionFactor) 
-    canvas.height = Math.round(height * pixelRatio * resolutionFactor)
+    canvas.width = Math.round(width * pixelRatio / resolutionDivisor) 
+    canvas.height = Math.round(height * pixelRatio / resolutionDivisor)
     aspectRatio = width / height
 
     nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
@@ -422,7 +422,6 @@ window.addEventListener('load', () => {
     shapes.push(new Shape(i))
   }
   const updateAR = () => {
-    console.log(closestShape)
     arController.detectMarker();
     const num = arController.getMarkerNum()
     let info, id, shape, transformation
@@ -472,14 +471,45 @@ window.addEventListener('load', () => {
   let now = 0 
   let frame = 0
 
-  let closestShape = 0 
+  let closestShape: number | undefined
+
+  async function measureDeviceFramerate(n = 50) {
+    function fiftyFrames(n: number) {
+      return new Promise<void>((resolve) => {
+        let counter = 0
+        const r = () => {
+          if(counter < n) {
+            counter += 1
+            requestAnimationFrame(r)
+          } else {
+            resolve()
+          }
+        }
+        r()
+      })
+    }
+    const before = Date.now()
+    await fiftyFrames(n)
+    const timePassed = (Date.now() - before) * 0.001
+    const deviceFrameRate = 50 / timePassed
+    return deviceFrameRate 
+  }
+
+  const targetFrameDuration = 1 / await measureDeviceFramerate() 
+  console.log('targetFrameRate', 1 / targetFrameDuration) 
+  let slowFramesSince = 0
+  let optimalFramesSince = 0
+  const maxRenderTime = Math.min(1 / 24, targetFrameDuration / 0.9) 
+  let avgRenderTime = targetFrameDuration
 
   function loop(gl: WebGL2RenderingContext, shapes: Shape[]) {
 
     now = Date.now()
-    deltaTime = (now - lastDateNow) / 1000
+    deltaTime = (now - lastDateNow) * 0.001
     lastDateNow = now
     time += deltaTime
+
+    const beforeRender = Date.now()
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -501,6 +531,7 @@ window.addEventListener('load', () => {
       })
 
       // determine closestShape - that's the one we use for manipulation
+      closestShape = undefined
       for(let i = 7 ; i >= 0; i--) {
         if(sortedShapes[i].visible) {
           closestShape = sortedShapes[i].id
@@ -533,15 +564,40 @@ window.addEventListener('load', () => {
       visualizePass()
     }
 
+    gl.finish()
+
+    const afterRender = Date.now()
+    const renderTime = (afterRender - beforeRender) * 0.001
+
+    if(renderTime > maxRenderTime) {
+      slowFramesSince += renderTime
+    } else {
+      slowFramesSince = 0
+    }
+
+    if(slowFramesSince > 0.5) { // if slow frames for more than one second
+      resolutionDivisor += 1
+      resize()
+      slowFramesSince = -0.5 // wait 2 seconds before reevaluation
+    }
+
+    if(resolutionDivisor > 1) {
+      avgRenderTime = (99 * avgRenderTime + renderTime) * 0.01
+
+      // workload factor expresses how much more pixel a shift up in resolutionDivisor would mean
+      const workloadFactor = Math.pow(resolutionDivisor / (resolutionDivisor - 1), 2) 
+
+      if(avgRenderTime < targetFrameDuration * (0.3 + 1 / workloadFactor)) {
+        console.log('stepping up') 
+        resolutionDivisor -= 1
+        optimalFramesSince = -1
+        resize()
+      }
+    }
+
     requestAnimationFrame(() => {
       loop(gl, shapes)
     })
-
-    frame++;
-    if(frame == 1000) {
-      var err = new Error();
-      console.log(err.stack);
-    }
   }
 
   loop(gl, shapes)
