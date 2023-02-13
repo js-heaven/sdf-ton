@@ -118,8 +118,8 @@ window.addEventListener('load', () => {
   let swipeB = [1,0]
 
   const setSdfUniforms = (uniLocs: any) => {
-    gl.uniform1f(uniLocs.tapState, store.tapState);
-    gl.uniform1f(uniLocs.twist, store.twist);
+    gl.uniform1f(uniLocs.tapState, 0);
+    gl.uniform1f(uniLocs.twist, store.shapeStates[0].twist);
   }
 
   const renderShape = () => {
@@ -494,8 +494,7 @@ window.addEventListener('load', () => {
   const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
     console.log('Gesture detected:', gestureType, args);
 
-    if (gestureType === TapDetector.TYPE) store.toggleTapState();
-    if (gestureType === PanDetector.TYPE) store.updatePanState(args);
+    if (gestureType === PanDetector.TYPE) store.updatePanState(0, args);
   }
 
   new GestureHandler(canvas, gestureCallbackFn);
