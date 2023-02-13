@@ -5,11 +5,13 @@ class TapDetector extends SingleTouchDetector {
   static TYPE = 'tap';
   static MAX_DELAY_MS = 2000;
 
-  constructor(touchEvents: TouchEvent[]) {
-    super(touchEvents, TapDetector.TYPE);
+  constructor() {
+    super(TapDetector.TYPE);
   }
 
-  detect(): boolean {
+  detect(touchEvents: TouchEvent[], numTouches: number): boolean {
+    super.detect(touchEvents, numTouches);
+
     if (this._timeBetweenFirstRelevantAndLastTouch > TapDetector.MAX_DELAY_MS) return false;
 
     const startTouch = this.firstTouchEvent.changedTouches[0];
