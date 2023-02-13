@@ -86,7 +86,7 @@ window.addEventListener('load', () => {
   const gl = canvas.getContext("webgl2", {
     alpha: true,
    // antialias: false,
-    premultipliedAlpha: false,
+    premultipliedAlpha: true,
     preserveDrawingBuffer: true,
   })
   if(!gl) {
@@ -223,22 +223,31 @@ window.addEventListener('load', () => {
   const cubedShapeProgram = compileShaders(gl, cubedShapeVs, cubedShapeFs)
   const cubedShapeUniLocs = makeUniformLocationAccessor(gl, cubedShapeProgram)
   const inverseModelViewMatrix = mat4.create()
-  const renderCubedShape = (viewMatrix: mat4) => {
+  const renderCubedShape = (shape: Shape, alpha) => {
+
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
     gl.cullFace(gl.BACK)
-    gl.disable(gl.BLEND)
+
+    gl.enable(gl.BLEND)
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    )
 
     gl.useProgram(cubedShapeProgram)
 
-    mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix)
+    mat4.multiply(modelViewMatrix, shape.glMatrix, modelMatrix)
     mat4.mul(mvp, projectionMatrix, modelViewMatrix)
     gl.uniformMatrix4fv(cubedShapeUniLocs.mvp, false, mvp)
 
-    const camPosition = vec3.create()
+    const shapeCamPosition = vec3.create()
     mat4.invert(inverseModelViewMatrix, modelViewMatrix)
-    vec3.transformMat4(camPosition, camPosition, inverseModelViewMatrix)
-    gl.uniform3fv(cubedShapeUniLocs.camPosition, camPosition)
+    vec3.transformMat4(shapeCamPosition, shapeCamPosition, inverseModelViewMatrix)
+    gl.uniform3fv(cubedShapeUniLocs.camPosition, shapeCamPosition)
+    shape.cameraDistance = vec3.length(shapeCamPosition)
+
+    gl.uniform1f(cubedShapeUniLocs.alpha, alpha)
 
     setSdfUniforms(cubedShapeUniLocs)
 
@@ -387,28 +396,33 @@ window.addEventListener('load', () => {
   
   // AR marker detection 
 
+  const fadeTime = 0.3
+
   class Shape {
     visible = false
     markerTransformMat = new Float64Array(12)
     transformMat = mat4.create()
     glMatrix = mat4.create()
     color: number[]
-    fadeOut = 0
 
-    constructor() {
-      this.visible = false
-      this.markerTransformMat = new Float64Array(12) 
-      this.transformMat = mat4.create()
-      this.glMatrix = mat4.create()
+    fadeOut = 0
+    fadeIn = 0
+    cameraDistance = 0
+
+    id: number
+
+    constructor(id: number) {
+      this.id = id
       this.color = [Math.random(), Math.random(), Math.random()]
     }
   }
   const numberOfShapes = 8
   const shapes: Shape[] = []
   for(let i = 0; i < numberOfShapes; i++) {
-    shapes.push(new Shape())
+    shapes.push(new Shape(i))
   }
   const updateAR = () => {
+    console.log(closestShape)
     arController.detectMarker();
     const num = arController.getMarkerNum()
     let info, id, shape, transformation
@@ -431,9 +445,19 @@ window.addEventListener('load', () => {
       }     
     }
     for(let i = 0; i < numberOfShapes; i++) {
+      const shape = shapes[i]
+      shape.fadeIn = Math.max(0, shape.fadeIn - deltaTime)
+      shape.fadeOut = Math.max(0, shape.fadeOut - deltaTime)
+
       if(visibleShapes.has(i)) {
+        if(!shapes[i].visible) {
+          shapes[i].fadeIn = fadeTime - shapes[i].fadeOut
+        }
         shapes[i].visible = true; 
       } else {
+        if(shapes[i].visible) {
+          shapes[i].fadeOut = fadeTime - shapes[i].fadeIn
+        }
         shapes[i].visible = false
       }
     }
@@ -446,8 +470,11 @@ window.addEventListener('load', () => {
   let deltaTime = 0
   let lastDateNow = Date.now()
   let now = 0 
+  let frame = 0
 
-  const loop = () => {
+  let closestShape = 0 
+
+  function loop(gl: WebGL2RenderingContext, shapes: Shape[]) {
 
     now = Date.now()
     deltaTime = (now - lastDateNow) / 1000
@@ -468,29 +495,56 @@ window.addEventListener('load', () => {
       } 
       updateModelMatrix()
 
-      if(renderBoxes) {
-        for(let i = 0; i < numberOfShapes; i++) {
-          if(shapes[i].visible) {
-            renderCube(shapes[i].glMatrix, shapes[i].color)
-          }
+      // order shapes by camera distance, because transparency during fade
+      const sortedShapes = shapes.slice().sort((a, b) => {
+        return b.cameraDistance - a.cameraDistance 
+      })
+
+      // determine closestShape - that's the one we use for manipulation
+      for(let i = 7 ; i >= 0; i--) {
+        if(sortedShapes[i].visible) {
+          closestShape = sortedShapes[i].id
+          break
         }
       }
 
-      for(let i = 0; i < numberOfShapes; i++) {
-        if(shapes[i].visible) {
-          renderCubedShape(shapes[i].glMatrix) 
-        }
+      if(renderBoxes) {
+        sortedShapes.forEach(shape => {
+          if(shape.visible) {
+            renderCube(shape.glMatrix, shape.color)
+          }
+        })
       }
+
+      sortedShapes.forEach(shape => {
+        let alpha = 0
+        if(shape.visible) {
+          alpha = 1 - shape.fadeIn / fadeTime
+        } else {
+          alpha = shape.fadeOut / fadeTime
+        }
+        if(alpha) {
+          renderCubedShape(shape, alpha)
+        }
+      })
     }
 
     if (visualize && isReady()) {
       visualizePass()
     }
 
-    requestAnimationFrame(loop)
+    requestAnimationFrame(() => {
+      loop(gl, shapes)
+    })
+
+    frame++;
+    if(frame == 1000) {
+      var err = new Error();
+      console.log(err.stack);
+    }
   }
 
-  loop()
+  loop(gl, shapes)
 
   const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
     console.log('Gesture detected:', gestureType, args);

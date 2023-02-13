@@ -4,6 +4,8 @@ precision highp float;
 
 uniform vec3 camPosition;
 
+uniform float alpha;
+
 in vec3 modelVertex;
 
 out vec4 rgba;
@@ -87,6 +89,6 @@ void main() {
     discard;
   }
 
-  rgba = vec4(rgb, 1);
+  rgba = vec4(rgb, alpha);
 }
 

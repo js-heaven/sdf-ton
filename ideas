@@ -52,9 +52,10 @@ The most recent one is at the top.
   - cubedShape
 
 - performance fallback: 
+  - determine target screen refresh rate by measuring it for half a second
   - lower resolution, when framerate drops < 24 FPS for 10 consecutive frames
   - increase resolution until optimum, when framerate > 29fps for 50 consecutive frames
-  - stepfactor 0.9
+  - stepfactor 0.9 - or maybe 1/2
 
 - das nächste Object ist das gesture target
   - Also einfach die length cameraPosition vergleichen :) 
