@@ -183,7 +183,7 @@ float sdf_D(in vec3 p) {
 
 float sdf_lerp(in vec3 p) {
   const float bend = 0.9;
-  const float twist = 5.2;
+  // const float twist = 5.2;
   const float displace = 15.;
   const float elongate = 2.;
 
@@ -195,7 +195,7 @@ float sdf_lerp(in vec3 p) {
   //p = rotateX(p, p.x*1.);
   //p = opCheapBend(p, bend);
   //p = opTwist(p, twist);
-  p = opElongate(p, elongate);
+  // p = opElongate(p, elongate);
 
 
   float d1 = sdf_B(p);
