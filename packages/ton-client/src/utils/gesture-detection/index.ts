@@ -1,6 +1,8 @@
 import BaseGestureDetector from './base-gesture-detector';
 import PanDetector from './pan-detector';
 import PinchDetector from './pinch-detector';
+// Rotation is sitll WIP
+// import RotateDetector from './rotate-detector';
 import SwipeDetector from './swipe-detector';
 import TapDetector from './tap-detector';
 
@@ -14,19 +16,15 @@ class GestureHandler {
   detectedGesture = '';
   numTouches = 0;
 
-  tapDetector: TapDetector;
-  panDetector: PanDetector;
-  swipeDetector: SwipeDetector;
-  pinchDetector: PinchDetector;
+  tapDetector = new TapDetector;
+  panDetector = new PanDetector;
+  swipeDetector = new SwipeDetector;
+  pinchDetector = new PinchDetector;
+  // rotateDetector = new RotateDetector;
 
   constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
     this.callbackFn = callbackFn;
     this.touchTarget = touchTarget || document;
-
-    this.tapDetector = new TapDetector(this.touchEvents);
-    this.panDetector = new PanDetector(this.touchEvents);
-    this.swipeDetector = new SwipeDetector(this.touchEvents);
-    this.pinchDetector = new PinchDetector(this.touchEvents);
 
     this.addEventListeners();
   }
@@ -61,7 +59,7 @@ class GestureHandler {
   handleTouchEnd(ev: TouchEvent) {
     ev.preventDefault();
 
-    if (this.numTouches === 0) return;
+    if (this.numTouches === 0 && this.touchEvents.length === 0 && this.detectedGesture === '') return;
 
     console.warn('touchEnd!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
@@ -78,6 +76,7 @@ class GestureHandler {
 
     this.detectGesture(this.panDetector);
     this.detectGesture(this.pinchDetector);
+    // this.detectGesture(this.rotateDetector);
   }
 
   handleTouchCancel(ev: TouchEvent) {
@@ -100,7 +99,7 @@ class GestureHandler {
     if (this.numTouches !== detector.numDesiredTouches) return;
     if (this.detectedGesture && this.detectedGesture !== detector.type) return;
 
-    const gestureDetected = detector.detect();
+    const gestureDetected = detector.detect(this.touchEvents, this.numTouches);
     if (!gestureDetected) return;
 
     this.detectedGesture = this.detectedGesture ? this.detectedGesture : detector.type;

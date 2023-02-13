@@ -17,19 +17,17 @@ class BaseGestureDetector {
   type: string;
   numDesiredTouches: number;
 
-  touchEvents: TouchEvent[];
+  touchEvents: TouchEvent[] = [];
+  numTouches = 0;
 
-  constructor(
-    touchEvents: TouchEvent[],
-    type: string,
-    numDesiredTouches: number
-  ) {
-    this.touchEvents = touchEvents;
+  constructor(type: string, numDesiredTouches: number) {
     this.type = type;
     this.numDesiredTouches = numDesiredTouches;
   }
 
-  detect() {
+  detect(touchEvents: TouchEvent[], numTouches: number) {
+    this.touchEvents = touchEvents;
+    this.numTouches = numTouches;
     return false; // will be implemented by children
   }
 
@@ -49,10 +47,14 @@ class BaseGestureDetector {
     return this.currentTouchEvent;
   }
 
-  get firstRelevantTouchEvent() {
+  get firstRelevantTouchEvent(): TouchEvent | undefined {
     return this.touchEvents.find(({ touches }) => {
       return touches.length === this.numDesiredTouches;
     });
+  }
+
+  get previousTouchEvent(): TouchEvent | undefined {
+    return this.touchEvents[this.touchEventsLength - 2];
   }
 
   get currentTouchesLength(): number {
@@ -77,6 +79,16 @@ class BaseGestureDetector {
     const position2 = vec2.fromValues(touch2.clientX, touch2.clientY);
 
     return vec2.distance(position1, position2);
+  }
+
+  protected _vecBetween2Touches(touch1: Touch, touch2: Touch): vec2 {
+    const position1 = vec2.fromValues(touch1.clientX, touch1.clientY);
+    const position2 = vec2.fromValues(touch2.clientX, touch2.clientY);
+    const outVec = vec2.fromValues(0, 0);
+
+    vec2.sub(outVec, position2, position1);
+
+    return outVec;
   }
 }
 

@@ -39,7 +39,6 @@ class Store {
     let newTwist = this.twist + (2 * newPanState.deltaY) / this.dimensions.height;
     newTwist = Math.min(newTwist, 1);
     newTwist = Math.max(newTwist, -1);
-    console.log('twist', newTwist);
 
     this.twist = newTwist;
 
@@ -49,7 +48,6 @@ class Store {
 
   private _registerSocketListeners() {
     this.socket.on('updateState', (newState) => {
-      console.log('updateState', newState);
       this.tapState = newState.tapState;
       this.twist = newState.twistState;
     });
