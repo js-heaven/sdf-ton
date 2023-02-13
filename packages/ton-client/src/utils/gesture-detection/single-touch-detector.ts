@@ -1,12 +1,12 @@
-import BaseGestureDetector from './gesture';
+import BaseGestureDetector from './base-gesture-detector';
 
-class PanSwipeDetector extends BaseGestureDetector {
+class SingleTouchDetector extends BaseGestureDetector {
   static NUM_TOUCHES = 1;
   static PAN_SWIPE_THREASHOLD_MS = 200;
   static PAN_SWIPE_THREASHOLD_PX = 50;
 
   constructor(touchEvents: TouchEvent[], type: string) {
-    super(touchEvents, type, PanSwipeDetector.NUM_TOUCHES);
+    super(touchEvents, type, SingleTouchDetector.NUM_TOUCHES);
   }
 
   protected get _distBetweenFirstRelevantAndLastTouch(): number {
@@ -19,4 +19,4 @@ class PanSwipeDetector extends BaseGestureDetector {
   }
 }
 
-export default PanSwipeDetector;
+export default SingleTouchDetector;

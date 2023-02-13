@@ -1,13 +1,12 @@
-import BaseGestureDetector from './gesture';
+import SingleTouchDetector from './single-touch-detector';
 
 // A tap is recognized when the pointer is doing a small tap/click.
-class TapDetector extends BaseGestureDetector {
+class TapDetector extends SingleTouchDetector {
   static TYPE = 'tap';
-  static NUM_TOUCHES = 1;
   static MAX_DELAY_MS = 2000;
 
   constructor(touchEvents: TouchEvent[]) {
-    super(touchEvents, TapDetector.TYPE, TapDetector.NUM_TOUCHES);
+    super(touchEvents, TapDetector.TYPE);
   }
 
   detect(): boolean {
@@ -17,7 +16,7 @@ class TapDetector extends BaseGestureDetector {
     const endTouch = this.lastTouchEvent.changedTouches[0];
     const pxMoved = this._distBetween2Touches(startTouch, endTouch);
 
-    return pxMoved <= BaseGestureDetector.PX_MOVE_TOLERANCE;
+    return pxMoved <= TapDetector.PX_MOVE_TOLERANCE;
   }
 }
 

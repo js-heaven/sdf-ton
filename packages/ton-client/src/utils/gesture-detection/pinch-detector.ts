@@ -1,4 +1,4 @@
-import TwoTouchesDetector from './two-touches';
+import TwoTouchesDetector from './two-touches-detector';
 
 class PinchDetector extends TwoTouchesDetector {
   static TYPE = 'pinch';
@@ -11,7 +11,7 @@ class PinchDetector extends TwoTouchesDetector {
     if (this.currentTouchesLength !== PinchDetector.NUM_TOUCHES) return false;
 
     if (
-      Math.abs(this.distRelativeToStart) < TwoTouchesDetector.PX_MOVE_TOLERANCE
+      Math.abs(this.distRelativeToStart) < PinchDetector.PX_MOVE_TOLERANCE
     ) {
       return false;
     }
@@ -20,7 +20,7 @@ class PinchDetector extends TwoTouchesDetector {
   }
 
   get distRelativeToStart(): number {
-    if (this.touchEventsLength < TwoTouchesDetector.NUM_EVENTS_THREASHOLD) return 0;
+    if (this.touchEventsLength < PinchDetector.NUM_EVENTS_THREASHOLD) return 0;
     if (!this.firstRelevantTouchEvent) return 0;
 
     const startTouch0 = this.firstRelevantTouchEvent.touches[0];

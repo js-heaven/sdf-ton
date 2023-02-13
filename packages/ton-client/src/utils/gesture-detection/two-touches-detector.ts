@@ -1,4 +1,4 @@
-import BaseGestureDetector from './gesture';
+import BaseGestureDetector from './base-gesture-detector';
 
 class TwoTouchesDetector extends BaseGestureDetector {
   static NUM_TOUCHES = 2;

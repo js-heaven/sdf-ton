@@ -20,12 +20,11 @@ import visualizeFs from './shaders/visualize.fs'
 
 import startSampling from './utils/sampling'
 
-import GestureHandler from './utils/gesture-detection';
+import GestureHandler, { GestureCallbackFn } from './utils/gesture-detection';
 import Store from './store';
 import createSocket from './utils/web-socket';
-import { GestureCallbackFn } from './utils/gesture-detection/gesture-detector';
-import TapDetector from './utils/gesture-detection/tap';
-import PanDetector from './utils/gesture-detection/pan';
+import TapDetector from './utils/gesture-detection/tap-detector';
+import PanDetector from './utils/gesture-detection/pan-detector';
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
 const SQRT_BUFFER_SIZE = 64
@@ -36,7 +35,7 @@ window.addEventListener('load', () => {
 
   // parse search params
 
-  const appParams = new URLSearchParams(location.search) 
+  const appParams = new URLSearchParams(location.search)
   const noAr = !appParams.has('ar')
   const renderBoxes = appParams.has('render-boxes')
   const visualize = appParams.has('visualize')
@@ -48,19 +47,19 @@ window.addEventListener('load', () => {
   let arController: any = undefined
   let cameraMatrix = mat4.create()
   if(noAr) {
-    cam.parentNode?.removeChild(cam) 
+    cam.parentNode?.removeChild(cam)
   } else {
     cam.addEventListener('play', () => {
       console.log(cam.videoWidth, cam.videoHeight)
       ARToolkit.ARController.initWithImage(
-        cam, 
+        cam,
         '/camera_para.dat', {
           orientation: 'landscape',
         }
-      ).then((controller: any) => { 
+      ).then((controller: any) => {
         controller.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
         controller.setMatrixCodeType(artoolkit.AR_MATRIX_CODE_3x3_HAMMING63);
-        // controller.setThresholdMode(artoolkit.AR_LABELING_THRESH_MODE_AUTO_OTSU); 
+        // controller.setThresholdMode(artoolkit.AR_LABELING_THRESH_MODE_AUTO_OTSU);
         arController = controller
         cameraMatrix = mat4.clone(arController.getCameraMatrix())
         resize()
@@ -68,10 +67,10 @@ window.addEventListener('load', () => {
     });
 
     navigator.mediaDevices.getUserMedia({
-      video: { 
-        facingMode: "environment", 
+      video: {
+        facingMode: "environment",
       }
-    }) 
+    })
       .then(function(stream) {
         cam.srcObject = stream
       })
@@ -174,7 +173,7 @@ window.addEventListener('load', () => {
     gl.disable(gl.DEPTH_TEST)
     gl.enable(gl.BLEND)
     gl.blendFuncSeparate(
-      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA
     );
 
@@ -202,7 +201,7 @@ window.addEventListener('load', () => {
   const updateModelMatrix = () => {
     mat4.rotateY(modelMatrix, fixedModelMatrix, time * 0.1)
   }
-  const modelViewMatrix = mat4.create() 
+  const modelViewMatrix = mat4.create()
   const renderCube = (viewMatrix: mat4, color: number[]) => {
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
@@ -265,9 +264,9 @@ window.addEventListener('load', () => {
     let top, left
 
     if(noAr) {
-      width = screenWidth 
+      width = screenWidth
       height = screenHeight
-      top = 0 
+      top = 0
       left = 0
     } else {
       if(arController !== undefined) {
@@ -317,7 +316,7 @@ window.addEventListener('load', () => {
     canvas.style.height = height + "px";
     canvas.style.top = top + "px";
     canvas.style.left = left + "px";
-    canvas.width = Math.round(width * pixelRatio * resolutionFactor) 
+    canvas.width = Math.round(width * pixelRatio * resolutionFactor)
     canvas.height = Math.round(height * pixelRatio * resolutionFactor)
     aspectRatio = width / height
 
@@ -345,10 +344,10 @@ window.addEventListener('load', () => {
     radius: 5,
     sqrtBufferSize: SQRT_BUFFER_SIZE,
     numberOfBuffers: NUMBER_OF_BUFFERS,
-  }) 
+  })
 
 
-  // Camera 
+  // Camera
 
   const lookAt = vec3.fromValues(0, 0, 0)
   const camPosition = vec3.create()
@@ -384,8 +383,8 @@ window.addEventListener('load', () => {
     vec3.scale(camUp, camUp, yScale)
   }
 
-  
-  // AR marker detection 
+
+  // AR marker detection
 
   class Shape {
     visible = false
@@ -397,7 +396,7 @@ window.addEventListener('load', () => {
 
     constructor() {
       this.visible = false
-      this.markerTransformMat = new Float64Array(12) 
+      this.markerTransformMat = new Float64Array(12)
       this.transformMat = mat4.create()
       this.glMatrix = mat4.create()
       this.color = [Math.random(), Math.random(), Math.random()]
@@ -421,18 +420,18 @@ window.addEventListener('load', () => {
         shape = shapes[id]
         transformation = shape.markerTransformMat
         const width = 1
-        if(shape.visible) { 
+        if(shape.visible) {
           arController.getTransMatSquareCont(i, width, transformation, transformation)
         } else {
-          arController.getTransMatSquare(i, width, transformation) 
+          arController.getTransMatSquare(i, width, transformation)
         }
-        arController.transMatToGLMat(transformation, shape.transformMat) 
-        arController.arglCameraViewRHf(shape.transformMat, shape.glMatrix) 
-      }     
+        arController.transMatToGLMat(transformation, shape.transformMat)
+        arController.arglCameraViewRHf(shape.transformMat, shape.glMatrix)
+      }
     }
     for(let i = 0; i < numberOfShapes; i++) {
       if(visibleShapes.has(i)) {
-        shapes[i].visible = true; 
+        shapes[i].visible = true;
       } else {
         shapes[i].visible = false
       }
@@ -445,7 +444,7 @@ window.addEventListener('load', () => {
   let time = 0
   let deltaTime = 0
   let lastDateNow = Date.now()
-  let now = 0 
+  let now = 0
 
   const loop = () => {
 
@@ -465,7 +464,7 @@ window.addEventListener('load', () => {
     } else {
       if (arController !== undefined) {
         updateAR()
-      } 
+      }
       updateModelMatrix()
 
       if(renderBoxes) {
@@ -478,7 +477,7 @@ window.addEventListener('load', () => {
 
       for(let i = 0; i < numberOfShapes; i++) {
         if(shapes[i].visible) {
-          renderCubedShape(shapes[i].glMatrix) 
+          renderCubedShape(shapes[i].glMatrix)
         }
       }
     }
@@ -578,7 +577,7 @@ function makeDrawCube(gl: WebGL2RenderingContext) {
       -1, 1, 1,
       1,-1, 1
     ]
-      
+
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0)
   }
