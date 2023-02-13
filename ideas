@@ -19,6 +19,14 @@ Status can be:
 The following blocks of ideas are in reverse chronological order. 
 The most recent one is at the top. 
 
+### future
+- sync clock across clients
+- multisampling
+- 2D signed distance textur als "mask"
+  - maybe generate from something?
+  - ai generated 
+  - scanned
+
 ### D&C Jahresausstellung
 - D: Rendering
 
@@ -36,36 +44,30 @@ The most recent one is at the top.
 
 - D: use store variables also in sampling 
 
-- visualize the scan area also in cubedShape
+- R(requires sync): visualize the scan area also in cubedShape
 
-- put the raymarch in a function and iclude from 
+- V(no, there are small differences. e.g. escape when leaving cube): 
+  put the raymarch in a function and iclude from 
   - shape and 
   - cubedShape
 
 - performance fallback: 
-  - lower resolution, when framerate drops < 30fps
-  - increase resolution until optimum, when framerate > 50fps
+  - lower resolution, when framerate drops < 24 FPS for 10 consecutive frames
+  - increase resolution until optimum, when framerate > 29fps for 50 consecutive frames
+  - stepfactor 0.9
 
 - das nächste Object ist das gesture target
-  - Also einfach die length cameraposition vergleichen :) 
+  - Also einfach die length cameraPosition vergleichen :) 
+  - dem store/gesture-system mitteilen
 
-- 2D signed distance textur als "mask"
+- different objects
+  - combined sdfs 0to1, 1to2, 2to3, 3to0
 
 - field of repeating bubbles
   - smooth blend mit großer sphere
   - dann twist
 
-- modes
-  - AR has no audio. 
-  - singleShape
-    - no AR
-    - eine einzelne shape wird angezeigt mit audio
-    - audio
-
-- AR fade in and out
-  - wenn nicht mehr visible: 'fade out'
-  - matrix bleibt
-  - use camera distance for z ordering: render far first
+- Gestures
 
 - Gestures: 
   - up-down pan => twist
@@ -73,12 +75,29 @@ The most recent one is at the top.
     - each of us creates one
     - linear interpolation between each 2 neighbors
   - pinch => bumps
-    - interpolate with infinitely gridrepeated circles
+    - interpolate with infinitely gridrepeated spheres 
   - optional: 
     - make thicker & thinner
       - e.g. two finger pan
+    - or custom base sdf manipulation
 
-- multisampling
+- modes
+  - audio
+    - no audio when AR 
+  - D: ar
+  - L: box
+  - D: singleShape
+    - D: no AR
+    - D: eine einzelne shape wird angezeigt mit audio
+
+- AR fade in and out
+  - wenn nicht mehr visible: 'fade out'
+  - matrix bleibt
+  - use camera distance for z ordering: render far first
+
+- R: 2D signed distance textur als "mask"
+
+- R(too much brainfuck for the little time): multisampling
 
 - Presentation 
   - 3 Sockel aus Boxen
@@ -97,6 +116,20 @@ The most recent one is at the top.
     - One light between the three pedestals
       - facing straight down
     - Align real world lighting and digital lighting
+  - Deployment
+    - Server hosten @Basti
+      - 3 Unterschiedliche shapes! ids = {0, 1, ..., 7}
+        - store braucht "setActiveShape"
+        - wird dann immer auf die nächste shape gesetzt 
+          - anhand length(cameraPos)
+      - Leute sollen die shape verändern können
+      - Und unser Laptop, 
+        - der mit den Lautsprechern verbunden ist
+        - ist auch mit dem server verbunden 
+        - und generiert den entsprechenden sound
+          - sound-only parameter
+          - sound-shape parameter (shape id) 
+          
 
 ### initial
 
