@@ -20,12 +20,11 @@ import visualizeFs from './shaders/visualize.fs'
 
 import startSampling from './utils/sampling'
 
-import GestureHandler from './utils/gesture-detection';
+import GestureHandler, { GestureCallbackFn } from './utils/gesture-detection';
 import Store from './store';
 import createSocket from './utils/web-socket';
-import { GestureCallbackFn } from './utils/gesture-detection/gesture-detector';
-import TapDetector from './utils/gesture-detection/tap';
-import PanDetector from './utils/gesture-detection/pan';
+import TapDetector from './utils/gesture-detection/tap-detector';
+import PanDetector from './utils/gesture-detection/pan-detector';
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F
 const SQRT_BUFFER_SIZE = 64
@@ -356,8 +355,7 @@ window.addEventListener('load', async () => {
     numberOfBuffers: NUMBER_OF_BUFFERS,
   }) 
 
-
-  // Camera 
+  // Camera
 
   const lookAt = vec3.fromValues(0, 0, 0)
   const camPosition = vec3.create()
