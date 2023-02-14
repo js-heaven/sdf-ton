@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
+import http from 'http';
 import https from 'https';
 import fs from 'fs';
 
@@ -13,9 +14,17 @@ const cert = fs.readFileSync('ca.crt', 'utf-8');
 
 const app: Express = express();
 const frontendUrl = process.env.FRONTEND_URL;
-const port = process.env.BACKEND_PORT;
+const port = process.env.PORT || 3000;
+const production = process.env.NODE_ENV === 'production';
 
-const server = https.createServer({ key, cert }, app);
+let server;
+
+if (production) {
+  server = http.createServer(app);
+} else {
+  server = https.createServer({ key, cert }, app);
+}
+
 const io = new Server(server, {
   cors: {
     origin: frontendUrl,
@@ -42,5 +51,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
+  console.log(`⚡️[server]: Server is running at http${production ? '' : 's'}://localhost:${port}`);
+  console.log(`Frontend url is: ${frontendUrl}`);
+
 });
