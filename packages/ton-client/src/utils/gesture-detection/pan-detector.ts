@@ -3,12 +3,15 @@ import SingleTouchDetector from './single-touch-detector';
 class PanDetector extends SingleTouchDetector {
   static TYPE = 'pan';
 
-  constructor(touchEvents: TouchEvent[]) {
-    super(touchEvents, PanDetector.TYPE);
+  constructor() {
+    super(PanDetector.TYPE);
   }
 
-  detect(): boolean {
+  detect(touchEvents: TouchEvent[], numTouches: number): boolean {
+    super.detect(touchEvents, numTouches);
+
     if (this.currentTouchesLength !== PanDetector.NUM_TOUCHES) return false;
+
     if (
       this._distBetweenFirstRelevantAndLastTouch <
       PanDetector.PX_MOVE_TOLERANCE
@@ -31,8 +34,6 @@ class PanDetector extends SingleTouchDetector {
     const previousTouch = this.touchEvents[this.touchEvents.length - 2];
 
     if (!this.firstRelevantTouchEvent || !previousTouch) return { deltaX: 0, deltaY: 0 };
-
-
 
     const deltaX =
       this.lastTouchEvent.touches[0].clientX -
