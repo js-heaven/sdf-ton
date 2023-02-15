@@ -43,8 +43,8 @@ export default class ShapeRenderer {
     // II in I) y * y * aspectRatio = 1 / 4
     // y = sqrt(1 / 4 / aspectRatio)
 
-    this.viewPlaneHalfWidth = Math.sqrt(0.25 / aspectRatio)
-    this.viewPlaneHalfHeight = this.viewPlaneHalfWidth * aspectRatio
+    this.viewPlaneHalfHeight = Math.sqrt(0.25 / aspectRatio)
+    this.viewPlaneHalfWidth = this.viewPlaneHalfHeight * aspectRatio
 
     this.gl.useProgram(this.program)
     this.gl.uniform1f(this.uniLocs.aspectRatio, aspectRatio)

@@ -10,23 +10,22 @@ export default class ShapeSampler {
 
   private frequency = 55
 
-  private sampleRate 
-  private periodLength
+  private sampleRate = 44100
+  private periodLength = this.sampleRate / this.frequency
 
-  private center = 1
-  private normalizeFactor = 1
+  private _signalCenter = 1
+  private _signalNormalizeFactor = 1
 
   constructor(
     gl: WebGL2RenderingContext,
-    private drawScreenQuad: () => void,
-    private setSdfUniforms: (uniLocs: any) => void,
+    drawScreenQuad: () => void,
+    setSdfUniforms: (uniLocs: any) => void,
     private radius: number,
     private sqrtBufferSize: number,
     private numberOfBuffers: number,
   ) {
     this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, 55, 0.5)
     this.bufferSize = sqrtBufferSize ** 2
-    this.setSampleRate(42000)
   }
 
   setSampleRate(rate: number) {
@@ -34,7 +33,7 @@ export default class ShapeSampler {
     this.periodLength = rate / this.frequency
   }
 
-  start() {
+  async start() {
     const audioContext = new AudioContext();
     this.setSampleRate(audioContext.sampleRate)
 
@@ -84,8 +83,8 @@ export default class ShapeSampler {
         }
       }
       if(event.data.type == 'normalizeInfo') {
-        this.center = event.data.center
-        this.normalizeFactor = event.data.normalizeFactor
+        this._signalCenter = event.data.center
+        this._signalNormalizeFactor = event.data.normalizeFactor
       }
     }
     continousBufferNode.port.postMessage({
@@ -93,30 +92,31 @@ export default class ShapeSampler {
     })
   }
 
-  isReady() {
+  get ready() {
     return this.generatedBufferCounter > 0
   }
 
-  getPeriodBeginAndLength() {
-    return [
-      this.periodStartSample - this.bufferStartSample, 
-      this.periodLength
-    ]
-  }
-
-  getSampleTexture() {
-    return this.renderer.getSampleTex()
-  }
-
-  getPlaneSegment() : number[] {
-    return this.renderer.getPlaneSegment()
-  }
-
-  getNormalizeInfo() {
+  get firstPeriodInBuffer() {
     return {
-      center: this.center, 
-      normalizeFactor: this.normalizeFactor
+      offset: this.periodStartSample - this.bufferStartSample, 
+      length: this.periodLength
     }
+  }
+
+  get bufferTexture() {
+    return this.renderer.texture
+  }
+
+  get scanSegment() : number[] {
+    return this.renderer.scanSegment
+  }
+
+  get signalCenter() {
+    return this._signalCenter
+  }
+
+  get signalNormalizeFactor() {
+    return this._signalNormalizeFactor
   }
 
   async loadImpulseBuffer(ac: AudioContext, url: string) {

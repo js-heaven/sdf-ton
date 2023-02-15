@@ -60,7 +60,7 @@ class ContinousBuffer extends AudioWorkletProcessor {
     this.bufferPointer = 0
     if(this.currentBuffer === this.nextBuffer) {
       this.currentBuffer = undefined
-      console.error('crackel: starving, no sample buffer available')
+      console.error('crackle: starving, no sample buffer available')
     }
     this.port.postMessage({
       type: 'requestBuffer'

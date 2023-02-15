@@ -97,7 +97,7 @@ export default class CubeRenderer {
     return this.tex
   }
 
-  get planeSegment() : number[] {
+  get scanSegment() : number[] {
     return [this.planeStartAngle, this.planeEndAngle]
   }
 }

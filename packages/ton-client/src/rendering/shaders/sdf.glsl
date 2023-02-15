@@ -130,7 +130,7 @@ float sdf_heavy_calculations(in vec3 p) {
 float sdf_lerp(in vec3 p) {
   //float d1 = sdf_B(p);
   //float d1 = sdf_C(p);
-  float d1 = sdf_heavy_calculations(p);
+  float d1 = sdf_B(p);
   float d3 = sdf_twistedBox(p);
   return mix(d1, d3, twist * 0.5 + 0.5);
 }

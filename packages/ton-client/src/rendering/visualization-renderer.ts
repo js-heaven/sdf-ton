@@ -23,8 +23,9 @@ export default class VisualizationRenderer {
 
   render (
     sampleTex: WebGLTexture, 
-    planeSegment: [number, number], 
-    normalizeInfo: {center: number, normalizeFactor: number}
+    scanSegment: number[], 
+    center: number, 
+    normalizeFactor: number
   ) {
     // use texture
     this.gl.activeTexture(this.gl.TEXTURE0)
@@ -39,11 +40,11 @@ export default class VisualizationRenderer {
     );
 
     this.gl.useProgram(this.program)
-    this.gl.uniform1f(this.uniLocs.periodBegin, planeSegment[0])
-    this.gl.uniform1f(this.uniLocs.periodLength, planeSegment[1])
+    this.gl.uniform1f(this.uniLocs.periodBegin, scanSegment[0])
+    this.gl.uniform1f(this.uniLocs.periodLength, scanSegment[1])
 
-    this.gl.uniform1f(this.uniLocs.center, normalizeInfo.center)
-    this.gl.uniform1f(this.uniLocs.normalizeFactor, normalizeInfo.normalizeFactor)
+    this.gl.uniform1f(this.uniLocs.center, center)
+    this.gl.uniform1f(this.uniLocs.normalizeFactor, normalizeFactor)
 
     this.drawScreenQuad()
   }

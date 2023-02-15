@@ -17,6 +17,8 @@ export class Shape {
 
   fadeOut = 0
   fadeIn = 0
+  alpha = 0
+
   cameraDistance = 0
 
   id: number
@@ -30,6 +32,7 @@ export class Shape {
 export default class ArShapeManager {
   cameraMatrix = mat4.create()
   arController = undefined as any
+  ready = false
 
   portraitCorrectionMatrix = mat4.create()
   projectionMatrix = mat4.create()
@@ -68,6 +71,7 @@ export default class ArShapeManager {
         // controller.setThresholdMode(artoolkit.AR_LABELING_THRESH_MODE_AUTO_OTSU); 
         this.cameraMatrix = mat4.clone(controller.getCameraMatrix())
         this.arController = controller
+        this.ready = true
         resize()
       });
     });
@@ -144,7 +148,7 @@ export default class ArShapeManager {
     for(let i = 0; i < num; i++) {
       info = this.arController.getMarker(i)
       id = info.idMatrix
-      if(id != -1) {
+      if(id != -1 && id < this.numberOfShapes) {
         visibleShapes.add(id)
         shape = this.shapes[id]
         transformation = shape.markerTransformMat
@@ -164,8 +168,10 @@ export default class ArShapeManager {
       shape.fadeOut = Math.max(0, shape.fadeOut - deltaTime)
 
       if(visibleShapes.has(i)) {
+        shape.alpha = 1 - shape.fadeIn / this.fadeTime
         if(!shape.visible) {
           shape.fadeIn = this.fadeTime - shape.fadeOut
+          shape.fadeOut = 0
         }
         shape.visible = true; 
         mat4.rotateY(this.modelMatrix, this.fixedModelMatrix, time * 0.1)
@@ -178,8 +184,10 @@ export default class ArShapeManager {
         vec3.transformMat4(shape.camPosition, shapeCamPosition, shape.inverseModelViewMatrix)
         shape.cameraDistance = vec3.length(shapeCamPosition)
       } else {
+        shape.alpha = shape.fadeOut / this.fadeTime
         if(shape.visible) {
           shape.fadeOut = this.fadeTime - shape.fadeIn
+          shape.fadeIn = 0
         }
         shape.visible = false
       }
@@ -190,7 +198,7 @@ export default class ArShapeManager {
     })
 
     this.closestShape = undefined
-    for(let i = 7 ; i >= 0; i--) {
+    for(let i = this.numberOfShapes - 1; i >= 0; i--) {
       if(this.sortedShapes[i].visible) {
         this.closestShape = this.sortedShapes[i]
         break
