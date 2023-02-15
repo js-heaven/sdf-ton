@@ -11,7 +11,7 @@ export default class CubeRenderer {
 
   private bufferSize: number
 
-  private sampleRate = 42000
+  private sampleRate = 44100
 
   private time = 0
 
@@ -53,7 +53,10 @@ export default class CubeRenderer {
 
     gl.clearColor(0,0,0,0)
     gl.clear(gl.COLOR_BUFFER_BIT)
+  }
 
+  setSampleRate(sampleRate: number) {
+    this.sampleRate = sampleRate
   }
 
   samplePass () {

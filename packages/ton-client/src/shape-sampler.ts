@@ -31,6 +31,7 @@ export default class ShapeSampler {
   setSampleRate(rate: number) {
     this.sampleRate = rate
     this.periodLength = rate / this.frequency
+    this.renderer.setSampleRate(rate)
   }
 
   async start() {
@@ -76,8 +77,8 @@ export default class ShapeSampler {
         }, [a.buffer])
         this.generatedBufferCounter += 1
         const assumedCurrentBuffer = this.generatedBufferCounter - this.numberOfBuffers
-        this.periodLength = this.sampleRate / this.frequency
         this.bufferStartSample = assumedCurrentBuffer * this.bufferSize
+        this.periodLength = this.sampleRate / this.frequency
         while(this.periodStartSample < this.bufferStartSample) {
           this.periodStartSample += this.periodLength
         }
@@ -96,11 +97,12 @@ export default class ShapeSampler {
     return this.generatedBufferCounter > 0
   }
 
-  get firstPeriodInBuffer() {
-    return {
-      offset: this.periodStartSample - this.bufferStartSample, 
-      length: this.periodLength
-    }
+  get firstPeriodOffset() {
+    return this.periodStartSample - this.bufferStartSample
+  }
+
+  get firstPeriodLength() {
+    return this.periodLength
   }
 
   get bufferTexture() {

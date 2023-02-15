@@ -98,7 +98,7 @@ export default class Loop {
         playButton.style.display = 'none'
         this.shapeSampler!.start()
       })
-      if(modeParams.has('visualizer')) {
+      if(modeParams.has('visualize')) {
         this.visualizationRenderer = new VisualizationRenderer(this.gl, this.drawScreenQuad, SQRT_BUFFER_SIZE)
       }
     }
@@ -188,18 +188,6 @@ export default class Loop {
     const beforeRender = Date.now()
 
     // for rendering the scan - maybe make it a function of sampling
-    if(this.shapeSampler) {
-      if(this.visualizationRenderer) {
-        if(this.shapeSampler.bufferTexture) {
-          this.visualizationRenderer.render(
-            this.shapeSampler.bufferTexture,
-            this.shapeSampler.scanSegment, 
-            this.shapeSampler.signalCenter, 
-            this.shapeSampler.signalNormalizeFactor
-          )
-        }
-      }
-    }
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
@@ -207,7 +195,7 @@ export default class Loop {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
 
     if(this.shapeRenderer) {
-      let planeSegment = [[0,0],[0,0]]
+      let planeSegment = [[0,1],[0,1]]
       if(this.shapeSampler) {
         planeSegment = this.shapeSampler.scanSegment.map(
           angle => [Math.cos(angle), Math.sin(angle)]
@@ -236,6 +224,21 @@ export default class Loop {
             )
           }
         })
+      }
+    }
+
+    if(this.shapeSampler) {
+      if(this.visualizationRenderer) {
+        if(this.shapeSampler.bufferTexture) {
+          console.log('firstPeriodOffset', this.shapeSampler.firstPeriodOffset)
+          this.visualizationRenderer.render(
+            this.shapeSampler.bufferTexture,
+            this.shapeSampler.firstPeriodOffset, 
+            this.shapeSampler.firstPeriodLength, 
+            this.shapeSampler.signalCenter, 
+            this.shapeSampler.signalNormalizeFactor
+          )
+        }
       }
     }
 

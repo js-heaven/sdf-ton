@@ -23,7 +23,8 @@ export default class VisualizationRenderer {
 
   render (
     sampleTex: WebGLTexture, 
-    scanSegment: number[], 
+    firstPeriodOffset: number, 
+    firstPeriodLength: number,
     center: number, 
     normalizeFactor: number
   ) {
@@ -40,8 +41,8 @@ export default class VisualizationRenderer {
     );
 
     this.gl.useProgram(this.program)
-    this.gl.uniform1f(this.uniLocs.periodBegin, scanSegment[0])
-    this.gl.uniform1f(this.uniLocs.periodLength, scanSegment[1])
+    this.gl.uniform1f(this.uniLocs.periodBegin, firstPeriodOffset)
+    this.gl.uniform1f(this.uniLocs.periodLength, firstPeriodLength)
 
     this.gl.uniform1f(this.uniLocs.center, center)
     this.gl.uniform1f(this.uniLocs.normalizeFactor, normalizeFactor)
