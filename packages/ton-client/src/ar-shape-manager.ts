@@ -195,8 +195,6 @@ export default class ArShapeManager {
     // order shapes by camera distance, because transparency during fade
     this.sortedShapes = this.shapes.slice().sort((a, b) => b.cameraDistance - a.cameraDistance)
 
-    console.log(this.sortedShapes.map(s => s.cameraDistance)) 
-
     this.closestShape = undefined
     for(let i = this.numberOfShapes - 1; i >= 0; i--) {
       if(this.sortedShapes[i].alpha) {

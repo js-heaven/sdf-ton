@@ -26,7 +26,7 @@ export default class CubedShapeRenderer {
       this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA
     )
 
-    const uniLocs = this.setSdfUniforms(this.programUniLocsPairs, shapeId)
+    const uniLocs = this.selectProgramAndSetSdfUniforms(this.programUniLocsPairs, shapeId)
 
     this.gl.uniformMatrix4fv(uniLocs.mvp, false, mvp)
 
