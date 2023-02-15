@@ -69,9 +69,7 @@ jobs:
       - name: Build with Vite
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
       - name: Debug1
-        run: ls
-      - name: Debug2
-        run: echo ${{ runner.temp }}
+        run: echo $VITE_BACKEND_URL
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
