@@ -24,11 +24,13 @@ concurrency:
   group: "pages"
   cancel-in-progress: true
 
+env:
+  VITE_BACKEND_URL: ${{ env.VITE_BACKEND_URL }}
+
 jobs:
   build:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -68,10 +70,6 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build with Vite
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
-      - name: Debug1
-        run: ls
-      - name: Debug2
-        run: echo ${{ runner.temp }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:

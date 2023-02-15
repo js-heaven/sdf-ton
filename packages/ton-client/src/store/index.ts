@@ -23,7 +23,7 @@ class Store {
   ) {
     this._socket = socket;
     for (let i = 0; i < numberOfShapes; i++) {
-      this.shapeStates.push(new ShapeState(numberOfShapes, this._updateFn));
+      this.shapeStates.push(new ShapeState(i, this._updateFn));
     }
 
     this._registerSocketListeners();
