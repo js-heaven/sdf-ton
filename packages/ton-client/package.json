@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host --https",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "build-check": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts"
   },
