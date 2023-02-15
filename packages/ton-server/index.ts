@@ -9,9 +9,6 @@ import fs from 'fs';
 import { Server } from 'socket.io';
 import Store, { State } from './store';
 
-const key = fs.readFileSync('ca.key', 'utf-8');
-const cert = fs.readFileSync('ca.crt', 'utf-8');
-
 const app: Express = express();
 const frontendUrl = process.env.FRONTEND_URL;
 const port = process.env.PORT || 3000;
@@ -22,6 +19,9 @@ let server;
 if (production) {
   server = http.createServer(app);
 } else {
+  const key = fs.readFileSync('ca.key', 'utf-8');
+  const cert = fs.readFileSync('ca.crt', 'utf-8');
+
   server = https.createServer({ key, cert }, app);
 }
 
