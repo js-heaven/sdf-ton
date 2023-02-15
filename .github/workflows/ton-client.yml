@@ -1,4 +1,4 @@
-name: Deploy von-ton-zu-ton
+name: Deploy Client
 
 on:
   # Runs on pushes targeting the default branch
