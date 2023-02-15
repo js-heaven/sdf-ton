@@ -24,6 +24,9 @@ concurrency:
   group: "pages"
   cancel-in-progress: true
 
+env:
+  VITE_BACKEND_URL: https://ton-server.litc0.de/
+
 jobs:
   build:
     environment:
