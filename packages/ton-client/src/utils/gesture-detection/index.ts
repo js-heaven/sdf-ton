@@ -1,17 +1,26 @@
-import PanDetector from './pan';
-import TapDetector from './tap';
-import PinchDetector from './pinch';
-import GestureDetector, { GestureCallbackFn } from './gesture-detector';
+import BaseGestureDetector from './base-gesture-detector';
+import PanDetector from './pan-detector';
+import PinchDetector from './pinch-detector';
+// Rotation is sitll WIP
+// import RotateDetector from './rotate-detector';
+import SwipeDetector from './swipe-detector';
+import TapDetector from './tap-detector';
+
+export type GestureCallbackFn = (gestureType: string, otherArgs?: any) => void;
 
 class GestureHandler {
   touchTarget: HTMLElement;
   callbackFn: GestureCallbackFn;
 
-  tapDetector?: TapDetector;
-  panDetector?: PanDetector;
-  pinchDetector?: PinchDetector;
+  touchEvents: TouchEvent[] = [];
+  detectedGesture = '';
+  numTouches = 0;
 
-  gestureDetector?: GestureDetector;
+  tapDetector = new TapDetector;
+  panDetector = new PanDetector;
+  swipeDetector = new SwipeDetector;
+  pinchDetector = new PinchDetector;
+  // rotateDetector = new RotateDetector;
 
   constructor(touchTarget: HTMLElement, callbackFn: GestureCallbackFn) {
     this.callbackFn = callbackFn;
@@ -41,38 +50,60 @@ class GestureHandler {
   }
 
   handleTouchStart(ev: TouchEvent) {
-    if (this.gestureDetector) {
-      this.gestureDetector.addTouch(ev);
-      return;
-    }
-
     console.warn('touchStart!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
-    this.gestureDetector = new GestureDetector(ev, this.callbackFn);
+    this.numTouches += 1;
+    this.update(ev);
   }
 
   handleTouchEnd(ev: TouchEvent) {
     ev.preventDefault();
 
-    if (!this.gestureDetector) return;
+    if (this.numTouches === 0 && this.touchEvents.length === 0 && this.detectedGesture === '') return;
 
     console.warn('touchEnd!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.log(this.gestureDetector.touchEvents);
 
-    this.gestureDetector.handleTouchEnd();
-    this.gestureDetector = undefined;
+    this.detectGesture(this.tapDetector);
+    this.detectGesture(this.swipeDetector);
+
+    this.reset();
   }
 
   handleTouchMove(ev: TouchEvent) {
     ev.preventDefault();
 
-    this.gestureDetector?.handleTouchMove(ev);
+    this.update(ev);
+
+    this.detectGesture(this.panDetector);
+    this.detectGesture(this.pinchDetector);
+    // this.detectGesture(this.rotateDetector);
   }
 
   handleTouchCancel(ev: TouchEvent) {
     ev.preventDefault();
 
     console.warn('touchCancel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+  }
+
+  update(touchEvent: TouchEvent) {
+    this.touchEvents.push(touchEvent);
+  }
+
+  reset() {
+    this.numTouches = 0;
+    this.touchEvents = [];
+    this.detectedGesture = '';
+  }
+
+  private detectGesture(detector: BaseGestureDetector) {
+    if (this.numTouches !== detector.numDesiredTouches) return;
+    if (this.detectedGesture && this.detectedGesture !== detector.type) return;
+
+    const gestureDetected = detector.detect(this.touchEvents, this.numTouches);
+    if (!gestureDetected) return;
+
+    this.detectedGesture = this.detectedGesture ? this.detectedGesture : detector.type;
+    this.callbackFn(this.detectedGesture, detector.callbackValue);
   }
 }
 

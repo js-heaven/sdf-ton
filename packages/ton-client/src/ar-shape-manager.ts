@@ -37,7 +37,6 @@ export default class ArShapeManager {
   portraitCorrectionMatrix = mat4.create()
   projectionMatrix = mat4.create()
 
-  numberOfShapes = 3
   shapes: Shape[] = []
   sortedShapes: Shape[] = []
   closestShape: Shape | undefined
@@ -49,6 +48,7 @@ export default class ArShapeManager {
 
   constructor(
     private cam: HTMLVideoElement, 
+    private numberOfShapes: number,
     resize: () => void,
   ) {
     cam.style.display = 'block'
@@ -182,7 +182,7 @@ export default class ArShapeManager {
         mat4.invert(shape.inverseModelViewMatrix, shape.modelViewMatrix)
 
         vec3.transformMat4(shape.camPosition, shapeCamPosition, shape.inverseModelViewMatrix)
-        shape.cameraDistance = vec3.length(shapeCamPosition)
+        shape.cameraDistance = vec3.length(shape.camPosition)
       } else {
         shape.alpha = shape.fadeOut / this.fadeTime
         if(shape.visible) {
@@ -193,13 +193,13 @@ export default class ArShapeManager {
       }
     }
     // order shapes by camera distance, because transparency during fade
-    this.sortedShapes = this.shapes.slice().sort((a, b) => {
-      return b.cameraDistance - a.cameraDistance 
-    })
+    this.sortedShapes = this.shapes.slice().sort((a, b) => b.cameraDistance - a.cameraDistance)
+
+    console.log(this.sortedShapes.map(s => s.cameraDistance)) 
 
     this.closestShape = undefined
     for(let i = this.numberOfShapes - 1; i >= 0; i--) {
-      if(this.sortedShapes[i].visible) {
+      if(this.sortedShapes[i].alpha) {
         this.closestShape = this.sortedShapes[i]
         break
       }

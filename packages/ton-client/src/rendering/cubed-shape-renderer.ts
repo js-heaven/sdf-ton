@@ -9,14 +9,14 @@ export default class CubedShapeRenderer {
 
   constructor(
     private gl: WebGL2RenderingContext, 
-    private setSdfUniforms: (uniLocs: any) => void,
+    private setSdfUniforms: (uniLocs: any, shapeId: number) => void,
     private drawCube: () => void, 
   ) {
     this.program = compileShaders(gl, vs, fs)
     this.uniLocs = makeUniformLocationAccessor(gl, this.program)
   }
 
-  render (mvp: mat4, camPosition: vec3, alpha: number) {
+  render (shapeId: number, mvp: mat4, camPosition: vec3, alpha: number) {
     this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.enable(this.gl.CULL_FACE)
     this.gl.cullFace(this.gl.BACK)
@@ -35,7 +35,7 @@ export default class CubedShapeRenderer {
 
     this.gl.uniform1f(this.uniLocs.alpha, alpha)
 
-    this.setSdfUniforms(this.uniLocs)
+    this.setSdfUniforms(this.uniLocs, shapeId)
 
     this.drawCube()
   }

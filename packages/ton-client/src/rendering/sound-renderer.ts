@@ -21,7 +21,7 @@ export default class CubeRenderer {
   constructor(
     private gl: WebGL2RenderingContext, 
     private drawScreenQuad: () => void, 
-    private setSdfUniforms: (uniLocs: any) => void,
+    private setSdfUniforms: (uniLocs: any, shapeId: number) => void,
     private sqrtBufferSize: number, 
     private frequency: number, 
     private planeFrequency: number
@@ -59,7 +59,7 @@ export default class CubeRenderer {
     this.sampleRate = sampleRate
   }
 
-  samplePass () {
+  samplePass (shapeId) {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo)
     this.gl.viewport(0, 0, this.sqrtBufferSize / 4, this.sqrtBufferSize)
 
@@ -85,7 +85,7 @@ export default class CubeRenderer {
 
     this.time += bufferDuration
 
-    this.setSdfUniforms(this.uniLocs)
+    this.setSdfUniforms(this.uniLocs, shapeId)
 
     this.drawScreenQuad()
 

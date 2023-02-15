@@ -2,12 +2,11 @@ import './style.css'
 
 import { Socket } from 'socket.io-client';
 
-import GestureHandler from './utils/gesture-detection';
+import GestureHandler, { GestureCallbackFn } from './utils/gesture-detection';
 import Store from './store';
 import createSocket from './utils/web-socket';
-import { GestureCallbackFn } from './utils/gesture-detection/gesture-detector';
-import TapDetector from './utils/gesture-detection/tap';
-import PanDetector from './utils/gesture-detection/pan';
+import TapDetector from './utils/gesture-detection/tap-detector';
+import PanDetector from './utils/gesture-detection/pan-detector';
 
 import { makeDrawScreenQuad, makeDrawCube } from './rendering/geometry-setup'
 
@@ -24,9 +23,10 @@ import ShapeSampler from './shape-sampler';
 const SQRT_BUFFER_SIZE = 64
 const NUMBER_OF_BUFFERS = 3
 
+const NUMBER_OF_SHAPES = 8
+
 export default class Loop {
 
-  closestShape: number | undefined
   lastDateNow = Date.now()
   deltaTime = 0
   time = 0
@@ -58,6 +58,8 @@ export default class Loop {
 
   gestureHandler: GestureHandler | undefined
 
+  targetShapeId = 0
+
   constructor(targetFrameDuration: number) {
     const modeParams = new URLSearchParams(location.search) 
 
@@ -73,11 +75,11 @@ export default class Loop {
 
     // create State
     this.socket = createSocket();
-    this.store = new Store(this.socket);
+    this.store = new Store(this.socket, NUMBER_OF_SHAPES);
 
     if(!modeParams.has('no-ar')) { // default to ar 
       const cam = document.getElementById('camera') as HTMLVideoElement
-      this.arShapeManager = new ArShapeManager(cam, this.resize.bind(this))
+      this.arShapeManager = new ArShapeManager(cam, NUMBER_OF_SHAPES, this.resize.bind(this))
       this.cubedShapeRenderer = new CubedShapeRenderer(this.gl, this.setSdfUniforms.bind(this), this.drawCube)
       if(modeParams.has('cubes')) {
         this.cubeRenderer = new CubeRenderer(this.gl, this.drawCube)
@@ -85,6 +87,8 @@ export default class Loop {
     } else if(modeParams.has('render')) {
       this.shapeRenderer = new ShapeRenderer(this.gl, this.setSdfUniforms.bind(this), this.drawScreenQuad)
     }
+
+    this.targetShapeId = parseInt(modeParams.get('shape') || '') || 0
 
     if(modeParams.has('audio')) {
       const playButton = document.getElementById('play') as HTMLDivElement
@@ -105,8 +109,15 @@ export default class Loop {
 
     if(!modeParams.has('no-gestures')) {
       const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
-        if (gestureType === TapDetector.TYPE) this.store.toggleTapState();
-        if (gestureType === PanDetector.TYPE) this.store.updatePanState(args);
+        console.log('Gesture detected:', gestureType, args);
+
+        let targetShapeId: number | undefined = this.targetShapeId 
+        if(this.arShapeManager) {
+          targetShapeId = this.arShapeManager.closestShape?.id
+        }
+        if(targetShapeId !== undefined) {
+          if (gestureType === PanDetector.TYPE) this.store.updatePanState(targetShapeId, args);
+        } 
       }
 
       this.gestureHandler = new GestureHandler(this.canvas, gestureCallbackFn);
@@ -138,9 +149,9 @@ export default class Loop {
     return gl
   }
 
-  setSdfUniforms (uniLocs: any) {
-    this.gl.uniform1f(uniLocs.tapState, this.store.tapState);
-    this.gl.uniform1f(uniLocs.twist, this.store.twist);
+  setSdfUniforms (uniLocs: any, shapeId: number) {
+    const shapeState = this.store.shapeStates[shapeId]
+    this.gl.uniform1f(uniLocs.twist, shapeState.twist);
   }
 
   resize() { 
@@ -202,7 +213,7 @@ export default class Loop {
         )
       }
       this.shapeRenderer.updateCamera(this.time) 
-      this.shapeRenderer.render(this.time, planeSegment)
+      this.shapeRenderer.render(this.targetShapeId, this.time, planeSegment)
     } else {
       if(this.arShapeManager && this.arShapeManager.ready) {
         this.arShapeManager.update(this.time, this.deltaTime) 
@@ -218,6 +229,7 @@ export default class Loop {
         this.arShapeManager.sortedShapes.forEach(shape => {
           if(shape.alpha) {
             this.cubedShapeRenderer!.render(
+              shape.id, 
               shape.mvpMatrix, 
               shape.camPosition,
               shape.alpha

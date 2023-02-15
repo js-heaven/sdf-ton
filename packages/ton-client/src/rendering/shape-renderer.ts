@@ -19,7 +19,7 @@ export default class ShapeRenderer {
 
   constructor(
     private gl: WebGL2RenderingContext, 
-    private setSdfUniforms: (uniLocs: any) => void,
+    private setSdfUniforms: (uniLocs: any, shapeId: number) => void,
     private drawScreenQuad: () => void, 
   ) {
     this.program = compileShaders(gl, vs, fs)
@@ -54,7 +54,7 @@ export default class ShapeRenderer {
 
   }
 
-  render(time: number, planeSegment: number[][]) {
+  render(shapeId: number, time: number, planeSegment: number[][]) {
     this.updateCamera(time) 
 
     this.gl.disable(this.gl.DEPTH_TEST)
@@ -75,7 +75,7 @@ export default class ShapeRenderer {
     this.gl.uniform2fv(this.uniLocs.swipeA, planeSegment[0])
     this.gl.uniform2fv(this.uniLocs.swipeB, planeSegment[1])
 
-    this.setSdfUniforms(this.uniLocs)
+    this.setSdfUniforms(this.uniLocs, shapeId)
 
     this.drawScreenQuad()
   }

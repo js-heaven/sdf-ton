@@ -16,10 +16,12 @@ export default class ShapeSampler {
   private _signalCenter = 1
   private _signalNormalizeFactor = 1
 
+  private shapeId = 0
+
   constructor(
     gl: WebGL2RenderingContext,
     drawScreenQuad: () => void,
-    setSdfUniforms: (uniLocs: any) => void,
+    setSdfUniforms: (uniLocs: any, shapeId: number) => void,
     private radius: number,
     private sqrtBufferSize: number,
     private numberOfBuffers: number,
@@ -70,7 +72,7 @@ export default class ShapeSampler {
     continousBufferNode.connect(gainNode);
     continousBufferNode.port.onmessage = (event) => {
       if(event.data.type == 'requestBuffer') {
-        const a = this.renderer.samplePass()
+        const a = this.renderer.samplePass(this.shapeId) 
         continousBufferNode.port.postMessage({
           type: 'buffer',
           buffer: a.buffer

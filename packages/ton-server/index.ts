@@ -3,13 +3,13 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import https from 'https';
-import fs from "fs";
+import fs from 'fs';
 
 import { Server } from 'socket.io';
+import Store, { State } from './store';
 
-const key = fs.readFileSync("ca.key", "utf-8");
-const cert = fs.readFileSync("ca.crt", "utf-8");
-
+const key = fs.readFileSync('ca.key', 'utf-8');
+const cert = fs.readFileSync('ca.crt', 'utf-8');
 
 const app: Express = express();
 const frontendUrl = process.env.FRONTEND_URL;
@@ -23,28 +23,21 @@ const io = new Server(server, {
   },
 });
 
-const store = {
-  tapState: 0.75,
-  panState: 0,
-  swipeState: 0,
-  pinchState: 0,
-  twistState: 0,
-}
-
 app.get('/', (_req: Request, res: Response) => {
   res.send('Hello 👋');
 });
+
+const store = new Store;
 
 io.on('connection', (socket) => {
   console.log('a user connected');
   console.log(socket.id);
 
-  socket.emit('updateState', store);
+  socket.emit('updateState', store.state);
 
-  socket.on('pushState', (state: any) => {
-    store.tapState = state.tapState;
-    store.twistState = state.twistState;
-    socket.broadcast.emit('updateState', store);
+  socket.on('pushState', (newState: State) => {
+    store.updateState(newState);
+    socket.broadcast.emit('updateState', store.state);
   });
 });
 

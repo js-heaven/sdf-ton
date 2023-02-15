@@ -1,17 +1,20 @@
-import PanSwipeDetector from './pan-swipe';
+import SingleTouchDetector from './single-touch-detector';
 
-class PanDetector extends PanSwipeDetector {
+class PanDetector extends SingleTouchDetector {
   static TYPE = 'pan';
 
-  constructor(touchEvents: TouchEvent[]) {
-    super(touchEvents, PanDetector.TYPE);
+  constructor() {
+    super(PanDetector.TYPE);
   }
 
-  detect(): boolean {
+  detect(touchEvents: TouchEvent[], numTouches: number): boolean {
+    super.detect(touchEvents, numTouches);
+
     if (this.currentTouchesLength !== PanDetector.NUM_TOUCHES) return false;
+
     if (
       this._distBetweenFirstRelevantAndLastTouch <
-      PanSwipeDetector.PX_MOVE_TOLERANCE
+      PanDetector.PX_MOVE_TOLERANCE
     )
       return false;
     if (!this.fulfillsPanRequirements) return false;
@@ -22,7 +25,7 @@ class PanDetector extends PanSwipeDetector {
   get fulfillsPanRequirements(): boolean {
     const fulfillsTimeThreashold =
       this._timeBetweenFirstRelevantAndLastTouch >
-      PanSwipeDetector.PAN_SWIPE_THREASHOLD_MS;
+      PanDetector.PAN_SWIPE_THREASHOLD_MS;
 
     return fulfillsTimeThreashold;
   }
@@ -31,8 +34,6 @@ class PanDetector extends PanSwipeDetector {
     const previousTouch = this.touchEvents[this.touchEvents.length - 2];
 
     if (!this.firstRelevantTouchEvent || !previousTouch) return { deltaX: 0, deltaY: 0 };
-
-
 
     const deltaX =
       this.lastTouchEvent.touches[0].clientX -
