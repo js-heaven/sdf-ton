@@ -11,6 +11,7 @@ body {
 }
 
 #play {
+  display: none;
   cursor: pointer;
   position: absolute;
   bottom: 75%;
@@ -35,6 +36,7 @@ body {
 }
 
 #camera {
+  display: none; 
   position: absolute; 
 }
 
