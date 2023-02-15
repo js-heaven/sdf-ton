@@ -1,11 +1,12 @@
+import { createSdfVariationPrograms, ProgramUniLocsPair } from './create-sdf-variation-programs';
+
 import { vec3 } from 'gl-matrix'
-import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
+
 import vs from './shaders/shape.vs'
 import fs from './shaders/shape.fs'
 
 export default class ShapeRenderer {
-  private program: WebGLProgram; 
-  private uniLocs: any; 
+  private programUniLocsPairs: ProgramUniLocsPair[] = []
 
   private lookAt: vec3
   private camPosition: vec3
@@ -19,11 +20,10 @@ export default class ShapeRenderer {
 
   constructor(
     private gl: WebGL2RenderingContext, 
-    private setSdfUniforms: (uniLocs: any, shapeId: number) => void,
+    private selectProgramAndSetSdfUniforms: (uniLocs: any, shapeId: number) => any,
     private drawScreenQuad: () => void, 
   ) {
-    this.program = compileShaders(gl, vs, fs)
-    this.uniLocs = makeUniformLocationAccessor(gl, this.program)
+    this.programUniLocsPairs = createSdfVariationPrograms(gl, vs, fs)
 
     this.lookAt = vec3.fromValues(0, 0, 0)
 
@@ -46,12 +46,13 @@ export default class ShapeRenderer {
     this.viewPlaneHalfHeight = Math.sqrt(0.25 / aspectRatio)
     this.viewPlaneHalfWidth = this.viewPlaneHalfHeight * aspectRatio
 
-    this.gl.useProgram(this.program)
-    this.gl.uniform1f(this.uniLocs.aspectRatio, aspectRatio)
+    this.programUniLocsPairs.forEach(pair => {
+      this.gl.useProgram(pair.program)
+      this.gl.uniform1f(pair.uniLocs.aspectRatio, aspectRatio)
 
-    const nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
-    this.gl.uniform1f(this.uniLocs.nearPlaneSize, nearPlaneSize) 
-
+      const nearPlaneSize = 0.5 / (aspectRatio > 1 ? 1 : aspectRatio)
+      this.gl.uniform1f(pair.uniLocs.nearPlaneSize, nearPlaneSize) 
+    })
   }
 
   render(shapeId: number, time: number, planeSegment: number[][]) {
@@ -61,21 +62,19 @@ export default class ShapeRenderer {
     this.gl.disable(this.gl.CULL_FACE)
     this.gl.disable(this.gl.BLEND)
 
-    this.gl.useProgram(this.program)
+    const uniLocs = this.selectProgramAndSetSdfUniforms(this.programUniLocsPairs, shapeId)
 
     // time
-    this.gl.uniform1f(this.uniLocs.time, time)
+    this.gl.uniform1f(uniLocs.time, time)
 
     // camera
-    this.gl.uniform3fv(this.uniLocs.camPosition, this.camPosition)
-    this.gl.uniform3fv(this.uniLocs.camStraight, this.camStraight)
-    this.gl.uniform3fv(this.uniLocs.camRight, this.camRight)
-    this.gl.uniform3fv(this.uniLocs.camUp, this.camUp)
+    this.gl.uniform3fv(uniLocs.camPosition, this.camPosition)
+    this.gl.uniform3fv(uniLocs.camStraight, this.camStraight)
+    this.gl.uniform3fv(uniLocs.camRight, this.camRight)
+    this.gl.uniform3fv(uniLocs.camUp, this.camUp)
 
-    this.gl.uniform2fv(this.uniLocs.swipeA, planeSegment[0])
-    this.gl.uniform2fv(this.uniLocs.swipeB, planeSegment[1])
-
-    this.setSdfUniforms(this.uniLocs, shapeId)
+    this.gl.uniform2fv(uniLocs.swipeA, planeSegment[0])
+    this.gl.uniform2fv(uniLocs.swipeB, planeSegment[1])
 
     this.drawScreenQuad()
   }

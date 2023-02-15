@@ -2,7 +2,7 @@ export type ShapeStateType = {
   twist?: number;
   bend?: number;
   bubbles?: number;
-  shape?: string;
+  shape?: number;
   fx?: string;
   note?: string;
 };
@@ -13,7 +13,7 @@ class ShapeState {
   twist = 0;
   bend = 0;
   bubbles = 0;
-  shape = 'cube';
+  shape = 0;
   fx = 'none';
   note = 'c';
 

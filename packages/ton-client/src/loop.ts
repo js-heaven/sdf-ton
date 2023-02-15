@@ -18,6 +18,7 @@ import CubedShapeRenderer from './rendering/cubed-shape-renderer';
 import VisualizationRenderer from './rendering/visualization-renderer';
 
 import ShapeSampler from './shape-sampler';
+import { ProgramUniLocsPair, SDF_VARIANTS } from './rendering/create-sdf-variation-programs';
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F | maybe we can 4x multisample dither
 const SQRT_BUFFER_SIZE = 64
@@ -75,17 +76,21 @@ export default class Loop {
 
     // create State
     this.socket = createSocket();
-    this.store = new Store(this.socket, NUMBER_OF_SHAPES);
+    this.store = new Store(
+      this.socket, 
+      NUMBER_OF_SHAPES,
+      SDF_VARIANTS
+    );
 
     if(!modeParams.has('no-ar')) { // default to ar 
       const cam = document.getElementById('camera') as HTMLVideoElement
       this.arShapeManager = new ArShapeManager(cam, NUMBER_OF_SHAPES, this.resize.bind(this))
-      this.cubedShapeRenderer = new CubedShapeRenderer(this.gl, this.setSdfUniforms.bind(this), this.drawCube)
+      this.cubedShapeRenderer = new CubedShapeRenderer(this.gl, this.selectProgramAndSetSdfUniforms.bind(this), this.drawCube)
       if(modeParams.has('cubes')) {
         this.cubeRenderer = new CubeRenderer(this.gl, this.drawCube)
       }
     } else if(modeParams.has('render')) {
-      this.shapeRenderer = new ShapeRenderer(this.gl, this.setSdfUniforms.bind(this), this.drawScreenQuad)
+      this.shapeRenderer = new ShapeRenderer(this.gl, this.selectProgramAndSetSdfUniforms.bind(this), this.drawScreenQuad)
     }
 
     this.targetShapeId = parseInt(modeParams.get('shape') || '') || 0
@@ -94,7 +99,7 @@ export default class Loop {
       const playButton = document.getElementById('play') as HTMLDivElement
       playButton.style.display = 'block'
       this.shapeSampler = new ShapeSampler(
-        this.gl, this.drawScreenQuad, this.setSdfUniforms.bind(this), 5, 
+        this.gl, this.drawScreenQuad, this.selectProgramAndSetSdfUniforms.bind(this), 5, 
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
       )
@@ -149,9 +154,22 @@ export default class Loop {
     return gl
   }
 
-  setSdfUniforms (uniLocs: any, shapeId: number) {
+  selectProgramAndSetSdfUniforms (programUniLocsPairs: ProgramUniLocsPair[], shapeId: number) {
     const shapeState = this.store.shapeStates[shapeId]
+
+    // select right program
+    const programId = Math.floor(shapeState.shape)
+
+    this.gl.useProgram(programUniLocsPairs[programId].program)
+    const uniLocs = programUniLocsPairs[programId].uniLocs
+    
+    // set linear interpolation [0,1[
+    this.gl.uniform1f(uniLocs.morph, shapeState.shape - programId) 
+
+    // set other uniforms
     this.gl.uniform1f(uniLocs.twist, shapeState.twist);
+
+    return uniLocs
   }
 
   resize() { 

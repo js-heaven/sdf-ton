@@ -1,4 +1,5 @@
 uniform float twist;
+uniform float morph;
 
 #include noise.glsl
 
@@ -140,44 +141,8 @@ float sdf_multiplePrimitives(in vec3 p) {
   return d;
 }
 
-float sdf_twistedBox(in vec3 p) {
-  p = rotateY(p, p.y * 3. * twist);
-  return sdBox(p, vec3(0.4)) - 0.1;
-}
-
-float sdf_B(in vec3 p) {
-  vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
-
-  vec3 pAlt = vec3(p.z, -p.y, -p.x); 
-
-  return min(
-    min(
-      sdCappedTorus(p, c, 0.85, 0.1) - 0.05, 
-      sdCappedTorus(pAlt, c, 0.85, 0.1) - 0.05
-    ), 
-    opSmoothUnion(
-      length(p - 0.2) - 0.35, 
-      length(p + 0.2) - 0.35, 
-      0.25
-    )
-  );
-}
-
 float sdf_C(in vec3 p) {
   return length(p + vec3(0.3, 0, 0)) - 0.7 + 0.2 * diamonds(p, 7.);
-}
-
-float sdf_D(in vec3 p) {
-  return min(
-    min(
-      length(p + vec3(0.5,0,0)) - 0.5,
-      length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5
-    ),
-    min(
-      sdBox(p + vec3(0.3,0,0), vec3(0.5, 0., 1.2)) - 0.1,
-      sdTriPrism(p + vec3(0,0.65,0.8), vec2(0.4, 0.4)) - 0.1
-    )
-  );
 }
 
 float sdf_heavy_calculations(in vec3 p) {
@@ -190,14 +155,19 @@ float sdf_heavy_calculations(in vec3 p) {
   return v; 
 }
 
-float sdf_lerp(in vec3 p) {
-  //float d1 = sdf_B(p);
-  //float d1 = sdf_C(p);
-  float d1 = sdf_B(p);
-  float d3 = sdf_twistedBox(p);
-  return mix(d1, d3, twist * 0.5 + 0.5);
+float injected_sdf_1(in vec3 p) {
+/*injected_sdf_1*/
 }
 
+float injected_sdf_2(in vec3 p) {
+/*injected_sdf_2*/
+}
+
+float sdf_lerp(in vec3 p) {
+  float d1 = injected_sdf_1(p);
+  float d3 = injected_sdf_2(p);
+  return mix(d1, d3, morph);
+}
 
 /* main sdf function */
 

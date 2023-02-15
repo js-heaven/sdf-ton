@@ -1,10 +1,9 @@
-import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
+import { createSdfVariationPrograms, ProgramUniLocsPair } from './create-sdf-variation-programs';
 import vs from './shaders/sample.vs'
 import fs from './shaders/sample.fs'
 
 export default class CubeRenderer {
-  private program: WebGLProgram; 
-  private uniLocs: any; 
+  private programUniLocsPairs: ProgramUniLocsPair[] = []
 
   private fbo: WebGLFramebuffer
   private tex: WebGLTexture
@@ -21,21 +20,21 @@ export default class CubeRenderer {
   constructor(
     private gl: WebGL2RenderingContext, 
     private drawScreenQuad: () => void, 
-    private setSdfUniforms: (uniLocs: any, shapeId: number) => void,
+    private selectProgramAndSetUniforms: (uniLocs: any, shapeId: number) => any,
     private sqrtBufferSize: number, 
     private frequency: number, 
     private planeFrequency: number
   ) {
     this.bufferSize = sqrtBufferSize ** 2
 
-    this.program = compileShaders(gl, vs, fs)
-    this.uniLocs = makeUniformLocationAccessor(gl, this.program)
+    this.programUniLocsPairs = createSdfVariationPrograms(gl, vs, fs)
 
-    gl.useProgram(this.program)
-    gl.uniform1f(this.uniLocs.sqrtBufferSize, this.sqrtBufferSize)
-    gl.uniform1f(this.uniLocs.oneByBufferSize, 1 / this.bufferSize)
-    gl.uniform1f(this.uniLocs.radius, 5)
-
+    this.programUniLocsPairs.forEach(pair => {
+      gl.useProgram(pair.program)
+      gl.uniform1f(pair.uniLocs.sqrtBufferSize, this.sqrtBufferSize)
+      gl.uniform1f(pair.uniLocs.oneByBufferSize, 1 / this.bufferSize)
+      gl.uniform1f(pair.uniLocs.radius, 5)
+    })
 
     // create framebuffer with float texture
     this.fbo = gl.createFramebuffer()!
@@ -59,7 +58,7 @@ export default class CubeRenderer {
     this.sampleRate = sampleRate
   }
 
-  samplePass (shapeId) {
+  samplePass (shapeId: number) {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo)
     this.gl.viewport(0, 0, this.sqrtBufferSize / 4, this.sqrtBufferSize)
 
@@ -67,7 +66,7 @@ export default class CubeRenderer {
     this.gl.disable(this.gl.DEPTH_TEST)
     this.gl.disable(this.gl.CULL_FACE)
 
-    this.gl.useProgram(this.program)
+    const uniLocs = this.selectProgramAndSetUniforms(this.programUniLocsPairs, shapeId)
 
     // calc time stuff
     const bufferDuration = this.bufferSize / this.sampleRate
@@ -75,17 +74,15 @@ export default class CubeRenderer {
     this.planeStartAngle = ((this.time * this.planeFrequency) % 1) * Math.PI * 2
     this.planeEndAngle = bufferDuration * this.planeFrequency * Math.PI * 2 + this.planeStartAngle
 
-    this.gl.uniform1f(this.uniLocs.planeStartAngle, this.planeStartAngle)
-    this.gl.uniform1f(this.uniLocs.planeEndAngle, this.planeEndAngle)
+    this.gl.uniform1f(uniLocs.planeStartAngle, this.planeStartAngle)
+    this.gl.uniform1f(uniLocs.planeEndAngle, this.planeEndAngle)
 
     const startAngle = ((this.time * this.frequency) % 1) * Math.PI * 2
     const endAngle = bufferDuration * this.frequency * Math.PI * 2 + startAngle
-    this.gl.uniform1f(this.uniLocs.startAngle, startAngle)
-    this.gl.uniform1f(this.uniLocs.endAngle, endAngle)
+    this.gl.uniform1f(uniLocs.startAngle, startAngle)
+    this.gl.uniform1f(uniLocs.endAngle, endAngle)
 
     this.time += bufferDuration
-
-    this.setSdfUniforms(this.uniLocs, shapeId)
 
     this.drawScreenQuad()
 

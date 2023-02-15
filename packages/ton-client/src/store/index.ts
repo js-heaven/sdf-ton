@@ -16,7 +16,11 @@ class Store {
   dimensions: Dimensions = { width: 1, height: 1 };
   shapeStates: ShapeState[] = [];
 
-  constructor(socket: Socket, numberOfShapes: number) {
+  constructor(
+    socket: Socket, 
+    numberOfShapes: number, 
+    private numberOfSdfVariants: number
+  ) {
     this._socket = socket;
     for (let i = 0; i < numberOfShapes; i++) {
       this.shapeStates.push(new ShapeState(numberOfShapes, this._updateFn));
@@ -63,7 +67,9 @@ class Store {
     newTwist = Math.min(newTwist, 1);
     newTwist = Math.max(newTwist, -1);
 
-    const newShape = shape + newPanState.deltaX;
+    let newShape = shape + newPanState.deltaX / this.dimensions.width;
+    newShape = newShape % this.numberOfSdfVariants;
+    while(newShape < 0) newShape += this.numberOfSdfVariants;
 
     this.shapeStates[shapeId].twist = newTwist;
     this.shapeStates[shapeId].shape = newShape;

@@ -27,7 +27,18 @@ The most recent one is at the top.
   - ai generated
   - scanned
 
-### D&C Jahresausstellung
+### Endspurt Semester-Ende-Ausstellung
+- Rendering verbessern 
+- Gestures implementieren
+  - Swipe y andere Frequenz
+  - pinch => Bumps 
+  - x pan: continous carousell between 4 shapes 
+    - generate 4 shaders
+      - for audio
+      - and for renderring
+
+### D&C Endspurt Semester-Ende-Ausstellung
+Jahresausstellung
 - D: Rendering
 
   - F(doesn't really work, maybe FXAA is better):
