@@ -7,7 +7,7 @@ const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 2,3 and 7,8
 const halfToneStepFactor = Math.pow(2, 1/12)
 let frequency = 55
 const frequencies: number[] = []
-for(let i = 0; i < 88; i++) { // Klavier
+for(let i = 0; i < 12 * 4 + 1; i++) { 
   if(scale[i % 12]) {
     frequencies.push(frequency) 
   } 
@@ -108,7 +108,7 @@ class Store {
     shapeId: number, 
   ) {
     let newNote = this.shapeStates[shapeId].note + 1
-    newNote = Math.max(newNote, 0)
+    newNote = Math.min(newNote, numberOfNotes - 1)
     this.shapeStates[shapeId].note = newNote
   }
 
@@ -116,7 +116,7 @@ class Store {
     shapeId: number
   ) {
     let newNote = this.shapeStates[shapeId].note - 1
-    newNote = Math.min(newNote, numberOfNotes - 1)
+    newNote = Math.max(newNote, 0)
     this.shapeStates[shapeId].note = newNote
   }
 
