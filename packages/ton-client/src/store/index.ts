@@ -1,6 +1,22 @@
 import { Socket } from 'socket.io-client';
 import ShapeState, { ShapeStateType } from './shape-state';
 
+const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 2,3 and 7,8
+// freqFactor ** 12 = 2, Oktave
+// freqFactor = 2 ** -12
+const halfToneStepFactor = Math.pow(2, 1/12)
+let frequency = 55
+const frequencies: number[] = []
+for(let i = 0; i < 88; i++) { // Klavier
+  if(scale[i % 12]) {
+    frequencies.push(frequency) 
+  } 
+  frequency *= halfToneStepFactor
+}
+
+const numberOfNotes = frequencies.length
+const baseNote = 7 * 2
+
 type Dimensions = {
   height: number;
   width: number;
@@ -23,7 +39,9 @@ class Store {
   ) {
     this._socket = socket;
     for (let i = 0; i < numberOfShapes; i++) {
-      this.shapeStates.push(new ShapeState(i, this._updateFn));
+      const shapeState = new ShapeState(i, this._updateFn)
+      shapeState.note = baseNote + i * 2
+      this.shapeStates.push(shapeState);
     }
 
     this._registerSocketListeners();
@@ -49,7 +67,7 @@ class Store {
     this.shapeStates[shapeId].fx = newFx;
   }
 
-  changeNote(shapeId: number, newNote: string) {
+  changeNote(shapeId: number, newNote: number) {
     this.shapeStates[shapeId].note = newNote;
   }
 
@@ -74,6 +92,36 @@ class Store {
 
     this.shapeStates[shapeId].twist = newTwist;
     this.shapeStates[shapeId].shape = newShape;
+  }
+
+  updateSwipeState(
+    shapeId: number,
+    direction: string
+  ) {
+    console.log('updateSwipeState', shapeId, direction)
+    if(direction === 'up') this.noteUp(shapeId)
+    if(direction === 'down') this.noteDown(shapeId)
+    console.log(this.shapeStates[shapeId].note)
+  }
+
+  noteUp(
+    shapeId: number, 
+  ) {
+    let newNote = this.shapeStates[shapeId].note + 1
+    newNote = Math.max(newNote, 0)
+    this.shapeStates[shapeId].note = newNote
+  }
+
+  noteDown(
+    shapeId: number
+  ) {
+    let newNote = this.shapeStates[shapeId].note - 1
+    newNote = Math.min(newNote, numberOfNotes - 1)
+    this.shapeStates[shapeId].note = newNote
+  }
+
+  getFrequency(shapeId: number) {
+    return frequencies[this.shapeStates[shapeId].note]
   }
 
   set state(newState: State) {

@@ -93,6 +93,10 @@ export default class CubeRenderer {
     return data
   }
 
+  setFrequency(frequency: number) {
+    this.frequency = frequency
+  }
+
   get texture() {
     return this.tex
   }

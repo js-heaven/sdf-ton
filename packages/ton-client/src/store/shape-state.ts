@@ -4,7 +4,7 @@ export type ShapeStateType = {
   bubbles?: number;
   shape?: number;
   fx?: string;
-  note?: string;
+  note?: number;
 };
 
 type UpdateFn = (shapeId: number, newShapeState: ShapeStateType) => void;
@@ -19,7 +19,7 @@ class ShapeState {
   private _bubbles = 0;
   private _shape = 0;
   private _fx = 'none';
-  private _note = 'c'; // this will become noteId, because we have an array of allowed frequencies (scale)
+  private _note = 0; 
 
   private _state: ShapeStateType = {
     twist: this._twist,
@@ -80,7 +80,7 @@ class ShapeState {
     return this._fx;
   }
 
-  set note(newNote: string) {
+  set note(newNote: number) {
     this._note = newNote;
     this._updateFn(this.shapeId, { note: newNote });
   }

@@ -18,6 +18,7 @@ import VisualizationRenderer from './rendering/visualization-renderer';
 
 import ShapeSampler from './shape-sampler';
 import { ProgramUniLocsPair, SDF_VARIANTS } from './rendering/create-sdf-variation-programs';
+import SwipeDetector from './utils/gesture-detection/swipe-detector';
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F | maybe we can 4x multisample dither
 const SQRT_BUFFER_SIZE = 64
@@ -101,6 +102,7 @@ export default class Loop {
         this.gl, this.drawScreenQuad, this.selectProgramAndSetSdfUniforms.bind(this), 5, 
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
+        (shapeId: number) => this.store.getFrequency(shapeId) 
       )
       playButton.addEventListener('click', async () => {
         playButton.style.display = 'none'
@@ -121,6 +123,7 @@ export default class Loop {
         }
         if(targetShapeId !== undefined) {
           if (gestureType === PanDetector.TYPE) this.store.updatePanState(targetShapeId, args);
+          if (gestureType === SwipeDetector.TYPE) this.store.updateSwipeState(targetShapeId, args);
         } 
       }
 

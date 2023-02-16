@@ -25,15 +25,26 @@ export default class ShapeSampler {
     private radius: number,
     private sqrtBufferSize: number,
     private numberOfBuffers: number,
+    private getFrequency: (shapeId: number) => number,
   ) {
-    this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, 55, 0.5)
+    this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 0.5)
     this.bufferSize = sqrtBufferSize ** 2
   }
 
   setSampleRate(rate: number) {
     this.sampleRate = rate
-    this.periodLength = rate / this.frequency
     this.renderer.setSampleRate(rate)
+    this.updatePeriodLength()
+  }
+
+  setFrequency(frequency: number) {
+    this.frequency = frequency
+    this.renderer.setFrequency(frequency)
+    this.updatePeriodLength()
+  }
+
+  updatePeriodLength() {
+    this.periodLength = this.sampleRate / this.frequency
   }
 
   async start() {
@@ -43,17 +54,17 @@ export default class ShapeSampler {
     await audioContext.audioWorklet.addModule("./worklet.js")
 
     const gainNode = new GainNode(audioContext, {gain: 0.0})
-    const filterNode = audioContext.createBiquadFilter();
-    filterNode.type = 'bandpass';
-    filterNode.frequency.value = this.frequency;
-    filterNode.Q.value = 1.;
+    //const filterNode = audioContext.createBiquadFilter();
+    //filterNode.type = 'bandpass';
+    //filterNode.frequency.value = this.frequency;
+    //filterNode.Q.value = 1.;
     const reverbNode = await this.createReverbNode(audioContext)
 
     gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0.1)
     gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 2)
     gainNode.connect(reverbNode)
     
-    filterNode.connect(reverbNode)
+    //filterNode.connect(reverbNode)
     reverbNode.connect(audioContext.destination)
     const continousBufferNode = new AudioWorkletNode(
       audioContext,
@@ -72,6 +83,7 @@ export default class ShapeSampler {
     continousBufferNode.connect(gainNode);
     continousBufferNode.port.onmessage = (event) => {
       if(event.data.type == 'requestBuffer') {
+        this.setFrequency(this.getFrequency(this.shapeId)) // update frequency
         const a = this.renderer.samplePass(this.shapeId) 
         continousBufferNode.port.postMessage({
           type: 'buffer',

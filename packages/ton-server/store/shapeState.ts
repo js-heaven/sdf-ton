@@ -4,7 +4,7 @@ export type ShapeStateType = {
   bubbles?: number;
   shape?: number;
   fx?: string;
-  note?: string;
+  note?: number;
 };
 
 class ShapeState {
@@ -15,7 +15,7 @@ class ShapeState {
   bubbles = 0;
   shape = 0;
   fx = 'none';
-  note = 'c';
+  note = 14; 
 
   private _state: ShapeStateType = {
     twist: this.twist,

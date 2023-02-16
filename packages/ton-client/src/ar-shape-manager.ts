@@ -92,6 +92,7 @@ export default class ArShapeManager {
 
     mat4.fromXRotation(this.fixedModelMatrix, Math.PI / 2) 
     mat4.translate(this.fixedModelMatrix, this.fixedModelMatrix, [0., 1., 0])
+    mat4.scale(this.fixedModelMatrix, this.fixedModelMatrix, [1.5, 1.5, 1.5])
   }
 
   resize(screenWidth: number, screenHeight: number) {
@@ -142,7 +143,7 @@ export default class ArShapeManager {
     return [left, top, width, height]
   }
 
-  update(time: number, deltaTime: number) {
+  update(time: number, deltaTime: number) { // frequencies
     this.arController.detectMarker();
     const num = this.arController.getMarkerNum()
     let info, id, shape, transformation
@@ -186,7 +187,7 @@ export default class ArShapeManager {
       }
 
       if(shape.alpha) {
-        mat4.fromYRotation(shape.modelMatrix, time * 0.1)
+        mat4.fromYRotation(shape.modelMatrix, time * 1.3)
 
         // pay attention, we use helpter this.modelMatrix for incorporating a fixedModelMatrix
         mat4.mul(this.modelMatrix, this.fixedModelMatrix, shape.modelMatrix)
