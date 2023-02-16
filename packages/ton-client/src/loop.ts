@@ -99,10 +99,14 @@ export default class Loop {
       const playButton = document.getElementById('play') as HTMLDivElement
       playButton.style.display = 'block'
       this.shapeSampler = new ShapeSampler(
-        this.gl, this.drawScreenQuad, this.selectProgramAndSetSdfUniforms.bind(this), 5, 
+        this.gl, 
+        this.drawScreenQuad, 
+        this.selectProgramAndSetSdfUniforms.bind(this), 
+        5, 
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
-        (shapeId: number) => this.store.getFrequency(shapeId) 
+        (shapeId: number) => this.store.getFrequency(shapeId),
+        this.targetShapeId
       )
       playButton.addEventListener('click', async () => {
         playButton.style.display = 'none'

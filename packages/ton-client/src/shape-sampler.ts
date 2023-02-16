@@ -16,8 +16,6 @@ export default class ShapeSampler {
   private _signalCenter = 1
   private _signalNormalizeFactor = 1
 
-  private shapeId = 0
-
   constructor(
     gl: WebGL2RenderingContext,
     drawScreenQuad: () => void,
@@ -26,6 +24,7 @@ export default class ShapeSampler {
     private sqrtBufferSize: number,
     private numberOfBuffers: number,
     private getFrequency: (shapeId: number) => number,
+    private shapeId: number
   ) {
     this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 0.5)
     this.bufferSize = sqrtBufferSize ** 2
