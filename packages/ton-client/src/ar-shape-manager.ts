@@ -8,10 +8,12 @@ export class Shape {
   glMatrix = mat4.create()
   color: number[]
 
-  modelViewMatrix = mat4.create()
-  mvpMatrix = mat4.create()
+  modelMatrix = mat4.create()
 
+  modelViewMatrix = mat4.create()
   inverseModelViewMatrix = mat4.create()
+
+  mvpMatrix = mat4.create()
 
   camPosition = vec3.create()
 
@@ -174,15 +176,6 @@ export default class ArShapeManager {
           shape.fadeOut = 0
         }
         shape.visible = true; 
-        mat4.rotateY(this.modelMatrix, this.fixedModelMatrix, time * 0.1)
-        mat4.mul(shape.modelViewMatrix, shape.glMatrix, this.modelMatrix)
-        mat4.mul(shape.mvpMatrix, this.projectionMatrix, shape.modelViewMatrix)
-
-        const shapeCamPosition = vec3.create()
-        mat4.invert(shape.inverseModelViewMatrix, shape.modelViewMatrix)
-
-        vec3.transformMat4(shape.camPosition, shapeCamPosition, shape.inverseModelViewMatrix)
-        shape.cameraDistance = vec3.length(shape.camPosition)
       } else {
         shape.alpha = shape.fadeOut / this.fadeTime
         if(shape.visible) {
@@ -190,6 +183,20 @@ export default class ArShapeManager {
           shape.fadeIn = 0
         }
         shape.visible = false
+      }
+
+      if(shape.alpha) {
+        mat4.fromYRotation(shape.modelMatrix, time * 0.1)
+
+        // pay attention, we use helpter this.modelMatrix for incorporating a fixedModelMatrix
+        mat4.mul(this.modelMatrix, this.fixedModelMatrix, shape.modelMatrix)
+        mat4.mul(shape.modelViewMatrix, shape.glMatrix, this.modelMatrix)
+        mat4.mul(shape.mvpMatrix, this.projectionMatrix, shape.modelViewMatrix)
+
+        mat4.invert(shape.inverseModelViewMatrix, shape.modelViewMatrix)
+
+        vec3.transformMat4(shape.camPosition, vec3.create(), shape.inverseModelViewMatrix)
+        shape.cameraDistance = vec3.length(shape.camPosition)
       }
     }
     // order shapes by camera distance, because transparency during fade

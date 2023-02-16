@@ -6,19 +6,17 @@ uniform float morph;
 /* SDF helper functions */
 
 vec3 rotateY(vec3 v, float angle) {
-    float s = sin(angle);
-    float c = cos(angle);
-    mat3 m = mat3(c, 0, -s, 0, 1, 0, s, 0, c);
-    return m * v;
+  float s = sin(angle);
+  float c = cos(angle);
+  mat3 m = mat3(c, 0, -s, 0, 1, 0, s, 0, c);
+  return m * v;
 }
 
-vec3 rotateX(vec3 point, float angle) {
-  mat4 rotationMatrix = mat4(1.0);
-  rotationMatrix[1][1] = cos(angle);
-  rotationMatrix[1][2] = -sin(angle);
-  rotationMatrix[2][1] = sin(angle);
-  rotationMatrix[2][2] = cos(angle);
-  return (rotationMatrix * vec4(point, 1.0)).xyz;
+vec3 rotateX(vec3 v, float angle) {
+  float s = sin(angle);
+  float c = cos(angle);
+  mat3 m = mat3(1, 0, 0, 0, c, -s, 0, s, c);
+  return m * v;
 }
 
 vec3 opCheapBend(vec3 p , float k)
@@ -73,7 +71,10 @@ float bumps(vec3 p, float scale) {
 }
 
 float bowl(vec3 p) {
-   return length(p) - 0.5;
+  return max(
+    length(p) - 0.5, 
+    - (length(p - vec3(0.3, 0., 0.)) - 0.6) 
+  ); 
 }
 
 
@@ -176,6 +177,7 @@ float sdf_lerp(in vec3 p) {
 /* main sdf function */
 
 float sdf(in vec3 p) {
+  p = rotateX(p, p.x * 2. * twist); 
   return sdf_lerp(p);
 }
 

@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4, mat3, vec3 } from 'gl-matrix'
 
 import { createSdfVariationPrograms, ProgramUniLocsPair } from './create-sdf-variation-programs';
 import loadTexture from './load-texture';
@@ -11,6 +11,8 @@ export default class CubedShapeRenderer {
 
   private envFrontTex: WebGLTexture
   private envBackTex: WebGLTexture
+
+  private inverseModelMatrix3 = mat3.create()
 
   constructor(
     private gl: WebGL2RenderingContext, 
@@ -29,7 +31,14 @@ export default class CubedShapeRenderer {
     this.envBackTex = loadTexture(gl, './env-back.1024.jpg')!
   }
 
-  render (shapeId: number, mvp: mat4, camPosition: vec3, alpha: number) {
+  render (
+    shapeId: number, 
+    mvp: mat4, 
+    camPosition: vec3, 
+    alpha: number, 
+    color: number[], 
+    inverseModelMatrix: mat4, 
+  ) {
     this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.enable(this.gl.CULL_FACE)
     this.gl.cullFace(this.gl.BACK)
@@ -54,6 +63,10 @@ export default class CubedShapeRenderer {
 
     this.gl.uniform1f(uniLocs.alpha, alpha)
 
+    this.gl.uniform3fv(uniLocs.shapeColor, color)
+
+    mat3.fromMat4(this.inverseModelMatrix3, inverseModelMatrix)
+    this.gl.uniformMatrix3fv(uniLocs.inverseModelMatrix, false, this.inverseModelMatrix3)
 
     this.drawCube()
   }

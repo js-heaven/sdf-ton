@@ -160,16 +160,20 @@ export default class Loop {
     // select right program
     const programId = Math.floor(shapeState.shape)
 
-    this.gl.useProgram(programUniLocsPairs[programId].program)
-    const uniLocs = programUniLocsPairs[programId].uniLocs
-    
-    // set linear interpolation [0,1[
-    this.gl.uniform1f(uniLocs.morph, shapeState.shape - programId) 
+    try {
+      this.gl.useProgram(programUniLocsPairs[programId].program)
+      const uniLocs = programUniLocsPairs[programId].uniLocs
 
-    // set other uniforms
-    this.gl.uniform1f(uniLocs.twist, shapeState.twist);
+      // set linear interpolation [0,1[
+      this.gl.uniform1f(uniLocs.morph, shapeState.shape - programId) 
 
-    return uniLocs
+      // set other uniforms
+      this.gl.uniform1f(uniLocs.twist, shapeState.twist);
+
+      return uniLocs
+    } catch (e) {
+      console.warn('failed to use sdf program with id', programId)
+    }
   }
 
   resize() { 
@@ -205,7 +209,6 @@ export default class Loop {
 
     this.store.dimensions.width = screenWidth;
     this.store.dimensions.height = screenHeight;
-
   }
 
   loop() {
@@ -250,7 +253,9 @@ export default class Loop {
               shape.id, 
               shape.mvpMatrix, 
               shape.camPosition,
-              shape.alpha
+              shape.alpha, 
+              shape.color, 
+              shape.modelMatrix
             )
           }
         })
@@ -260,7 +265,6 @@ export default class Loop {
     if(this.shapeSampler) {
       if(this.visualizationRenderer) {
         if(this.shapeSampler.bufferTexture) {
-          console.log('firstPeriodOffset', this.shapeSampler.firstPeriodOffset)
           this.visualizationRenderer.render(
             this.shapeSampler.bufferTexture,
             this.shapeSampler.firstPeriodOffset, 

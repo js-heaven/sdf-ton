@@ -1,4 +1,5 @@
-return min(
+p *= 2.; 
+return 0.5 * min(
   min(
     length(p + vec3(0.5,0,0)) - 0.5,
     length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5

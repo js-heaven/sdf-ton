@@ -41,7 +41,7 @@ class Store {
     this.shapeStates[shapeId].bubbles = newBubbleLevel;
   }
 
-  changeShape(shapeId: number, newShape: string) {
+  changeShape(shapeId: number, newShape: number) {
     this.shapeStates[shapeId].shape = newShape;
   }
 
@@ -61,15 +61,16 @@ class Store {
     shapeId: number,
     newPanState: { deltaX: number; deltaY: number }
   ) {
+    const sensitivity = 3; 
     const { twist, shape } = this.shapeStates[shapeId];
 
-    let newTwist = twist + (2 * newPanState.deltaY) / this.dimensions.height;
+    let newTwist = twist + sensitivity * (2 * newPanState.deltaY) / this.dimensions.height;
     newTwist = Math.min(newTwist, 1);
     newTwist = Math.max(newTwist, -1);
 
-    let newShape = shape + newPanState.deltaX / this.dimensions.width;
-    newShape = newShape % this.numberOfSdfVariants;
+    let newShape = shape + sensitivity * newPanState.deltaX / this.dimensions.width;
     while(newShape < 0) newShape += this.numberOfSdfVariants;
+    newShape = newShape % this.numberOfSdfVariants;
 
     this.shapeStates[shapeId].twist = newTwist;
     this.shapeStates[shapeId].shape = newShape;

@@ -50,7 +50,7 @@ class GestureHandler {
   }
 
   handleTouchStart(ev: TouchEvent) {
-    console.warn('touchStart!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    //console.warn('touchStart!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
     this.numTouches += 1;
     this.update(ev);
@@ -61,7 +61,7 @@ class GestureHandler {
 
     if (this.numTouches === 0 && this.touchEvents.length === 0 && this.detectedGesture === '') return;
 
-    console.warn('touchEnd!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    //console.warn('touchEnd!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
     this.detectGesture(this.tapDetector);
     this.detectGesture(this.swipeDetector);
@@ -82,7 +82,7 @@ class GestureHandler {
   handleTouchCancel(ev: TouchEvent) {
     ev.preventDefault();
 
-    console.warn('touchCancel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    //console.warn('touchCancel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
   }
 
   update(touchEvent: TouchEvent) {
