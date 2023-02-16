@@ -115,7 +115,7 @@ export default class Loop {
 
     if(!modeParams.has('no-gestures')) {
       const gestureCallbackFn: GestureCallbackFn = (gestureType, args) => {
-        console.log('Gesture detected:', gestureType, args);
+        // console.log('Gesture detected:', gestureType, args);
 
         let targetShapeId: number | undefined = this.targetShapeId 
         if(this.arShapeManager) {
