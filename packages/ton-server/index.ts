@@ -9,6 +9,8 @@ import fs from 'fs';
 import { Server } from 'socket.io';
 import Store, { State } from './store';
 
+const NUMBER_OF_SHAPES = 8;
+
 const app: Express = express();
 const frontendUrl = process.env.FRONTEND_URL;
 const port = process.env.PORT || 3000;
@@ -36,7 +38,7 @@ app.get('/', (_req: Request, res: Response) => {
   res.send('Hello 👋');
 });
 
-const store = new Store;
+const store = new Store(NUMBER_OF_SHAPES);
 
 io.on('connection', (socket) => {
   console.log('a user connected');

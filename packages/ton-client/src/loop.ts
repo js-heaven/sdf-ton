@@ -5,7 +5,6 @@ import { Socket } from 'socket.io-client';
 import GestureHandler, { GestureCallbackFn } from './utils/gesture-detection';
 import Store from './store';
 import createSocket from './utils/web-socket';
-import TapDetector from './utils/gesture-detection/tap-detector';
 import PanDetector from './utils/gesture-detection/pan-detector';
 
 import { makeDrawScreenQuad, makeDrawCube } from './rendering/geometry-setup'

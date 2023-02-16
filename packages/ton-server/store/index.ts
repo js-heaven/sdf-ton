@@ -9,6 +9,13 @@ export type UpdateFn = (shapeId: number, newShapeState: ShapeStateType) => void;
 class Store {
   shapeStates: ShapeState[] = [];
 
+  constructor(numberOfShapes: number) {
+    for (let i = 0; i < numberOfShapes; i++) {
+      this.shapeStates.push(new ShapeState(i));
+    }
+
+  }
+
   get state(): State {
     return this.shapeStates.reduce(
       (state: State, shapeState) => ({
@@ -22,18 +29,8 @@ class Store {
   updateState(newState: State) {
     Object.keys(newState).forEach((_shapeId) => {
       const shapeId = Number(_shapeId);
-      this._createOrSetShapeState(shapeId, newState[shapeId]);
+      this.shapeStates[shapeId].state = newState[shapeId];
     });
-  }
-
-  private _createOrSetShapeState(
-    shapeId: number,
-    newShapeState: ShapeStateType
-  ) {
-    if (!this.shapeStates[shapeId])
-      this.shapeStates.push(new ShapeState(this.shapeStates.length));
-
-    this.shapeStates[shapeId].state = newShapeState;
   }
 }
 
