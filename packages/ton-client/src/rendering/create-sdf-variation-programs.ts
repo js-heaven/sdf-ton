@@ -1,9 +1,11 @@
 import { compileShaders, makeUniformLocationAccessor } from './shader-tools'
+import fourBowls from './shaders/sdfs/four-bowls.glsl'
 import oneOfTheFirst from './shaders/sdfs/one-of-the-first.glsl'
 import twistedBox from './shaders/sdfs/twisted-box.glsl'
 import weirdAtom from './shaders/sdfs/weird-atom.glsl'
 
 const sdfs = [
+  fourBowls,
   oneOfTheFirst, 
   twistedBox,
   weirdAtom

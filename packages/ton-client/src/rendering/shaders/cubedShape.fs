@@ -2,6 +2,9 @@
 
 precision highp float;
 
+uniform sampler2D envFront;
+uniform sampler2D envBack;
+
 uniform vec3 camPosition;
 
 uniform float alpha;
@@ -73,10 +76,22 @@ void main() {
 
     // vec3 stepVis = float(s) * vec3(0.05);
     normal = getNormal(pos);
+
+
     color = 0.5 * (
       mix(colorInside, colorOutside, b) +
       clamp(pos * 0.5 + 0.5, 0., 1.)
     );
+
+    vec3 r = reflect(rayDir, normal);
+    vec3 env;
+    if( r.z > 0.) {
+      env = texture(envFront, r.xy * 0.5 + 0.5).rgb;
+    } else {
+      env = texture(envBack, r.xy * 0.5 + 0.5).rgb;
+    }
+    color = (env + color) * 0.5; 
+
     color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
     // see xournalpp sketch
     // bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;

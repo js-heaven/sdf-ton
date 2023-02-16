@@ -1,11 +1,16 @@
 import { mat4, vec3 } from 'gl-matrix'
 
 import { createSdfVariationPrograms, ProgramUniLocsPair } from './create-sdf-variation-programs';
+import loadTexture from './load-texture';
+
 import vs from './shaders/cubedShape.vs'
 import fs from './shaders/cubedShape.fs'
 
 export default class CubedShapeRenderer {
   private programUniLocsPairs: ProgramUniLocsPair[] = []
+
+  private envFrontTex: WebGLTexture
+  private envBackTex: WebGLTexture
 
   constructor(
     private gl: WebGL2RenderingContext, 
@@ -13,6 +18,15 @@ export default class CubedShapeRenderer {
     private drawCube: () => void, 
   ) {
     this.programUniLocsPairs = createSdfVariationPrograms(gl, vs, fs)
+
+    this.programUniLocsPairs.forEach((programUniLocsPair) => {
+      gl.useProgram(programUniLocsPair.program)
+      gl.uniform1i(programUniLocsPair.uniLocs.envFront, 0)
+      gl.uniform1i(programUniLocsPair.uniLocs.envBack, 1)
+    })
+
+    this.envFrontTex = loadTexture(gl, './env-front.1024.jpg')!
+    this.envBackTex = loadTexture(gl, './env-back.1024.jpg')!
   }
 
   render (shapeId: number, mvp: mat4, camPosition: vec3, alpha: number) {
@@ -25,6 +39,12 @@ export default class CubedShapeRenderer {
       this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA,
       this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA
     )
+
+    this.gl.activeTexture(this.gl.TEXTURE0)
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.envFrontTex)
+
+    this.gl.activeTexture(this.gl.TEXTURE1)
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.envBackTex)
 
     const uniLocs = this.selectProgramAndSetSdfUniforms(this.programUniLocsPairs, shapeId)
 

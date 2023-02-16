@@ -72,6 +72,10 @@ float bumps(vec3 p, float scale) {
   return length(p) / scale;
 }
 
+float bowl(vec3 p) {
+   return length(p) - 0.5;
+}
+
 
 /* SDF primitives */
 
