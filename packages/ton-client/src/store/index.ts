@@ -7,10 +7,10 @@ const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 2,3 and 7,8
 const halfToneStepFactor = Math.pow(2, 1/12)
 let frequency = 55
 const frequencies: number[] = []
-for(let i = 0; i < 12 * 4 + 1; i++) { 
+for(let i = 0; i < 12 * 4 + 1; i++) {
   if(scale[i % 12]) {
-    frequencies.push(frequency) 
-  } 
+    frequencies.push(frequency)
+  }
   frequency *= halfToneStepFactor
 }
 
@@ -33,14 +33,13 @@ class Store {
   shapeStates: ShapeState[] = [];
 
   constructor(
-    socket: Socket, 
-    numberOfShapes: number, 
+    socket: Socket,
+    numberOfShapes: number,
     private numberOfSdfVariants: number
   ) {
     this._socket = socket;
     for (let i = 0; i < numberOfShapes; i++) {
-      const shapeState = new ShapeState(i, this._updateFn)
-      shapeState.note = baseNote + i * 2
+      const shapeState = new ShapeState(i, this._updateFn, baseNote + i * 2);
       this.shapeStates.push(shapeState);
     }
 
@@ -79,7 +78,7 @@ class Store {
     shapeId: number,
     newPanState: { deltaX: number; deltaY: number }
   ) {
-    const sensitivity = 3; 
+    const sensitivity = 3;
     const { twist, shape } = this.shapeStates[shapeId];
 
     let newTwist = twist + sensitivity * (2 * newPanState.deltaY) / this.dimensions.height;
@@ -105,7 +104,7 @@ class Store {
   }
 
   noteUp(
-    shapeId: number, 
+    shapeId: number,
   ) {
     let newNote = this.shapeStates[shapeId].note + 1
     newNote = Math.min(newNote, numberOfNotes - 1)
@@ -127,7 +126,7 @@ class Store {
   set state(newState: State) {
     Object.keys(newState).forEach((_shapeId) => {
       const shapeId = Number(_shapeId);
-      this._createOrSetShapeState(shapeId, newState[shapeId]);
+      this.shapeStates[shapeId].state = newState[shapeId];
     });
   }
 
@@ -153,18 +152,6 @@ class Store {
 
   private _updateFn = (shapeId: number, newState: ShapeStateType) => {
     this._pushState({ [shapeId]: newState });
-  }
-
-  private _createOrSetShapeState(
-    shapeId: number,
-    newShapeState: ShapeStateType
-  ) {
-    if (!this.shapeStates[shapeId])
-      this.shapeStates.push(
-        new ShapeState(this.shapeStates.length, this._updateFn)
-      );
-
-    this.shapeStates[shapeId].state = newShapeState;
   }
 }
 

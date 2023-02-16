@@ -19,7 +19,7 @@ class ShapeState {
   private _bubbles = 0;
   private _shape = 0;
   private _fx = 'none';
-  private _note = 0; 
+  private _note = 0;
 
   private _state: ShapeStateType = {
     twist: this._twist,
@@ -30,9 +30,10 @@ class ShapeState {
     note: this._note,
   };
 
-  constructor(shapeId: number, updateFn: UpdateFn) {
+  constructor(shapeId: number, updateFn: UpdateFn, baseNote: number) {
     this.shapeId = shapeId;
     this._updateFn = updateFn;
+    this._note = baseNote;
   }
 
   set twist(newTwist: number) {
