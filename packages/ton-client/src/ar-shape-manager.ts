@@ -9,6 +9,7 @@ export class Shape {
   color: number[]
 
   modelMatrix = mat4.create()
+  rotation = Math.random() * Math.PI * 2
 
   modelViewMatrix = mat4.create()
   inverseModelViewMatrix = mat4.create()
@@ -143,7 +144,7 @@ export default class ArShapeManager {
     return [left, top, width, height]
   }
 
-  update(time: number, deltaTime: number) { // frequencies
+  update(time: number, deltaTime: number, getNote: (shapeId: number) => number) { // frequencies
     this.arController.detectMarker();
     const num = this.arController.getMarkerNum()
     let info, id, shape, transformation
@@ -187,7 +188,11 @@ export default class ArShapeManager {
       }
 
       if(shape.alpha) {
-        mat4.fromYRotation(shape.modelMatrix, time * 1.3)
+        shape.rotation += deltaTime * getNote(i) * 0.12
+        while(shape.rotation > Math.PI * 2) {
+          shape.rotation -= Math.PI * 2
+        }
+        mat4.fromYRotation(shape.modelMatrix, shape.rotation) 
 
         // pay attention, we use helpter this.modelMatrix for incorporating a fixedModelMatrix
         mat4.mul(this.modelMatrix, this.fixedModelMatrix, shape.modelMatrix)

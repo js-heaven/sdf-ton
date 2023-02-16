@@ -239,7 +239,11 @@ export default class Loop {
       this.shapeRenderer.render(this.targetShapeId, this.time, planeSegment)
     } else {
       if(this.arShapeManager && this.arShapeManager.ready) {
-        this.arShapeManager.update(this.time, this.deltaTime) 
+        this.arShapeManager.update(
+          this.time, 
+          this.deltaTime, 
+          shapeId => this.store.shapeStates[shapeId].note
+        )
 
         if(this.cubeRenderer) {
           this.arShapeManager.sortedShapes.forEach(shape => {
