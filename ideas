@@ -1,28 +1,47 @@
 # ideas
 
-A crude way of keeping track of ideas for this project. 
+A crude way of keeping track of ideas for this project.
 
 ## comments
 can be denoted at the beginning of an item
-Syntax: 
+Syntax:
 ```
 <Status>(<comment>): <item>
 ```
-Status can be: 
+Status can be:
 - D = done
 - V = discarded
 - R = deferred
 - F = failed
 
-## ideas 
+## ideas
 
-The following blocks of ideas are in reverse chronological order. 
-The most recent one is at the top. 
+The following blocks of ideas are in reverse chronological order.
+The most recent one is at the top.
 
-### D&C Jahresausstellung
+### future
+- sync clock across clients
+- multisampling
+- 2D signed distance textur als "mask"
+  - maybe generate from something?
+  - ai generated
+  - scanned
+
+### Endspurt Semester-Ende-Ausstellung
+- Rendering verbessern 
+- Gestures implementieren
+  - Swipe y andere Frequenz
+  - pinch => Bumps 
+  - x pan: continous carousell between 4 shapes 
+    - generate 4 shaders
+      - for audio
+      - and for renderring
+
+### D&C Endspurt Semester-Ende-Ausstellung
+Jahresausstellung
 - D: Rendering
 
-  - F(doesn't really work, maybe FXAA is better): 
+  - F(doesn't really work, maybe FXAA is better):
     Edge antialiasing by distance
     - D: inner half of threshold: draw as is
     - D: outer half of threshold: draw with smoothstep e.g.
@@ -34,53 +53,63 @@ The most recent one is at the top.
     - arController.setThresholdMode
     - AR_LABELING_THRESH_MODE_AUTO_OTSU
 
-- D: use store variables also in sampling 
+- D: use store variables also in sampling
 
-- visualize the scan area also in cubedShape
+- R(requires sync): visualize the scan area also in cubedShape
 
-- put the raymarch in a function and iclude from 
-  - shape and 
+- V(no, there are small differences. e.g. escape when leaving cube):
+  put the raymarch in a function and iclude from
+  - shape and
   - cubedShape
 
-- performance fallback: 
-  - lower resolution, when framerate drops < 30fps
-  - increase resolution until optimum, when framerate > 50fps
+- D: performance fallback: 
+  - determine target screen refresh rate by measuring it for half a second
+  - lower resolution, when framerate drops < 24 FPS for 10 consecutive frames
+  - increase resolution until optimum, when framerate > 29fps for 50 consecutive frames
+  - stepfactor 0.9 - or maybe 1/2
 
-- das nächste Object ist das gesture target
-  - Also einfach die length cameraposition vergleichen :) 
+- D: das nächste Object ist das gesture target
+  - Also einfach die length cameraPosition vergleichen :) 
+  - dem store/gesture-system mitteilen
 
-- 2D signed distance textur als "mask"
+- different objects
+  - combined sdfs 0to1, 1to2, 2to3, 3to0
 
 - field of repeating bubbles
   - smooth blend mit großer sphere
   - dann twist
 
-- modes
-  - AR has no audio. 
-  - singleShape
-    - no AR
-    - eine einzelne shape wird angezeigt mit audio
-    - audio
-
-- AR fade in and out
-  - wenn nicht mehr visible: 'fade out'
-  - matrix bleibt
-  - use camera distance for z ordering: render far first
-
-- Gestures: 
+- Gestures
   - up-down pan => twist
   - left-right pan => carousell between 4 base shapes
     - each of us creates one
     - linear interpolation between each 2 neighbors
   - pinch => bumps
-    - interpolate with infinitely gridrepeated circles
-  - optional: 
+    - interpolate with infinitely gridrepeated spheres
+  - optional:
     - make thicker & thinner
       - e.g. two finger pan
+    - or custom base sdf manipulation
 
-- multisampling
+- modes
+  - audio only
+    - no audio when AR
+  - D: ar
+  - L: box
+  - D: singleShape
+    - D: no AR
+    - D: eine einzelne shape wird angezeigt mit audio
 
-- Presentation 
+- D: AR fade in and out
+  - D: wenn nicht mehr visible: 'fade out'
+  - D: matrix bleibt
+  - D: use camera distance for z ordering: render far first
+
+- R: 2D signed distance textur als "mask"
+
+- R(too much brainfuck for the little time): multisampling
+
+- Presentation
   - 3 Sockel aus Boxen
   - Lautsprecher innen rein legen
     - auf schaumstoff
@@ -92,23 +121,37 @@ The most recent one is at the top.
   - Mein Smartphone als Stativ
     - leave this smartphone at its place
     - use your own!: QR code
-  - Lighting 
+  - Lighting
     - QR codes well visible
     - One light between the three pedestals
       - facing straight down
     - Align real world lighting and digital lighting
-
+  - Deployment
+    - Server hosten @Basti
+      - 3 Unterschiedliche shapes! ids = {0, 1, ..., 7}
+        - store braucht "setActiveShape"
+        - wird dann immer auf die nächste shape gesetzt
+          - anhand length(cameraPos)
+      - Leute sollen die shape verändern können
+      - Und unser Laptop,
+        - der mit den Lautsprechern verbunden ist
+        - ist auch mit dem server verbunden
+        - und generiert den entsprechenden sound
+          - sound-only parameter
+          - sound-shape parameter (shape id) 
+  - Rendering überarbeiten
+          
 ### initial
 
 - Ziel: Leute kommen ein zweites mal in die Ausstellung, extra um nochmal mit unserem Projekt spielen zu können
 
-  - Interaction 
-    - Frequency einstellbar 
+  - Interaction
+    - Frequency einstellbar
     - Gesten
     - Interface zu den Shadern
     - Sync across multiple clients
       - Websockets
-      - Server im Lokalen Netzwerk? 
+      - Server im Lokalen Netzwerk?
         - Öffentliches WLAN
     - ca 0.25s delay wegen buffersize + count
 
@@ -119,15 +162,15 @@ The most recent one is at the top.
     - Graphics
       - Reflections
         - Raum als 6 sided cube map
-    - Audio 
+    - Audio
       - Synchronisiert: Voreingestellte bpm
-      - Verschiedene Vielfache (3, 4, 8, 5) 
+      - Verschiedene Vielfache (3, 4, 8, 5)
 
-  - Sound zu Anlage 
+  - Sound zu Anlage
     - 1 Objekt pro Speaker
     - 1 tab vs 7 browsertabs https://blabla/audio/object?1-7
       - WebAudio kann auch mehrere Channels
-    - irgendjemand mit MAC oder Windows (wegen Dante) 
+    - irgendjemand mit MAC oder Windows (wegen Dante)
     - Filter & Effekte
       - Unterschiedlich je node
       - z.B. Sägezahn LFO + FM für Percussionartiges
@@ -135,7 +178,7 @@ The most recent one is at the top.
 
   - QR-codes
     - Auf Hölzernen Sockeln / Tische
-      - Marker für VR? 
+      - Marker für VR?
 
   - AR (low prio)
     - Modellieren

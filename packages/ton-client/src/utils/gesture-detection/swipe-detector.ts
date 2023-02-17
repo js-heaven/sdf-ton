@@ -3,11 +3,13 @@ import SingleTouchDetector from './single-touch-detector';
 class SwipeDetector extends SingleTouchDetector {
   static TYPE = 'swipe';
 
-  constructor(touchEvents: TouchEvent[]) {
-    super(touchEvents, SwipeDetector.TYPE);
+  constructor() {
+    super(SwipeDetector.TYPE);
   }
 
-  detect(): boolean {
+  detect(touchEvents: TouchEvent[], numTouches: number): boolean {
+    super.detect(touchEvents, numTouches);
+
     if (this.currentTouchesLength !== SwipeDetector.NUM_TOUCHES) return false;
     if (!this.fulfillsSwipeRequirements) return false;
 

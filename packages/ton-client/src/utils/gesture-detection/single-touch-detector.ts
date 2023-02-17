@@ -5,8 +5,8 @@ class SingleTouchDetector extends BaseGestureDetector {
   static PAN_SWIPE_THREASHOLD_MS = 200;
   static PAN_SWIPE_THREASHOLD_PX = 50;
 
-  constructor(touchEvents: TouchEvent[], type: string) {
-    super(touchEvents, type, SingleTouchDetector.NUM_TOUCHES);
+  constructor(type: string) {
+    super(type, SingleTouchDetector.NUM_TOUCHES);
   }
 
   protected get _distBetweenFirstRelevantAndLastTouch(): number {
