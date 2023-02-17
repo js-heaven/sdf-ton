@@ -9,4 +9,7 @@ vec3 r = vec3(
   q.y * 0.7071 - q.x * 0.7071,
   q.z
 ); 
-return bowl(r);
+return min(
+  bowl(r), 
+  length(p + vec3(0, 0.5, 0)) - 0.3
+); 

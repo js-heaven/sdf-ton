@@ -26,7 +26,7 @@ export default class ShapeSampler {
     private getFrequency: (shapeId: number) => number,
     private shapeId: number
   ) {
-    this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 0.5)
+    this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 0.125)
     this.bufferSize = sqrtBufferSize ** 2
   }
 

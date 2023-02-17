@@ -26,6 +26,8 @@ const NUMBER_OF_BUFFERS = 3
 
 const NUMBER_OF_SHAPES = 8
 
+const CAM_RADIUS = 2.5
+
 export default class Loop {
 
   lastDateNow = Date.now()
@@ -40,16 +42,15 @@ export default class Loop {
 
   arShapeManager: ArShapeManager | undefined
 
-  targetFrameDuration: number
-  slowFramesSince = 0
-  optimalFramesSince = 0
   maxRenderTime: number
-  avgRenderTime: number
+  avgRenderTime = 0
   
   resolutionDivisor = 1
 
   canvas: HTMLCanvasElement
   gl: WebGL2RenderingContext
+
+  fps: HTMLDivElement | undefined
 
   drawScreenQuad: () => void
   drawCube: () => void
@@ -61,12 +62,12 @@ export default class Loop {
 
   targetShapeId = 0
 
-  constructor(targetFrameDuration: number) {
+  lastLoopCall: number | undefined
+
+  constructor() {
     const modeParams = new URLSearchParams(location.search) 
 
-    this.targetFrameDuration = targetFrameDuration
-    this.maxRenderTime = Math.min(1 / 40, this.targetFrameDuration / 0.8) 
-    this.avgRenderTime = this.targetFrameDuration
+    this.maxRenderTime = 1/24 // minimum 24 fps
 
     this.canvas = document.getElementById("canvas") as HTMLCanvasElement
     this.gl = this.setUpWebGL(this.canvas) 
@@ -82,6 +83,11 @@ export default class Loop {
       SDF_VARIANTS
     );
 
+    if(modeParams.has('fps')) {
+      this.fps = document.getElementById('fps') as HTMLDivElement
+      this.fps.style.display = 'block'
+    }
+
     if(!modeParams.has('no-ar')) { // default to ar 
       const cam = document.getElementById('camera') as HTMLVideoElement
       this.arShapeManager = new ArShapeManager(cam, NUMBER_OF_SHAPES, this.resize.bind(this))
@@ -90,7 +96,12 @@ export default class Loop {
         this.cubeRenderer = new CubeRenderer(this.gl, this.drawCube)
       }
     } else if(modeParams.has('render')) {
-      this.shapeRenderer = new ShapeRenderer(this.gl, this.selectProgramAndSetSdfUniforms.bind(this), this.drawScreenQuad)
+      this.shapeRenderer = new ShapeRenderer(
+        this.gl, 
+        this.selectProgramAndSetSdfUniforms.bind(this), 
+        this.drawScreenQuad, 
+        CAM_RADIUS
+      )
     }
 
     this.targetShapeId = parseInt(modeParams.get('shape') || '') || 0
@@ -102,7 +113,7 @@ export default class Loop {
         this.gl, 
         this.drawScreenQuad, 
         this.selectProgramAndSetSdfUniforms.bind(this), 
-        5, 
+        CAM_RADIUS, 
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
         (shapeId: number) => this.store.getFrequency(shapeId),
@@ -133,7 +144,9 @@ export default class Loop {
 
       this.gestureHandler = new GestureHandler(this.canvas, gestureCallbackFn);
     }
+  }
 
+  start() {
     window.addEventListener('resize', this.resize.bind(this))
     this.resize()
 
@@ -201,20 +214,24 @@ export default class Loop {
     this.canvas.style.height = height + "px";
     this.canvas.style.top = top + "px";
     this.canvas.style.left = left + "px";
-    this.canvas.width = Math.round(width * pixelRatio / this.resolutionDivisor) 
-    this.canvas.height = Math.round(height * pixelRatio / this.resolutionDivisor)
 
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
-    
-    const aspectRatio = width / height
+    // wait for DOM before setting the new resolution
+    setTimeout(() => {
+      this.canvas.width = Math.round(width * pixelRatio / this.resolutionDivisor) 
+      this.canvas.height = Math.round(height * pixelRatio / this.resolutionDivisor)
 
-    if(this.shapeRenderer) {
-      this.shapeRenderer.setAspectRatio(aspectRatio)
-    }
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
+      this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
+      
+      const aspectRatio = width / height
 
-    this.store.dimensions.width = screenWidth;
-    this.store.dimensions.height = screenHeight;
+      if(this.shapeRenderer) {
+        this.shapeRenderer.setAspectRatio(aspectRatio)
+      }
+
+      this.store.dimensions.width = screenWidth;
+      this.store.dimensions.height = screenHeight;
+    }) 
   }
 
   loop() {
@@ -223,7 +240,14 @@ export default class Loop {
     this.lastDateNow = now
     this.time += this.deltaTime
 
-    const beforeRender = Date.now()
+    if(this.lastLoopCall !== undefined) {
+      const timeSinceLoopCall = (now - this.lastLoopCall) * 0.001
+      if(!(timeSinceLoopCall < 0.002)) {
+        this.checkPerformanceAndAdjustResolution(timeSinceLoopCall)
+      }
+    }
+    
+    this.lastLoopCall = now
 
     // for rendering the scan - maybe make it a function of sampling
 
@@ -286,40 +310,20 @@ export default class Loop {
       }
     }
 
-    this.gl.finish()
-
-    const afterRender = Date.now()
-    const renderTime = (afterRender - beforeRender) * 0.001
-
-    this.checkPerformanceAndAdjustResolution(renderTime)
-
     requestAnimationFrame(this.loop.bind(this))
   }
 
-  checkPerformanceAndAdjustResolution(renderTime: number) {
-    if(renderTime > this.maxRenderTime) {
-      this.slowFramesSince += renderTime
-    } else {
-      this.slowFramesSince = 0
+  checkPerformanceAndAdjustResolution(timeBetweenLoopCalls: number) {
+    this.avgRenderTime = (this.avgRenderTime * 9 + timeBetweenLoopCalls) * 0.1
+    if(this.fps) {
+      this.fps.textContent = Math.trunc(1 / this.avgRenderTime) + ' fps'
     }
-
-    if(this.slowFramesSince > 0.5) { // if slow frames for more than one second
-      this.resolutionDivisor += 1
+    console.log(this.avgRenderTime) 
+    if(this.avgRenderTime > this.maxRenderTime) {
+      console.log('reducing resolution') 
+      this.avgRenderTime = this.maxRenderTime * 0.75
+      this.resolutionDivisor *= 2
       this.resize()
-      this.slowFramesSince = -0.5 // wait 2 seconds before reevaluation
-    }
-
-    if(this.resolutionDivisor > 1) {
-      this.avgRenderTime = (99 * this.avgRenderTime + renderTime) * 0.01
-
-      // workload factor expresses how much more pixel a shift up in resolutionDivisor would mean
-      const workloadFactor = Math.pow(this.resolutionDivisor / (this.resolutionDivisor - 1), 2) 
-
-      if(this.avgRenderTime < this.targetFrameDuration / workloadFactor) {
-        this.resolutionDivisor -= 1
-        this.optimalFramesSince = -1
-        this.resize()
-      }
     }
   }
 }

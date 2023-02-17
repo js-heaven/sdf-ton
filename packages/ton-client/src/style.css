@@ -40,6 +40,17 @@ body {
   position: absolute; 
 }
 
+#fps {
+  display: none; 
+  position: absolute; 
+  right: 1rem; 
+  top: 1rem; 
+  font-weight: bold; 
+  padding: 0.2rem; 
+  background-color: #0004; 
+  color: #fff; 
+}
+
 /* {
   outline: 1px solid green; 
 } /**/

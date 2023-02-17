@@ -13,7 +13,6 @@ export default class ShapeRenderer {
   private camStraight: vec3
   private camRight: vec3
   private camUp: vec3
-  private camR: number
 
   private viewPlaneHalfWidth = 1
   private viewPlaneHalfHeight = 1
@@ -22,6 +21,7 @@ export default class ShapeRenderer {
     private gl: WebGL2RenderingContext, 
     private selectProgramAndSetSdfUniforms: (uniLocs: any, shapeId: number) => any,
     private drawScreenQuad: () => void, 
+    private camRadius: number
   ) {
     this.programUniLocsPairs = createSdfVariationPrograms(gl, vs, fs)
 
@@ -32,7 +32,6 @@ export default class ShapeRenderer {
     this.camRight = vec3.create()
     this.camUp = vec3.create()
 
-    this.camR = 5
   }
 
   setAspectRatio(aspectRatio: number) {
@@ -81,9 +80,9 @@ export default class ShapeRenderer {
 
   updateCamera(time: number) {
     vec3.set(this.camPosition,
-      this.camR * Math.cos(time * 0.5),
+      this.camRadius * Math.cos(time * 0.5),
       Math.sin(time * 0.33) * 2.5,
-      this.camR * Math.sin(time * 0.5),
+      this.camRadius * Math.sin(time * 0.5),
     )
 
     vec3.sub(this.camStraight, this.lookAt, this.camPosition)
