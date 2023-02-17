@@ -50,7 +50,10 @@ class ArpeggiatorPattern {
 }
 
 const arps: ArpeggiatorPattern[] = []
-for(let i = 0; i < 2; i++) {
+
+const NUMBER_OF_ARPS = 40
+
+for(let i = 0; i < NUMBER_OF_ARPS; i++) {
   arps.push(new ArpeggiatorPattern(
     4 * (2 + Math.trunc(Math.random() * 5)), 
     Math.random(),
@@ -59,8 +62,6 @@ for(let i = 0; i < 2; i++) {
     Math.random() * 0.5 + 0.25
   ))
 }
-
-const NUMBER_OF_ARPS = arps.length
 
 export default class ShapeSampler {
   private bufferSize: number;
