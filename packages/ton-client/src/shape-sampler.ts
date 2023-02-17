@@ -23,21 +23,23 @@ class ArpeggiatorPattern {
     let nextSlotWithANote = undefined
 
     // generate triggers in reverse order
-    let i = this.slotsPerBar
-    while(i > 0) {
-      i -= 1
-      if(Math.random() < density) {
-        let noteLength = 0
-        if(nextSlotWithANote) {
-          noteLength = Math.round(
-            Math.random() * (nextSlotWithANote - i)
-          ) // 
+    while(this.triggers.length == 0) {
+      let i = this.slotsPerBar
+      while(i > 0) {
+        i -= 1
+        if(Math.random() < density) {
+          let noteLength = 0
+          if(nextSlotWithANote) {
+            noteLength = Math.round(
+              Math.random() * (nextSlotWithANote - i)
+            ) // 
+          }
+          nextSlotWithANote = i
+          this.triggers.push({
+            slot: i, 
+            length: noteLength
+          })
         }
-        nextSlotWithANote = i
-        this.triggers.push({
-          slot: i, 
-          length: noteLength
-        })
       }
     }
     const lastTrigger = this.triggers[0]
@@ -55,10 +57,10 @@ const NUMBER_OF_ARPS = 40
 
 for(let i = 0; i < NUMBER_OF_ARPS; i++) {
   arps.push(new ArpeggiatorPattern(
-    4 * (2 + Math.trunc(Math.random() * 5)), 
-    Math.random(),
-    Math.random(),
-    Math.trunc(Math.random() * 8) / 4, 
+    2 * (2 + Math.trunc(Math.random() * 5)), 
+    Math.random() * 0.1 + 0.01,
+    Math.random() * 0.5,
+    Math.trunc(Math.random() * 3) / 4, 
     Math.random() * 0.5 + 0.25
   ))
 }
@@ -79,7 +81,7 @@ export default class ShapeSampler {
   private _signalCenter = 1
   private _signalNormalizeFactor = 1
 
-  private barDuration = 2 // sekunden
+  private barDuration = 3 // sekunden
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -92,7 +94,9 @@ export default class ShapeSampler {
     private getArpeggiatorId: (shapeId: number) => number, 
     private shapeId: number
   ) {
-    this.renderer = new SoundRenderer(gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 0.125)
+    this.renderer = new SoundRenderer(
+      gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 1 / (this.barDuration * 2)
+    ) 
     this.bufferSize = sqrtBufferSize ** 2
   }
 
@@ -131,11 +135,10 @@ export default class ShapeSampler {
     gainNode.connect(reverbNode)
 
     const prepareGainNodeForTheNextBar = (bar: number, start: number) => {
-      let arpId = this.getArpeggiatorId(this.shapeId)
-      if(arpId < 0) {
-        arpId = NUMBER_OF_ARPS - arpId
-      }
-      arpId = arpId % NUMBER_OF_ARPS
+      let arpId = this.getArpeggiatorId(this.shapeId) % NUMBER_OF_ARPS
+      while(arpId < 0) {
+        arpId += NUMBER_OF_ARPS
+      } 
       const arp = arps[arpId]
 
       const slotDuration = this.barDuration / arp.slotsPerBar

@@ -94,7 +94,7 @@ class ShapeState {
   }
 
   set arpeggiatorId(newArpeggiatorId: number) {
-    this._note = newArpeggiatorId;
+    this._arpeggiatorId = newArpeggiatorId;
     this._updateFn(this.shapeId, { arpeggiatorId: newArpeggiatorId });
   }
 
