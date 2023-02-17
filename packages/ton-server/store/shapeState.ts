@@ -5,6 +5,7 @@ export type ShapeStateType = {
   shape?: number;
   fx?: string;
   note?: number;
+  arpeggiatorId?: number;
 };
 
 class ShapeState {
@@ -15,7 +16,8 @@ class ShapeState {
   bubbles = 0;
   shape = 0;
   fx = 'none';
-  note = 14; 
+  note = 14;
+  arpeggiatorId = 0;
 
   private _state: ShapeStateType = {
     twist: this.twist,
@@ -24,6 +26,7 @@ class ShapeState {
     shape: this.shape,
     fx: this.fx,
     note: this.note,
+    arpeggiatorId: this.arpeggiatorId,
   };
 
   constructor(shapeId: number) {
@@ -40,6 +43,7 @@ class ShapeState {
       shape: this.shape,
       fx: this.fx,
       note: this.note,
+      arpeggiatorId: this.arpeggiatorId,
     };
   }
 

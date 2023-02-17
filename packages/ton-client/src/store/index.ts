@@ -70,6 +70,10 @@ class Store {
     this.shapeStates[shapeId].note = newNote;
   }
 
+  changeArpeggiatorId(shapeId: number, newArpeggiatorId: number) {
+    this.shapeStates[shapeId].arpeggiatorId = newArpeggiatorId;
+  }
+
   changeState(shapeId: number, newState: State) {
     this.shapeStates[shapeId].state = newState;
   }
@@ -97,10 +101,10 @@ class Store {
     shapeId: number,
     direction: string
   ) {
-    console.log('updateSwipeState', shapeId, direction)
-    if(direction === 'up') this.noteUp(shapeId)
-    if(direction === 'down') this.noteDown(shapeId)
-    console.log(this.shapeStates[shapeId].note)
+    if (direction === 'up') this.noteUp(shapeId);
+    if (direction === 'down') this.noteDown(shapeId);
+    if (direction === 'left') this.arpeggiatorIdDown(shapeId);
+    if (direction === 'right') this.arpeggiatorIdUp(shapeId);
   }
 
   noteUp(
@@ -117,6 +121,18 @@ class Store {
     let newNote = this.shapeStates[shapeId].note - 1
     newNote = Math.max(newNote, 0)
     this.shapeStates[shapeId].note = newNote
+  }
+
+  arpeggiatorIdDown(shapeId: number) {
+    const oldArpeggiatorId = this.shapeStates[shapeId].arpeggiatorId;
+    const newArpeggiatorId = oldArpeggiatorId - 1;
+    this.changeArpeggiatorId(shapeId, newArpeggiatorId);
+  }
+
+  arpeggiatorIdUp(shapeId: number) {
+    const oldArpeggiatorId = this.shapeStates[shapeId].arpeggiatorId;
+    const newArpeggiatorId = oldArpeggiatorId + 1;
+    this.changeArpeggiatorId(shapeId, newArpeggiatorId);
   }
 
   getFrequency(shapeId: number) {
