@@ -117,6 +117,7 @@ export default class Loop {
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
         (shapeId: number) => this.store.getFrequency(shapeId),
+        (shapeId: number) => this.store.shapeStates[shapeId].arpeggiatorId, 
         this.targetShapeId
       )
       playButton.addEventListener('click', async () => {
@@ -318,7 +319,6 @@ export default class Loop {
     if(this.fps) {
       this.fps.textContent = Math.trunc(1 / this.avgRenderTime) + ' fps'
     }
-    console.log(this.avgRenderTime) 
     if(this.avgRenderTime > this.maxRenderTime) {
       console.log('reducing resolution') 
       this.avgRenderTime = this.maxRenderTime * 0.75
