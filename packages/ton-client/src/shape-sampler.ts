@@ -128,7 +128,7 @@ export default class ShapeSampler {
 
     gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0)
     gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
-    gainNode.connect(audioContext.destination)
+    gainNode.connect(reverbNode)
 
     const prepareGainNodeForTheNextBar = (bar: number, start: number) => {
       let arpId = this.getArpeggiatorId(this.shapeId)
@@ -155,7 +155,8 @@ export default class ShapeSampler {
       }, 1000 * ((nextBarStart - now) - 0.1) ) // always schedule arp setting 100ms before next bar
     }
 
-    prepareGainNodeForTheNextBar(0, audioContext.currentTime + 0.1)
+    const start = (0.001 * Date.now() + this.barDuration - 0.1) % this.barDuration + 0.1 // sync a bit
+    prepareGainNodeForTheNextBar(0, start)
     
     //filterNode.connect(reverbNode)
     reverbNode.connect(audioContext.destination)
