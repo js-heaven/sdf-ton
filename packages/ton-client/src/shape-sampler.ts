@@ -17,7 +17,6 @@ class ArpeggiatorPattern {
     density: number
   ) {
     this.fillRandom(density) 
-    console.log(this.triggers)
   }
 
   fillRandom(density: number) {
@@ -131,7 +130,6 @@ export default class ShapeSampler {
     gainNode.connect(audioContext.destination)
 
     const prepareGainNodeForTheNextBar = (bar: number, start: number) => {
-      console.log('prep gain node') 
       let arpId = this.getArpeggiatorId(this.shapeId)
       if(arpId < 0) {
         arpId = NUMBER_OF_ARPS - arpId
@@ -141,19 +139,11 @@ export default class ShapeSampler {
 
       const slotDuration = this.barDuration / arp.slotsPerBar
 
-      console.log('using arp', arp) 
-
       arp.triggers.forEach(t => {
         gainNode.gain.setValueAtTime(0.01, start + (t.slot) * slotDuration)
         gainNode.gain.linearRampToValueAtTime(1, start + (arp.attack + t.slot) * slotDuration)
         gainNode.gain.exponentialRampToValueAtTime(arp.sustain, start + (t.slot + t.length) * slotDuration) 
         gainNode.gain.exponentialRampToValueAtTime(0.01, start + (t.slot + t.length + arp.decay) * slotDuration) 
-        console.log(`
-gainNode.gain.setValueAtTime(0.01, ${start + (t.slot) * slotDuration})
-gainNode.gain.linearRampToValueAtTime(1, ${start + (arp.attack + t.slot) * slotDuration})
-gainNode.gain.exponentialRampToValueAtTime(arp.sustain, ${start + (t.slot + t.length) * slotDuration}) 
-gainNode.gain.exponentialRampToValueAtTime(0.01, ${start + (t.slot + t.length + arp.decay) * slotDuration}) 
-          `)
       })
 
       const now = audioContext.currentTime
