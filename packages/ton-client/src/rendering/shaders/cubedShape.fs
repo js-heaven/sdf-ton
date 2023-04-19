@@ -2,7 +2,16 @@
 
 precision highp float;
 
+uniform sampler2D envFront;
+uniform sampler2D envBack;
+
+uniform float alpha;
+
 uniform vec3 camPosition;
+
+uniform vec3 shapeColor; 
+
+uniform mat3 inverseModelMatrix; 
 
 in vec3 modelVertex;
 
@@ -25,9 +34,7 @@ vec3 sky(vec3 v) {
   return vec3(v * 0.5 + 0.5);
 }
 
-const vec3 colorInside = vec3(0.1, 0.1, 0.3);
-const vec3 colorOutside = vec3(1, 0.7, 0.5);
-const vec3 scanColor = vec3(0.3,0.5,0.7);
+const vec3 sunColor = vec3(0.9,0.8,0.7);
 
 const float carefulness = 0.5; 
 
@@ -50,7 +57,7 @@ void main() {
 
   vec3 color = vec3(1);
   vec3 normal;
-  for (int s = 0; s < 50; s++) {
+  for (int s = 0; s < 30; s++) {
     d = sdf(pos) * carefulness;
     if(
       d < 0. || 
@@ -70,23 +77,26 @@ void main() {
     b = clamp(length(pos), 0., 1.);
 
     // vec3 stepVis = float(s) * vec3(0.05);
-    normal = getNormal(pos);
-    color = 0.5 * (
-      mix(colorInside, colorOutside, b) +
-      clamp(pos * 0.5 + 0.5, 0., 1.)
-    );
-    color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
-    // see xournalpp sketch
-    // bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;
-    // bool s2 = pos.x * swipeB.y <= swipeB.x * pos.y;
-    // if(s1 && s2 || !s1 && !s2) {
-    //   color += scanColor;
-    // }
-    rgb = mix(rgb, color, a);
+    normal = inverseModelMatrix * getNormal(pos); 
+
+    vec3 r = reflect(rayDir, normal);
+    vec3 env;
+    if( r.z > 0.) {
+      env = texture(envFront, r.xy * 0.5 + 0.5).rgb;
+    } else {
+      env = texture(envBack, r.xy * 0.5 + 0.5).rgb;
+    }
+
+    color = (env + shapeColor * b) * 0.5; 
+
+    // lights
+    color += dot(normal, vec3(0,1,0)) * sunColor * 0.5;
+
+    rgb = color;
   } else {
     discard;
   }
 
-  rgba = vec4(rgb, 1);
+  rgba = vec4(rgb, alpha);
 }
 

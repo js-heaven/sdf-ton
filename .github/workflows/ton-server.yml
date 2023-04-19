@@ -1,0 +1,27 @@
+name: Deploy Server
+
+on:
+  push:
+    branches: [exhibition-semesterende]
+
+defaults:
+  run:
+    working-directory: packages/ton-server
+
+concurrency:
+  group: fly
+  cancel-in-progress: true
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  deploy:
+    name: Deploy app
+    environment:
+      name: fly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only

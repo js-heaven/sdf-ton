@@ -3,11 +3,13 @@ import TwoTouchesDetector from './two-touches-detector';
 class PinchDetector extends TwoTouchesDetector {
   static TYPE = 'pinch';
 
-  constructor(touchEvents: TouchEvent[]) {
-    super(touchEvents, PinchDetector.TYPE);
+  constructor() {
+    super(PinchDetector.TYPE);
   }
 
-  detect(): boolean {
+  detect(touchEvents: TouchEvent[], numTouches: number): boolean {
+    super.detect(touchEvents, numTouches);
+
     if (this.currentTouchesLength !== PinchDetector.NUM_TOUCHES) return false;
 
     if (
@@ -23,13 +25,8 @@ class PinchDetector extends TwoTouchesDetector {
     if (this.touchEventsLength < PinchDetector.NUM_EVENTS_THREASHOLD) return 0;
     if (!this.firstRelevantTouchEvent) return 0;
 
-    const startTouch0 = this.firstRelevantTouchEvent.touches[0];
-    const startTouch1 = this.firstRelevantTouchEvent.touches[1];
-    const currentTouch0 = this.currentTouchEvent.touches[0];
-    const currentTouch1 = this.currentTouchEvent.touches[1];
-
-    const distStart = this._distBetween2Touches(startTouch0, startTouch1);
-    const distCurrent = this._distBetween2Touches(currentTouch0, currentTouch1);
+    const distStart = this._distBetweenTouches(this.firstRelevantTouchEvent);
+    const distCurrent = this._distBetweenTouches(this.currentTouchEvent);
 
     return distCurrent - distStart;
   }

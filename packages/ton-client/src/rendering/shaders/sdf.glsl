@@ -1,24 +1,22 @@
 uniform float twist;
+uniform float morph;
 
-#include 4d-noise.glsl
-
+#include noise.glsl
 
 /* SDF helper functions */
 
 vec3 rotateY(vec3 v, float angle) {
-    float s = sin(angle);
-    float c = cos(angle);
-    mat3 m = mat3(c, 0, -s, 0, 1, 0, s, 0, c);
-    return m * v;
+  float s = sin(angle);
+  float c = cos(angle);
+  mat3 m = mat3(c, 0, -s, 0, 1, 0, s, 0, c);
+  return m * v;
 }
 
-vec3 rotateX(vec3 point, float angle) {
-  mat4 rotationMatrix = mat4(1.0);
-  rotationMatrix[1][1] = cos(angle);
-  rotationMatrix[1][2] = -sin(angle);
-  rotationMatrix[2][1] = sin(angle);
-  rotationMatrix[2][2] = cos(angle);
-  return (rotationMatrix * vec4(point, 1.0)).xyz;
+vec3 rotateX(vec3 v, float angle) {
+  float s = sin(angle);
+  float c = cos(angle);
+  mat3 m = mat3(1, 0, 0, 0, c, -s, 0, s, c);
+  return m * v;
 }
 
 vec3 opCheapBend(vec3 p , float k)
@@ -70,6 +68,13 @@ float diamonds(vec3 p, float scale) {
 float bumps(vec3 p, float scale) {
   p = mod(scale * p, 2.) - 1.;
   return length(p) / scale;
+}
+
+float bowl(vec3 p) {
+  return max(
+    length(p) - 0.5, 
+    - (length(p - vec3(0.3, 0., 0.)) - 0.6) 
+  ); 
 }
 
 
@@ -124,90 +129,55 @@ float sdCappedTorus(in vec3 p, in vec2 sc, in float ra, in float rb)
 }
 
 
-/* SDF Zoo
-   Let's keep some options for sdfs lingering around.
-   At some point, we can combine them before compiling the program
+/* SDF Zoo 
+   Let's keep some options for sdfs lingering around. 
+   At some point, we can combine them before compiling the program 
    and have different "presets" that way */
 
 float sdf_multiplePrimitives(in vec3 p) {
-  p += vec3(0, -1.2, 0);
-  float d = sdTorus(p, vec2(0.5, 0.2));
+  p += vec3(0, -1.2, 0); 
+  float d = sdTorus(p, vec2(0.5, 0.2)); 
   for(int i = 0; i < 10; i++) {
     vec3 q = p + float(i) * vec3(0, 0.3, 0);
     d = opSmoothUnion(d, sdTorus(q, vec2(0.5, 0.1)), 0.1);
   }
   d = min(d, sdBox(p + vec3(0,1,0), vec3(0.1, 2.3, 0.1)));
-  d = min(d, sdTorus(p + vec3(0, 2., 0), vec2(0.5, 0.2)));
+  d = min(d, sdTorus(p + vec3(0, 2., 0), vec2(0.5, 0.2))); 
   return d;
-}
-
-float sdf_twistedBox(in vec3 p) {
-  p = rotateY(p, p.y * 3. * twist);
-  return sdBox(p, vec3(0.4)) - 0.1;
-}
-
-float sdf_B(in vec3 p) {
-  vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
-
-  vec3 pAlt = vec3(p.z, -p.y, -p.x);
-
-  return min(
-    min(
-      sdCappedTorus(p, c, 0.85, 0.1) - 0.05,
-      sdCappedTorus(pAlt, c, 0.85, 0.1) - 0.05
-    ),
-    opSmoothUnion(
-      length(p - 0.2) - 0.35,
-      length(p + 0.2) - 0.35,
-      0.25
-    )
-  );
 }
 
 float sdf_C(in vec3 p) {
   return length(p + vec3(0.3, 0, 0)) - 0.7 + 0.2 * diamonds(p, 7.);
 }
 
-float sdf_D(in vec3 p) {
-  return min(
-    min(
-      length(p + vec3(0.5,0,0)) - 0.5,
-      length(p + vec3(-0.3,0.3,0)) - 0.4 + 0.2 * bumps(p, 16.) - 0.5
-    ),
-    min(
-      sdBox(p + vec3(0.3,0,0), vec3(0.5, 0., 1.2)) - 0.1,
-      sdTriPrism(p + vec3(0,0.65,0.8), vec2(0.4, 0.4)) - 0.1
-    )
-  );
+float sdf_heavy_calculations(in vec3 p) {
+  float v = 0.; 
+  float f = 0.3; 
+  for(int i = 0; i < 4; i++) {
+    f *= 2.;
+    v += snoise3d(p * f) / f;
+  }
+  return v; 
+}
+
+float injected_sdf_1(in vec3 p) {
+/*injected_sdf_1*/
+}
+
+float injected_sdf_2(in vec3 p) {
+/*injected_sdf_2*/
 }
 
 float sdf_lerp(in vec3 p) {
-  const float bend = 0.9;
-  // const float twist = 5.2;
-  const float displace = 15.;
-  const float elongate = 2.;
-
-  /*
-  // Vector Transformation
-  */
-
-  //p = rotateY(p, p.y*1.);
-  //p = rotateX(p, p.x*1.);
-  //p = opCheapBend(p, bend);
-  //p = opTwist(p, twist);
-  // p = opElongate(p, elongate);
-
-
-  float d1 = sdf_B(p);
-  //float d2 = sdf_C(p);
-  float d3 = sdf_twistedBox(p);
-  return mix(d1, d3, twist * 0.5 + 0.5);
+  float d1 = injected_sdf_1(p);
+  float d3 = injected_sdf_2(p);
+  return mix(d1, d3, morph);
 }
-
 
 /* main sdf function */
 
 float sdf(in vec3 p) {
+  p = rotateX(p, p.x * 2. * twist); 
   return sdf_lerp(p);
 }
 

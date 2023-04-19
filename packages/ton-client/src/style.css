@@ -11,6 +11,7 @@ body {
 }
 
 #play {
+  display: none;
   cursor: pointer;
   position: absolute;
   bottom: 75%;
@@ -35,7 +36,19 @@ body {
 }
 
 #camera {
+  display: none; 
   position: absolute; 
+}
+
+#fps {
+  display: none; 
+  position: absolute; 
+  right: 1rem; 
+  top: 1rem; 
+  font-weight: bold; 
+  padding: 0.2rem; 
+  background-color: #0004; 
+  color: #fff; 
 }
 
 /* {
