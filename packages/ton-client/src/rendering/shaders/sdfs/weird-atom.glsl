@@ -1,4 +1,4 @@
-vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
+const vec2 c = vec2(sin(3.14 * 0.5),cos(3.14 * 0.5));
 
 vec3 pAlt = vec3(p.z, -p.y, -p.x); 
 

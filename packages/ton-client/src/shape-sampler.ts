@@ -177,7 +177,8 @@ export default class ShapeSampler {
         }
       }
     );
-    continousBufferNode.connect(gainNode);
+    // continousBufferNode.connect(gainNode);
+    continousBufferNode.connect(audioContext.destination); // continous
     continousBufferNode.port.onmessage = (event) => {
       if(event.data.type == 'requestBuffer') {
         this.setFrequency(this.getFrequency(this.shapeId)) // update frequency

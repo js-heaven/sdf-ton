@@ -1,11 +1,11 @@
 import { Socket } from 'socket.io-client';
 import ShapeState, { ShapeStateType } from './shape-state';
 
-const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 2,3 and 7,8
+const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 3,4 and 7,8
 // freqFactor ** 12 = 2, Oktave
 // freqFactor = 2 ** -12
 const halfToneStepFactor = Math.pow(2, 1/12)
-let frequency = 55
+let frequency = 440 / (2 ** 4)
 const frequencies: number[] = []
 for(let i = 0; i < 12 * 4 + 1; i++) {
   if(scale[i % 12]) {

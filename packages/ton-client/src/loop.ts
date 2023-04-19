@@ -319,7 +319,7 @@ export default class Loop {
     if(this.fps) {
       this.fps.textContent = Math.trunc(1 / this.avgRenderTime) + ' fps'
     }
-    if(this.avgRenderTime > this.maxRenderTime) {
+    if(this.avgRenderTime > this.maxRenderTime && this.resolutionDivisor < 16) {
       console.log('reducing resolution') 
       this.avgRenderTime = this.maxRenderTime * 0.75
       this.resolutionDivisor *= 2
