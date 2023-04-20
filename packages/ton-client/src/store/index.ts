@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io-client';
 import ShapeState, { ShapeStateType } from './shape-state';
+import config from '../config';
 
 const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 2,3 and 7,8
 // freqFactor ** 12 = 2, Oktave
@@ -70,8 +71,8 @@ class Store {
     this.shapeStates[shapeId].note = newNote;
   }
 
-  changeArpeggiatorId(shapeId: number, newArpeggiatorId: number) {
-    this.shapeStates[shapeId].arpeggiatorId = newArpeggiatorId;
+  changeArpeggioId(shapeId: number, newArpeggioId: number) {
+    this.shapeStates[shapeId].arpeggioId = newArpeggioId;
   }
 
   changeState(shapeId: number, newState: State) {
@@ -103,8 +104,8 @@ class Store {
   ) {
     if (direction === 'up') this.noteUp(shapeId);
     if (direction === 'down') this.noteDown(shapeId);
-    if (direction === 'left') this.arpeggiatorIdDown(shapeId);
-    if (direction === 'right') this.arpeggiatorIdUp(shapeId);
+    if (direction === 'left') this.arpeggioIdDown(shapeId);
+    if (direction === 'right') this.arpeggioIdUp(shapeId);
   }
 
   noteUp(
@@ -123,16 +124,20 @@ class Store {
     this.shapeStates[shapeId].note = newNote
   }
 
-  arpeggiatorIdDown(shapeId: number) {
-    const oldArpeggiatorId = this.shapeStates[shapeId].arpeggiatorId;
-    const newArpeggiatorId = oldArpeggiatorId - 1;
-    this.changeArpeggiatorId(shapeId, newArpeggiatorId);
+  arpeggioIdDown(shapeId: number) {
+    let newArpeggioId = this.shapeStates[shapeId].arpeggioId - 1; 
+    if(newArpeggioId < 0) {
+      newArpeggioId += config.numberOfArps;
+    }
+    this.changeArpeggioId(shapeId, newArpeggioId);
   }
 
-  arpeggiatorIdUp(shapeId: number) {
-    const oldArpeggiatorId = this.shapeStates[shapeId].arpeggiatorId;
-    const newArpeggiatorId = oldArpeggiatorId + 1;
-    this.changeArpeggiatorId(shapeId, newArpeggiatorId);
+  arpeggioIdUp(shapeId: number) {
+    let newArpeggioId = this.shapeStates[shapeId].arpeggioId + 1;
+    if(newArpeggioId >= config.numberOfArps) {
+      newArpeggioId = 0;
+    }
+    this.changeArpeggioId(shapeId, newArpeggioId);
   }
 
   getFrequency(shapeId: number) {

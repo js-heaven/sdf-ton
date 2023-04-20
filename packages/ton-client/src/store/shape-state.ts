@@ -5,7 +5,7 @@ export type ShapeStateType = {
   shape?: number;
   fx?: string;
   note?: number;
-  arpeggiatorId?: number;
+  arpeggioId?: number;
 };
 
 type UpdateFn = (shapeId: number, newShapeState: ShapeStateType) => void;
@@ -21,7 +21,7 @@ class ShapeState {
   private _shape = 0;
   private _fx = 'none';
   private _note = 0;
-  private _arpeggiatorId = 0;
+  private _arpeggioId = 0;
 
   private _state: ShapeStateType = {
     twist: this._twist,
@@ -30,7 +30,7 @@ class ShapeState {
     shape: this._shape,
     fx: this._fx,
     note: this._note,
-    arpeggiatorId: this._arpeggiatorId,
+    arpeggioId: this._arpeggioId,
   };
 
   constructor(shapeId: number, updateFn: UpdateFn, baseNote: number) {
@@ -93,13 +93,13 @@ class ShapeState {
     return this._note;
   }
 
-  set arpeggiatorId(newArpeggiatorId: number) {
-    this._arpeggiatorId = newArpeggiatorId;
-    this._updateFn(this.shapeId, { arpeggiatorId: newArpeggiatorId });
+  set arpeggioId(newArpeggioId: number) {
+    this._arpeggioId = newArpeggioId;
+    this._updateFn(this.shapeId, { arpeggioId: newArpeggioId });
   }
 
-  get arpeggiatorId() {
-    return this._arpeggiatorId;
+  get arpeggioId() {
+    return this._arpeggioId;
   }
 
   set state(newState: ShapeStateType) {
@@ -109,7 +109,7 @@ class ShapeState {
     this._shape = newState.shape || this._shape;
     this._fx = newState.fx || this._fx;
     this._note = newState.note || this._note;
-    this._arpeggiatorId = newState.arpeggiatorId || this._arpeggiatorId;
+    this._arpeggioId = newState.arpeggioId || this._arpeggioId;
 
     Object.assign(this._state, newState);
   }

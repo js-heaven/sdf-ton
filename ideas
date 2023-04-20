@@ -14,6 +14,13 @@ Status can be:
 - R = deferred
 - F = failed
 
+## 2. exhibition
+- arps
+  - sync time
+  - schedule less long ahead => faster response on arpeggio change
+
+- git merge changes from my exhibition commit
+
 ## ideas
 
 The following blocks of ideas are in reverse chronological order.

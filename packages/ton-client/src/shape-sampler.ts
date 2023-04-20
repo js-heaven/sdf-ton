@@ -1,69 +1,6 @@
 import SoundRenderer from './rendering/sound-renderer';
 
-interface Trigger {
-  slot: number, 
-  length: number
-}
-
-class ArpeggiatorPattern {
-
-  public triggers: Trigger[] = []
-
-  constructor(
-    public slotsPerBar = 16,  
-    public attack = 0.05,  // of a slot
-    public sustain = 0.5, 
-    public decay = 1, // of a slot
-    density: number
-  ) {
-    this.fillRandom(density) 
-  }
-
-  fillRandom(density: number) {
-    let nextSlotWithANote = undefined
-
-    // generate triggers in reverse order
-    while(this.triggers.length == 0) {
-      let i = this.slotsPerBar
-      while(i > 0) {
-        i -= 1
-        if(Math.random() < density) {
-          let noteLength = 0
-          if(nextSlotWithANote) {
-            noteLength = Math.round(
-              Math.random() * (nextSlotWithANote - i)
-            ) // 
-          }
-          nextSlotWithANote = i
-          this.triggers.push({
-            slot: i, 
-            length: noteLength
-          })
-        }
-      }
-    }
-    const lastTrigger = this.triggers[0]
-
-    // !!! trigger order gets reversed here
-    this.triggers.reverse()
-
-    lastTrigger.length = Math.random() * (this.slotsPerBar + this.triggers[0].slot - lastTrigger.slot)
-  }
-}
-
-const arps: ArpeggiatorPattern[] = []
-
-const NUMBER_OF_ARPS = 40
-
-for(let i = 0; i < NUMBER_OF_ARPS; i++) {
-  arps.push(new ArpeggiatorPattern(
-    2 * (2 + Math.trunc(Math.random() * 5)), 
-    Math.random() * 0.1 + 0.01,
-    Math.random() * 0.5,
-    Math.trunc(Math.random() * 3) / 4, 
-    Math.random() * 0.5 + 0.25
-  ))
-}
+import arps from './arps'
 
 export default class ShapeSampler {
   private bufferSize: number;
@@ -91,7 +28,7 @@ export default class ShapeSampler {
     private sqrtBufferSize: number,
     private numberOfBuffers: number,
     private getFrequency: (shapeId: number) => number,
-    private getArpeggiatorId: (shapeId: number) => number, 
+    private getArpeggioId: (shapeId: number) => number, 
     private shapeId: number
   ) {
     this.renderer = new SoundRenderer(
@@ -122,23 +59,18 @@ export default class ShapeSampler {
 
     await audioContext.audioWorklet.addModule("./worklet.js")
 
-    const gainNode = new GainNode(audioContext, {gain: 0.0})
-
-    //const filterNode = audioContext.createBiquadFilter();
-    //filterNode.type = 'bandpass';
-    //filterNode.frequency.value = this.frequency;
-    //filterNode.Q.value = 1.;
     const reverbNode = await this.createReverbNode(audioContext)
+    reverbNode.connect(audioContext.destination)
+
+    const gainNode = new GainNode(audioContext, {gain: 0.0})
 
     gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0)
     gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
     gainNode.connect(reverbNode)
 
     const prepareGainNodeForTheNextBar = (bar: number, start: number) => {
-      let arpId = this.getArpeggiatorId(this.shapeId) % NUMBER_OF_ARPS
-      while(arpId < 0) {
-        arpId += NUMBER_OF_ARPS
-      } 
+      const arpId = this.getArpeggioId(this.shapeId) 
+      console.log('preparing for next bar', arpId)
       const arp = arps[arpId]
 
       const slotDuration = this.barDuration / arp.slotsPerBar
@@ -155,14 +87,16 @@ export default class ShapeSampler {
 
       setTimeout(() => {
         prepareGainNodeForTheNextBar(bar + 1, start + this.barDuration)
-      }, 1000 * ((nextBarStart - now) - 0.1) ) // always schedule arp setting 100ms before next bar
+      }, 1000 * (nextBarStart - now) - 100) // always schedule arp setting 100ms before next bar
     }
 
     const start = (0.001 * Date.now() + this.barDuration - 0.1) % this.barDuration + 0.1 // sync a bit
+    // here sync with server
+
+    console.log('this should only run once') 
     prepareGainNodeForTheNextBar(0, start)
     
     //filterNode.connect(reverbNode)
-    reverbNode.connect(audioContext.destination)
     const continousBufferNode = new AudioWorkletNode(
       audioContext,
       "continous-buffer",

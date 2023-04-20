@@ -20,6 +20,8 @@ import ShapeSampler from './shape-sampler';
 import { ProgramUniLocsPair, SDF_VARIANTS } from './rendering/create-sdf-variation-programs';
 import SwipeDetector from './utils/gesture-detection/swipe-detector';
 
+import generateArpTextures from './generate-arp-textures'
+
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F | maybe we can 4x multisample dither
 const SQRT_BUFFER_SIZE = 64
 const NUMBER_OF_BUFFERS = 3
@@ -64,6 +66,8 @@ export default class Loop {
 
   lastLoopCall: number | undefined
 
+  private arpTextures: (WebGLTexture | null)[]
+
   constructor() {
     const modeParams = new URLSearchParams(location.search) 
 
@@ -74,6 +78,8 @@ export default class Loop {
 
     this.drawScreenQuad = makeDrawScreenQuad(this.gl)
     this.drawCube = makeDrawCube(this.gl)
+
+    this.arpTextures = generateArpTextures(this.gl)
 
     // create State
     this.socket = createSocket();
@@ -117,7 +123,7 @@ export default class Loop {
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
         (shapeId: number) => this.store.getFrequency(shapeId),
-        (shapeId: number) => this.store.shapeStates[shapeId].arpeggiatorId, 
+        (shapeId: number) => this.store.shapeStates[shapeId].arpeggioId, 
         this.targetShapeId
       )
       playButton.addEventListener('click', async () => {
@@ -189,6 +195,10 @@ export default class Loop {
 
       // set other uniforms
       this.gl.uniform1f(uniLocs.twist, shapeState.twist);
+
+      // bind respective arp texture
+      this.gl.activeTexture(this.gl.TEXTURE2)
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.arpTextures[shapeState.arpeggioId])
 
       return uniLocs
     } catch (e) {

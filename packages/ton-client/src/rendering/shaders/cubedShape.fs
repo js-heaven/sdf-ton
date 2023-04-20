@@ -5,6 +5,9 @@ precision highp float;
 uniform sampler2D envFront;
 uniform sampler2D envBack;
 
+uniform sampler2D arpTexture;
+uniform float phase; 
+
 uniform float alpha;
 
 uniform vec3 camPosition;

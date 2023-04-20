@@ -17,6 +17,7 @@ export default class ShapeRenderer {
   private viewPlaneHalfWidth = 1
   private viewPlaneHalfHeight = 1
 
+
   constructor(
     private gl: WebGL2RenderingContext, 
     private selectProgramAndSetSdfUniforms: (uniLocs: any, shapeId: number) => any,
@@ -31,7 +32,6 @@ export default class ShapeRenderer {
     this.camStraight = vec3.create()
     this.camRight = vec3.create()
     this.camUp = vec3.create()
-
   }
 
   setAspectRatio(aspectRatio: number) {
@@ -65,6 +65,7 @@ export default class ShapeRenderer {
 
     // time
     this.gl.uniform1f(uniLocs.time, time)
+    this.gl.uniform1f(uniLocs.phase, time)
 
     // camera
     this.gl.uniform3fv(uniLocs.camPosition, this.camPosition)

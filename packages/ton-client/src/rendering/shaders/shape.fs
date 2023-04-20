@@ -2,6 +2,11 @@
 
 precision highp float;
 
+uniform sampler2D arpTexture;
+
+uniform float noteLength; 
+uniform float currentSlot; 
+
 uniform vec3 camPosition;
 uniform float time;
 
@@ -68,6 +73,18 @@ void main() {
       clamp(pos * 0.5 + 0.5, 0., 1.)
     );
     color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
+
+    float barPos = pos.y * 2. + pos.x;
+    float arp = texture(arpTexture, vec2(barPos, 0.5)).r;
+    float slotFract = barPos / noteLength; 
+    float slot = floor(slotFract);
+    float play = 0.; 
+    if(true || slot == currentSlot) {
+      play = 1. - fract(slot); 
+    }
+
+    color += vec3(arp + play - 1.5) * 0.2;
+
     // see xournalpp sketch
     bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;
     bool s2 = pos.x * swipeB.y <= swipeB.x * pos.y;

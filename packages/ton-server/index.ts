@@ -50,6 +50,10 @@ io.on('connection', (socket) => {
     store.updateState(newState);
     socket.broadcast.emit('updateState', store.state);
   });
+
+  socket.on('time-sync-ping', () => {
+    socket.emit('time-sync-pong', Date.now());
+  })
 });
 
 server.listen(port, () => {
