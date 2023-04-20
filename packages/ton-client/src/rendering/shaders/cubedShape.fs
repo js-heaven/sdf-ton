@@ -6,7 +6,8 @@ uniform sampler2D envFront;
 uniform sampler2D envBack;
 
 uniform sampler2D arpTexture;
-uniform float phase; 
+uniform float noteLength; 
+uniform float currentSlot;
 
 uniform float alpha;
 

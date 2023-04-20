@@ -199,7 +199,6 @@ export default class Loop {
       // bind respective arp texture
       this.gl.activeTexture(this.gl.TEXTURE2)
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.arpTextures[shapeState.arpeggioId])
-
       return uniLocs
     } catch (e) {
       console.warn('failed to use sdf program with id', programId)

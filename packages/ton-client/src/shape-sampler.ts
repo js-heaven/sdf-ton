@@ -96,7 +96,6 @@ export default class ShapeSampler {
     console.log('this should only run once') 
     prepareGainNodeForTheNextBar(0, start)
     
-    //filterNode.connect(reverbNode)
     const continousBufferNode = new AudioWorkletNode(
       audioContext,
       "continous-buffer",
@@ -111,7 +110,6 @@ export default class ShapeSampler {
         }
       }
     );
-    continousBufferNode.connect(gainNode);
     continousBufferNode.port.onmessage = (event) => {
       if(event.data.type == 'requestBuffer') {
         this.setFrequency(this.getFrequency(this.shapeId)) // update frequency
@@ -136,6 +134,7 @@ export default class ShapeSampler {
     continousBufferNode.port.postMessage({
       type: 'start'
     })
+    continousBufferNode.connect(gainNode);
   }
 
   get ready() {

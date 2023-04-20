@@ -8,7 +8,6 @@ uniform float noteLength;
 uniform float currentSlot; 
 
 uniform vec3 camPosition;
-uniform float time;
 
 uniform vec2 swipeA;
 uniform vec2 swipeB;

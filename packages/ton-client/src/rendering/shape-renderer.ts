@@ -17,7 +17,6 @@ export default class ShapeRenderer {
   private viewPlaneHalfWidth = 1
   private viewPlaneHalfHeight = 1
 
-
   constructor(
     private gl: WebGL2RenderingContext, 
     private selectProgramAndSetSdfUniforms: (uniLocs: any, shapeId: number) => any,
