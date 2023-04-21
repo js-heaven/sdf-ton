@@ -3,7 +3,7 @@ name: Deploy Client
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: [exhibition-semesterende]
+    branches: [exhibition-semesterende, main, arpeggio-visualization]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

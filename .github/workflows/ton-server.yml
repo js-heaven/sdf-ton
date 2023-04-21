@@ -2,7 +2,7 @@ name: Deploy Server
 
 on:
   push:
-    branches: [exhibition-semesterende]
+    branches: [exhibition-semesterende, main, arpeggio-visualization]
 
 defaults:
   run:
