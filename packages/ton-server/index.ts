@@ -11,6 +11,7 @@ import Store, { State } from './store';
 
 const NUMBER_OF_SHAPES = 8;
 
+
 const app: Express = express();
 const frontendUrl = process.env.FRONTEND_URL;
 const port = process.env.PORT || 3000;
@@ -51,13 +52,12 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('updateState', store.state);
   });
 
-  socket.on('time-sync-ping', () => {
-    socket.emit('time-sync-pong', Date.now());
+  socket.on('syncPing', () => {
+    socket.emit('syncPong', Date.now());
   })
 });
 
 server.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http${production ? '' : 's'}://localhost:${port}`);
   console.log(`Frontend url is: ${frontendUrl}`);
-
 });

@@ -6,8 +6,8 @@ uniform sampler2D envFront;
 uniform sampler2D envBack;
 
 uniform sampler2D arpTexture;
-uniform float noteLength; 
-uniform float currentSlot;
+uniform float slotsPerBar; 
+uniform float currentSlot; 
 
 uniform float alpha;
 
@@ -36,6 +36,22 @@ vec3 getNormal( in vec3 p ) // for function f(p)
 vec3 sky(vec3 v) {
   // shall be replaced with env map soon
   return vec3(v * 0.5 + 0.5);
+}
+
+vec3 arpVis(float y) {
+  float barPos = 1. - mod(y + 10., 1.);
+  float arp = texture(arpTexture, vec2(barPos, 0.5)).r;
+  float slot = barPos * slotsPerBar; 
+  float slotFloor = floor(slot);
+  float triggered = 0.; 
+
+  if(slotFloor == floor(currentSlot)) {
+    float slotProgress = fract(currentSlot - slotFloor);
+    triggered = 4. * (1. - slotProgress) * slotProgress;
+  }
+
+  return (arp - 0.5) * vec3(0.4) + 
+    triggered * vec3(0.6, 0.3, 0.2);
 }
 
 const vec3 sunColor = vec3(0.9,0.8,0.7);
@@ -80,7 +96,6 @@ void main() {
     a = 0.1 + pow(0.9, z);
     b = clamp(length(pos), 0., 1.);
 
-    // vec3 stepVis = float(s) * vec3(0.05);
     normal = inverseModelMatrix * getNormal(pos); 
 
     vec3 r = reflect(rayDir, normal);
@@ -92,6 +107,8 @@ void main() {
     }
 
     color = (env + shapeColor * b) * 0.5; 
+
+    color += arpVis(pos.y * 1.2); 
 
     // lights
     color += dot(normal, vec3(0,1,0)) * sunColor * 0.5;

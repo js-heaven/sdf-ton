@@ -1,6 +1,9 @@
 import SoundRenderer from './rendering/sound-renderer';
 
 import arps from './arps'
+import BarClock from './bar-clock'
+
+import config from './config';
 
 export default class ShapeSampler {
   private bufferSize: number;
@@ -18,7 +21,6 @@ export default class ShapeSampler {
   private _signalCenter = 1
   private _signalNormalizeFactor = 1
 
-  private barDuration = 3 // sekunden
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -32,7 +34,7 @@ export default class ShapeSampler {
     private shapeId: number
   ) {
     this.renderer = new SoundRenderer(
-      gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 1 / (this.barDuration * 2)
+      gl, drawScreenQuad, setSdfUniforms, sqrtBufferSize, this.frequency, 1 / (config.barDuration * 2)
     ) 
     this.bufferSize = sqrtBufferSize ** 2
   }
@@ -53,51 +55,50 @@ export default class ShapeSampler {
     this.periodLength = this.sampleRate / this.frequency
   }
 
-  async start() {
-    const audioContext = new AudioContext();
-    this.setSampleRate(audioContext.sampleRate)
+  async start(barClock: BarClock) {
+    const ac = new AudioContext();
+    const ac0 = ac.currentTime
+    const acTimeOffset = ac.currentTime - barClock.getCurrentTime()
 
-    await audioContext.audioWorklet.addModule("./worklet.js")
+    this.setSampleRate(ac.sampleRate)
 
-    const reverbNode = await this.createReverbNode(audioContext)
-    reverbNode.connect(audioContext.destination)
+    await ac.audioWorklet.addModule("./worklet.js")
 
-    const gainNode = new GainNode(audioContext, {gain: 0.0})
+    const reverbNode = await this.createReverbNode(ac)
+    reverbNode.connect(ac.destination)
 
-    gainNode.gain.setValueAtTime(0.0, audioContext.currentTime + 0)
-    gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+    const gainNode = new GainNode(ac, {gain: 0.0})
+
+    gainNode.gain.setValueAtTime(0.0, ac.currentTime + 0)
+    gainNode.gain.linearRampToValueAtTime(0.01, ac.currentTime + 0.1)
     gainNode.connect(reverbNode)
 
     const prepareGainNodeForTheNextBar = (bar: number, start: number) => {
+      console.log('preparing bar at', start) 
       const arpId = this.getArpeggioId(this.shapeId) 
       console.log('preparing for next bar', arpId)
       const arp = arps[arpId]
 
-      const slotDuration = this.barDuration / arp.slotsPerBar
+      const slotDuration = config.barDuration / arp.slotsPerBar
 
+      const barStartTime = start + acTimeOffset
       arp.triggers.forEach(t => {
-        gainNode.gain.setValueAtTime(0.01, start + (t.slot) * slotDuration)
-        gainNode.gain.linearRampToValueAtTime(1, start + (arp.attack + t.slot) * slotDuration)
-        gainNode.gain.exponentialRampToValueAtTime(arp.sustain, start + (t.slot + t.length) * slotDuration) 
-        gainNode.gain.exponentialRampToValueAtTime(0.01, start + (t.slot + t.length + arp.decay) * slotDuration) 
+        console.log('negative?', barStartTime + (t.slot) * slotDuration)
+        gainNode.gain.setValueAtTime(0.01, barStartTime + (t.slot) * slotDuration)
+        gainNode.gain.linearRampToValueAtTime(1, barStartTime + (arp.attack + t.slot) * slotDuration)
+        gainNode.gain.exponentialRampToValueAtTime(arp.sustain, barStartTime + (t.slot + t.length) * slotDuration) 
+        gainNode.gain.exponentialRampToValueAtTime(0.01, barStartTime + (t.slot + t.length + arp.decay) * slotDuration) 
       })
 
-      const now = audioContext.currentTime
-      const nextBarStart = start + this.barDuration
-
       setTimeout(() => {
-        prepareGainNodeForTheNextBar(bar + 1, start + this.barDuration)
-      }, 1000 * (nextBarStart - now) - 100) // always schedule arp setting 100ms before next bar
+        prepareGainNodeForTheNextBar(bar + 1, barClock.getNextBarStart())
+      }, 1000 * config.barDuration - 200) // always schedule arp setting 100ms before next bar
     }
 
-    const start = (0.001 * Date.now() + this.barDuration - 0.1) % this.barDuration + 0.1 // sync a bit
-    // here sync with server
-
-    console.log('this should only run once') 
-    prepareGainNodeForTheNextBar(0, start)
+    prepareGainNodeForTheNextBar(0, barClock.getNextBarStart())
     
     const continousBufferNode = new AudioWorkletNode(
-      audioContext,
+      ac,
       "continous-buffer",
       {
         // the following options get copied into another js execution context

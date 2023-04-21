@@ -6,7 +6,7 @@ export default () => {
   const socket = io(BACKEND_URL);
 
   socket.on('connect', () => {
-    console.log(socket.id);
+    console.log('connected', socket.id);
   });
 
   return socket;

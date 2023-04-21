@@ -4,6 +4,7 @@ import { Socket } from 'socket.io-client';
 
 import GestureHandler, { GestureCallbackFn } from './utils/gesture-detection';
 import Store from './store';
+import BarClock from './bar-clock';
 import createSocket from './utils/web-socket';
 import PanDetector from './utils/gesture-detection/pan-detector';
 
@@ -20,13 +21,14 @@ import ShapeSampler from './shape-sampler';
 import { ProgramUniLocsPair, SDF_VARIANTS } from './rendering/create-sdf-variation-programs';
 import SwipeDetector from './utils/gesture-detection/swipe-detector';
 
+import arps from './arps'
 import generateArpTextures from './generate-arp-textures'
 
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F | maybe we can 4x multisample dither
 const SQRT_BUFFER_SIZE = 64
 const NUMBER_OF_BUFFERS = 3
 
-const NUMBER_OF_SHAPES = 8
+const NUMBER_OF_SHAPES = 8 // TBD may be more some day
 
 const CAM_RADIUS = 2.5
 
@@ -58,6 +60,7 @@ export default class Loop {
   drawCube: () => void
 
   socket: Socket
+  barClock: BarClock
   store: Store
 
   gestureHandler: GestureHandler | undefined
@@ -88,6 +91,7 @@ export default class Loop {
       NUMBER_OF_SHAPES,
       SDF_VARIANTS
     );
+    this.barClock = new BarClock(this.socket)
 
     if(modeParams.has('fps')) {
       this.fps = document.getElementById('fps') as HTMLDivElement
@@ -128,7 +132,9 @@ export default class Loop {
       )
       playButton.addEventListener('click', async () => {
         playButton.style.display = 'none'
-        this.shapeSampler!.start()
+        this.shapeSampler!.start(
+          this.barClock,
+        )
       })
       if(modeParams.has('visualize')) {
         this.visualizationRenderer = new VisualizationRenderer(this.gl, this.drawScreenQuad, SQRT_BUFFER_SIZE)
@@ -196,9 +202,14 @@ export default class Loop {
       // set other uniforms
       this.gl.uniform1f(uniLocs.twist, shapeState.twist);
 
+      const arp = arps[shapeState.arpeggioId]
+      this.gl.uniform1f(uniLocs.slotsPerBar, arp.slotsPerBar);
+      this.gl.uniform1f(uniLocs.currentSlot, this.barClock.getCurrentSlot() * arp.slotsPerBar);
+
       // bind respective arp texture
       this.gl.activeTexture(this.gl.TEXTURE2)
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.arpTextures[shapeState.arpeggioId])
+
       return uniLocs
     } catch (e) {
       console.warn('failed to use sdf program with id', programId)

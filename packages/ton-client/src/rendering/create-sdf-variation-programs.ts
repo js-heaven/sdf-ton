@@ -6,10 +6,10 @@ import weirdAtom from './shaders/sdfs/weird-atom.glsl'
 import detailedOne from './shaders/sdfs/detailed-one.glsl'
 
 const sdfs = [
+  twistedBox,
   detailedOne,
   twoBowls,
   oneOfTheFirst, 
-  twistedBox,
   weirdAtom, 
 ]
 
