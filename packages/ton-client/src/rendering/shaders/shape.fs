@@ -43,7 +43,7 @@ const vec3 sunColor = vec3(1.0,0.8,0.6);
 void main() {
   vec3 rayDir = normalize(ray);
 
-  vec3 rgb = sky(rayDir);
+  vec3 rgb = mix(sky(rayDir), vec3(0.0,0.07,0.2), 0.8);
 
   // raymarch
   float z = 0.;
@@ -53,7 +53,6 @@ void main() {
   float b = 0.;
   float xyAngle;
 
-  vec3 color = vec3(1);
   vec3 normal;
   for (int s = 0; s < 50; s++) {
     d = sdf(pos) * 0.5;
@@ -65,12 +64,11 @@ void main() {
   }
 
   if(d < 0.1) {
-    a = 0.1 + pow(0.9, z);
 
     normal = getNormal(pos);
-    b = clamp(length(pos), 0., 1.) * 0.5;
-    color = baseColor + sunColor * b; 
-    color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * sunColor;
+    b = clamp(length(pos), 0., 1.) * 0.8 + 0.2;
+    vec3 color = (baseColor + 0.3 * sunColor); 
+    color += max(0., dot(normal, vec3(0,1,0))) * 0.7 * sunColor;
 
     float barPos = 1. - mod(pos.y * 1.2 + 10., 1.);
     float arp = texture(arpTexture, vec2(barPos, 0.5)).r;
@@ -83,8 +81,11 @@ void main() {
       triggered = 4. * (1. - slotProgress) * slotProgress;
     }
 
-    color += (arp - 0.5) * vec3(0.4);
-    color += triggered * vec3(0.6, 0.3, 0.2);
+    color += (arp - 0.5) * vec3(0.3);
+    color += triggered * vec3(0.3, 0.2, 0.1);
+    color += arp * triggered * vec3(0.9, 0.4, 0.1);
+
+    color *= b;
 
     // see xournalpp sketch
     bool s1 = swipeA.x * pos.y <= pos.x * swipeA.y;
@@ -92,7 +93,7 @@ void main() {
     if(s1 && s2 || !s1 && !s2) {
       color += scanColor;
     }
-    rgb = mix(rgb, color, a);
+    rgb = color;
   } 
 
   rgba = vec4(rgb, 1.0);

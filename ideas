@@ -19,13 +19,13 @@ Status can be:
   - sync time
   - schedule less long ahead => faster response on arpeggio change
 
-- git merge changes from my exhibition commit
+- D: git merge changes from my exhibition commit
 
-- fix orientation change - again -.-
+- V(no): fix orientation change - again -.-
 
-- prevent reload
+- D: prevent reload
 
-- rotation direction based on note
+- V: rotation direction based on note
 
 ## ideas
 

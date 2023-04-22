@@ -69,14 +69,13 @@ class Store {
     shapeId: number,
     newPanState: { deltaX: number; deltaY: number }
   ) {
-    const sensitivity = 3;
     const { twist, shape } = this.shapeStates[shapeId];
 
-    let newTwist = twist + sensitivity * (2 * newPanState.deltaY) / this.dimensions.height;
+    let newTwist = twist + 2 * newPanState.deltaY / this.dimensions.height;
     newTwist = Math.min(newTwist, 1);
     newTwist = Math.max(newTwist, -1);
 
-    let newShape = shape + sensitivity * newPanState.deltaX / this.dimensions.width;
+    let newShape = shape + 2 * newPanState.deltaX / this.dimensions.width;
     while(newShape < 0) newShape += this.numberOfSdfVariants;
     newShape = newShape % this.numberOfSdfVariants;
 
