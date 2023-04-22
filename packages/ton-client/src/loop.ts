@@ -343,14 +343,19 @@ export default class Loop {
   }
 
   checkPerformanceAndAdjustResolution(timeBetweenLoopCalls: number) {
-    this.avgRenderTime = (this.avgRenderTime * 9 + timeBetweenLoopCalls) * 0.1
+    this.avgRenderTime = (this.avgRenderTime * 49 + timeBetweenLoopCalls) * 0.02
     if(this.fps) {
       this.fps.textContent = Math.trunc(1 / this.avgRenderTime) + ' fps'
     }
-    if(this.avgRenderTime > this.maxRenderTime) {
+    if(this.avgRenderTime > this.maxRenderTime && this.resolutionDivisor < 16) {
       console.log('reducing resolution') 
-      this.avgRenderTime = this.maxRenderTime * 0.75
+      this.avgRenderTime = this.maxRenderTime * 0.9
       this.resolutionDivisor *= 2
+      this.resize()
+    } else if(this.avgRenderTime < this.maxRenderTime * 0.8 && this.resolutionDivisor > 1) {
+      console.log('increasing resolution') 
+      this.avgRenderTime = this.maxRenderTime * 0.9
+      this.resolutionDivisor /= 2
       this.resize()
     }
   }
