@@ -72,9 +72,7 @@ export default class ShapeSampler {
     gainNode.connect(reverbNode)
 
     const prepareGainNodeForTheNextBar = (bar: number, start: number) => {
-      console.log('preparing bar at', start) 
       const arpId = this.getArpeggioId(this.shapeId) 
-      console.log('preparing for next bar', arpId)
       const arp = arps[arpId]
 
       const slotDuration = config.barDuration / arp.slotsPerBar
