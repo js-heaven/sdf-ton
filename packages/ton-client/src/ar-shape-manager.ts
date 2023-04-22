@@ -6,7 +6,6 @@ export class Shape {
   markerTransformMat = new Float64Array(12)
   transformMat = mat4.create()
   glMatrix = mat4.create()
-  color: number[]
 
   modelMatrix = mat4.create()
   rotation = Math.random() * Math.PI * 2
@@ -28,7 +27,6 @@ export class Shape {
 
   constructor(id: number) {
     this.id = id
-    this.color = [Math.random(), Math.random(), Math.random()]
   }
 }
 
@@ -188,7 +186,7 @@ export default class ArShapeManager {
       }
 
       if(shape.alpha) {
-        shape.rotation += deltaTime * getNote(i) * 0.12
+        shape.rotation += deltaTime * (7 + getNote(i)) * 0.06
         while(shape.rotation > Math.PI * 2) {
           shape.rotation -= Math.PI * 2
         }

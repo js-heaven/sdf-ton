@@ -2,20 +2,6 @@ import { Socket } from 'socket.io-client';
 import ShapeState, { ShapeStateType } from './shape-state';
 import config from '../config';
 
-const scale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1] // half tones at 3,4 and 7,8
-
-// freqFactor ** 12 = 2, Oktave
-// freqFactor = 2 ** -12
-const halfToneStepFactor = Math.pow(2, 1/12)
-const frequencies: number[] = []
-for(let i = 0; i < 12 * 4 + 1; i++) {
-  if(scale[i % 12]) {
-    frequencies.push(config.baseFrequency)
-  }
-  config.baseFrequency *= halfToneStepFactor
-}
-
-const numberOfNotes = frequencies.length
 const baseNote = 7 * 2
 
 type Dimensions = {
@@ -112,7 +98,7 @@ class Store {
     shapeId: number,
   ) {
     let newNote = this.shapeStates[shapeId].note + 1
-    newNote = Math.min(newNote, numberOfNotes - 1)
+    newNote = Math.min(newNote, config.numberOfFreqs - 1)
     this.shapeStates[shapeId].note = newNote
   }
 
@@ -138,10 +124,6 @@ class Store {
       newArpeggioId = 0;
     }
     this.changeArpeggioId(shapeId, newArpeggioId);
-  }
-
-  getFrequency(shapeId: number) {
-    return frequencies[this.shapeStates[shapeId].note]
   }
 
   set state(newState: State) {

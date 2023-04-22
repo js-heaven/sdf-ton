@@ -15,7 +15,7 @@ export default class CubeRenderer {
     this.uniLocs = makeUniformLocationAccessor(gl, this.program)
   }
 
-  render(mvp: mat4, color: number[]) {
+  render(mvp: mat4) {
     this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.enable(this.gl.CULL_FACE)
     this.gl.cullFace(this.gl.FRONT)
@@ -24,7 +24,6 @@ export default class CubeRenderer {
     this.gl.useProgram(this.program)
 
     this.gl.uniformMatrix4fv(this.uniLocs.mvp, false, mvp)
-    this.gl.uniform3fv(this.uniLocs.color, color)
 
     this.drawCube()
   }

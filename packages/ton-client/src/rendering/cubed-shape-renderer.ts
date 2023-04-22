@@ -36,7 +36,6 @@ export default class CubedShapeRenderer {
     mvp: mat4, 
     camPosition: vec3, 
     alpha: number, 
-    color: number[], 
     inverseModelMatrix: mat4, 
   ) {
     this.gl.enable(this.gl.DEPTH_TEST)
@@ -62,8 +61,6 @@ export default class CubedShapeRenderer {
     this.gl.uniform3fv(uniLocs.camPosition, camPosition)
 
     this.gl.uniform1f(uniLocs.alpha, alpha)
-
-    this.gl.uniform3fv(uniLocs.shapeColor, color)
 
     mat3.fromMat4(this.inverseModelMatrix3, inverseModelMatrix)
     this.gl.uniformMatrix3fv(uniLocs.inverseModelMatrix, false, this.inverseModelMatrix3)

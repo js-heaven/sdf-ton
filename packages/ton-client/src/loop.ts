@@ -24,6 +24,10 @@ import SwipeDetector from './utils/gesture-detection/swipe-detector';
 import arps from './arps'
 import generateArpTextures from './generate-arp-textures'
 
+import freqs, { getColor } from './freqs'
+
+import config from './config'
+
 // sqrt buffer size has to be dividable by 4 because we're forced to render to RGBA32F | maybe we can 4x multisample dither
 const SQRT_BUFFER_SIZE = 64
 const NUMBER_OF_BUFFERS = 3
@@ -126,7 +130,10 @@ export default class Loop {
         CAM_RADIUS, 
         SQRT_BUFFER_SIZE, 
         NUMBER_OF_BUFFERS, 
-        (shapeId: number) => this.store.getFrequency(shapeId),
+        (shapeId: number) => { 
+          const shapeState = this.store.shapeStates[shapeId]
+          return freqs[shapeState.note]
+        }, 
         (shapeId: number) => this.store.shapeStates[shapeId].arpeggioId, 
         this.targetShapeId
       )
@@ -205,6 +212,8 @@ export default class Loop {
       const arp = arps[shapeState.arpeggioId]
       this.gl.uniform1f(uniLocs.slotsPerBar, arp.slotsPerBar);
       this.gl.uniform1f(uniLocs.currentSlot, this.barClock.getCurrentSlot() * arp.slotsPerBar);
+      const color = getColor(shapeState.note)
+      this.gl.uniform3fv(uniLocs.baseColor, color.map(c => c * 0.5 * (1 + shapeState.note / config.numberOfFreqs)));
 
       // bind respective arp texture
       this.gl.activeTexture(this.gl.TEXTURE2)
@@ -297,7 +306,7 @@ export default class Loop {
         if(this.cubeRenderer) {
           this.arShapeManager.sortedShapes.forEach(shape => {
             if(shape.visible) {
-              this.cubeRenderer!.render(shape.mvpMatrix, shape.color) 
+              this.cubeRenderer!.render(shape.mvpMatrix) 
             }
           })
         }
@@ -309,7 +318,6 @@ export default class Loop {
               shape.mvpMatrix, 
               shape.camPosition,
               shape.alpha, 
-              shape.color, 
               shape.modelMatrix
             )
           }

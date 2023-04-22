@@ -12,6 +12,8 @@ uniform vec3 camPosition;
 uniform vec2 swipeA;
 uniform vec2 swipeB;
 
+uniform vec3 baseColor; 
+
 in vec3 ray;
 
 out vec4 rgba;
@@ -33,9 +35,10 @@ vec3 sky(vec3 v) {
   return vec3(v * 0.5 + 0.5);
 }
 
-const vec3 colorInside = vec3(0.1, 0.1, 0.3);
-const vec3 colorOutside = vec3(1, 0.7, 0.5);
+const vec3 colorInside = vec3(0.1, 0.1, 0.2);
 const vec3 scanColor = vec3(0.3,0.5,0.7);
+
+const vec3 sunColor = vec3(1.0,0.8,0.6); 
 
 void main() {
   vec3 rayDir = normalize(ray);
@@ -63,15 +66,11 @@ void main() {
 
   if(d < 0.1) {
     a = 0.1 + pow(0.9, z);
-    b = clamp(length(pos), 0., 1.);
 
-    // vec3 stepVis = float(s) * vec3(0.05);
     normal = getNormal(pos);
-    color = 0.5 * (
-      mix(colorInside, colorOutside, b) +
-      clamp(pos * 0.5 + 0.5, 0., 1.)
-    );
-    color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * vec3(1.0,0.9,0.6);
+    b = clamp(length(pos), 0., 1.) * 0.5;
+    color = baseColor + sunColor * b; 
+    color += max(0., dot(normal, vec3(-1,0.3,0))) * 0.5 * sunColor;
 
     float barPos = 1. - mod(pos.y * 1.2 + 10., 1.);
     float arp = texture(arpTexture, vec2(barPos, 0.5)).r;

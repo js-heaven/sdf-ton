@@ -1,7 +1,7 @@
 import config from './config';
 import { sfc32 } from './utils/deterministic-rg';
 
-const rand = sfc32(12399910,2,3,4);
+const rand = sfc32(12399910,23,339,4);
 
 interface Trigger {
   slot: number, 

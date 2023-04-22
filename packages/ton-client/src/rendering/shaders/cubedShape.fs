@@ -13,7 +13,7 @@ uniform float alpha;
 
 uniform vec3 camPosition;
 
-uniform vec3 shapeColor; 
+uniform vec3 baseColor; 
 
 uniform mat3 inverseModelMatrix; 
 
@@ -71,11 +71,9 @@ void main() {
   float z = 0.;
   vec3 pos = modelVertex;
   float d = 0.;
-  float a = 0.;
   float b = 0.;
   float xyAngle;
 
-  vec3 color = vec3(1);
   vec3 normal;
   for (int s = 0; s < 30; s++) {
     d = sdf(pos) * carefulness;
@@ -93,8 +91,7 @@ void main() {
   }
 
   if(d < threshold) {
-    a = 0.1 + pow(0.9, z);
-    b = clamp(length(pos), 0., 1.);
+    b = 0.2 + 0.8 * clamp(length(pos), 0., 1.); 
 
     normal = inverseModelMatrix * getNormal(pos); 
 
@@ -106,12 +103,13 @@ void main() {
       env = texture(envBack, r.xy * 0.5 + 0.5).rgb;
     }
 
-    color = (env + shapeColor * b) * 0.5; 
+    vec3 color = baseColor + arpVis(pos.y * 1.2); 
+    color += dot(normal, vec3(0,1,0)) * sunColor * 0.5;
+    color += env * 0.5;  
+    color *= b; 
 
-    color += arpVis(pos.y * 1.2); 
 
     // lights
-    color += dot(normal, vec3(0,1,0)) * sunColor * 0.5;
 
     rgb = color;
   } else {

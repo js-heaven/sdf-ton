@@ -32,26 +32,29 @@ class GestureHandler {
   addEventListeners() {
     this.touchTarget.addEventListener(
       'touchstart',
-      this.handleTouchStart.bind(this)
+      this.handleTouchStart.bind(this), 
+      { passive: false }
     );
 
     this.touchTarget.addEventListener(
       'touchmove',
-      this.handleTouchMove.bind(this)
+      this.handleTouchMove.bind(this), 
+      { passive: false }
     );
     this.touchTarget.addEventListener(
       'touchcancel',
-      this.handleTouchCancel.bind(this)
+      this.handleTouchCancel.bind(this), 
+      { passive: false }
     );
     this.touchTarget.addEventListener(
       'touchend',
-      this.handleTouchEnd.bind(this)
+      this.handleTouchEnd.bind(this), 
+      { passive: false }
     );
   }
 
   handleTouchStart(ev: TouchEvent) {
-    //console.warn('touchStart!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
+    ev.preventDefault();
     this.numTouches += 1;
     this.update(ev);
   }
