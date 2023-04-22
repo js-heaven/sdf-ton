@@ -90,6 +90,7 @@ export default class ShapeRenderer {
 
     vec3.set(this.camUp, 0, 1, 0) // has to be reset everytime because we scale it based on aspectRatio
     vec3.cross(this.camRight, this.camUp, this.camStraight)
+    vec3.cross(this.camUp, this.camRight, this.camStraight)
 
     vec3.scale(this.camRight, this.camRight, this.viewPlaneHalfWidth)
     vec3.scale(this.camUp, this.camUp, this.viewPlaneHalfHeight)
