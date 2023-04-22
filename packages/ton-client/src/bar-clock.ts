@@ -7,26 +7,26 @@ class Store {
   constructor(
     socket: Socket,
   ) {
-    const startTime = Date.now(); 
+    const startTime = performance.now(); 
     socket.on('syncPong', (timeOffset) => {
-      const endTime = Date.now();
+      const endTime = performance.now();
       const serverTime = (endTime - startTime) / 2 + timeOffset; 
-      this.timeOffset = serverTime - Date.now();
+      this.timeOffset = serverTime - performance.now();
     }) 
     socket.emit('syncPing');
   }
 
   getCurrentTime() {
-    return (Date.now() + this.timeOffset) * 0.001
+    return (performance.now() + this.timeOffset) * 0.001
   }
 
   getCurrentSlot() {
-    return (Date.now() + this.timeOffset) * 0.001 % config.barDuration / config.barDuration;
+    return (performance.now() + this.timeOffset) * 0.001 % config.barDuration / config.barDuration;
   }
 
-  getNextBarStart() {
+  nextBarIn() {
     const currentTime = this.getCurrentTime()
-    return (Math.floor(currentTime / config.barDuration) + 1) * config.barDuration
+    return config.barDuration - (currentTime % config.barDuration) 
   }
 }
 

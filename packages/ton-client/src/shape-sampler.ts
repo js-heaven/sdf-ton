@@ -57,8 +57,6 @@ export default class ShapeSampler {
 
   async start(barClock: BarClock) {
     const ac = new AudioContext();
-    const ac0 = ac.currentTime
-    const acTimeOffset = ac.currentTime - barClock.getCurrentTime()
 
     this.setSampleRate(ac.sampleRate)
 
@@ -81,21 +79,19 @@ export default class ShapeSampler {
 
       const slotDuration = config.barDuration / arp.slotsPerBar
 
-      const barStartTime = start + acTimeOffset
       arp.triggers.forEach(t => {
-        console.log('negative?', barStartTime + (t.slot) * slotDuration)
-        gainNode.gain.setValueAtTime(0.01, barStartTime + (t.slot) * slotDuration)
-        gainNode.gain.linearRampToValueAtTime(1, barStartTime + (arp.attack + t.slot) * slotDuration)
-        gainNode.gain.exponentialRampToValueAtTime(arp.sustain, barStartTime + (t.slot + t.length) * slotDuration) 
-        gainNode.gain.exponentialRampToValueAtTime(0.01, barStartTime + (t.slot + t.length + arp.decay) * slotDuration) 
+        gainNode.gain.setValueAtTime(0.01, start + (t.slot) * slotDuration)
+        gainNode.gain.linearRampToValueAtTime(1, start + (arp.attack + t.slot) * slotDuration)
+        gainNode.gain.exponentialRampToValueAtTime(arp.sustain, start + (t.slot + t.length) * slotDuration) 
+        gainNode.gain.exponentialRampToValueAtTime(0.01, start + (t.slot + t.length + arp.decay) * slotDuration) 
       })
 
       setTimeout(() => {
-        prepareGainNodeForTheNextBar(bar + 1, barClock.getNextBarStart())
-      }, 1000 * config.barDuration - 200) // always schedule arp setting 100ms before next bar
+        prepareGainNodeForTheNextBar(bar + 1, ac.currentTime + barClock.nextBarIn())
+      }, 1000 * config.barDuration - 300) // always schedule arp setting 300ms before next bar
     }
 
-    prepareGainNodeForTheNextBar(0, barClock.getNextBarStart())
+    prepareGainNodeForTheNextBar(0, ac.currentTime + barClock.nextBarIn())
     
     const continousBufferNode = new AudioWorkletNode(
       ac,
