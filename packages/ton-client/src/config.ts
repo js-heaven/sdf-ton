@@ -3,7 +3,7 @@ const bpm = 107;
 const numberOfOctaves = 4
 
 const config = {
-  numberOfArps: 40, 
+  numberOfArps: 100, 
   baseFrequency: 440 / (2 ** 4), 
   barDuration: 60 / bpm * 4,
 

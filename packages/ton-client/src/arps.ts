@@ -1,7 +1,10 @@
 import config from './config';
 import { sfc32 } from './utils/deterministic-rg';
 
-const rand = sfc32(12399910,23,339,4);
+const rand = sfc32(42399910,145,339,9);
+rand()
+rand()
+rand()
 
 interface Trigger {
   slot: number, 
@@ -58,7 +61,7 @@ const arps: ArpeggioPattern[] = []
 
 for(let i = 0; i < config.numberOfArps; i++) {
   arps.push(new ArpeggioPattern(
-    2 * (2 + Math.trunc(rand() * 5)), 
+    2 * (2 + Math.trunc(rand() * 6)), 
     rand() * 0.1 + 0.01,
     rand() * 0.5,
     Math.trunc(rand() * 3) / 4, 

@@ -78,10 +78,12 @@ export default class ShapeSampler {
       const slotDuration = config.barDuration / arp.slotsPerBar
 
       arp.triggers.forEach(t => {
-        gainNode.gain.setValueAtTime(0.01, start + (t.slot) * slotDuration)
-        gainNode.gain.linearRampToValueAtTime(1, start + (arp.attack + t.slot) * slotDuration)
-        gainNode.gain.exponentialRampToValueAtTime(arp.sustain, start + (t.slot + t.length) * slotDuration) 
-        gainNode.gain.exponentialRampToValueAtTime(0.01, start + (t.slot + t.length + arp.decay) * slotDuration) 
+        const slotStart = start + t.slot * slotDuration
+        gainNode.gain.setValueAtTime(0.01, slotStart)
+        gainNode.gain.linearRampToValueAtTime(1, slotStart + arp.attack * slotDuration)
+        const triggerEnd = slotStart + t.length * slotDuration
+        gainNode.gain.exponentialRampToValueAtTime(arp.sustain, triggerEnd) 
+        gainNode.gain.exponentialRampToValueAtTime(0.01, triggerEnd + arp.decay * slotDuration) 
       })
 
       setTimeout(() => {
